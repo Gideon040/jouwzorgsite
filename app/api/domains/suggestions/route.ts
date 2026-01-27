@@ -62,7 +62,7 @@ function generateSuggestions(naam: string, beroep?: string): string[] {
   }
 
   // Return unique suggestions, prioritize .nl
-  return [...new Set(suggestions)].slice(0, 20);
+  return Array.from(new Set(suggestions)).slice(0, 20);
 }
 
 export async function POST(request: NextRequest) {
