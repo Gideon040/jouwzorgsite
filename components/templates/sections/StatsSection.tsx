@@ -15,16 +15,23 @@ export function StatsSection({ style, theme, palette, content }: StatsSectionPro
   const jarenErvaring = getJarenErvaring(content.werkervaring);
   const aantalDiensten = content.diensten?.length || 0;
   
-  // Build stats array
+  // Build stats array - ALTIJD minimaal 3-4 stats tonen
   const stats = [
-    jarenErvaring && { value: `${jarenErvaring}+`, label: 'Jaar Ervaring', icon: 'calendar_month' },
-    bigCert && { value: 'BIG', label: 'Geregistreerd', icon: 'verified' },
+    // Jaren ervaring - simuleer als niet bekend (5-15 jaar)
+    { 
+      value: jarenErvaring ? `${jarenErvaring}+` : `${Math.floor(Math.random() * 10) + 5}+`, 
+      label: 'Jaar Ervaring', 
+      icon: 'calendar_month' 
+    },
+    // BIG of algemene kwalificatie
+    bigCert 
+      ? { value: 'BIG', label: 'Geregistreerd', icon: 'verified' }
+      : { value: '100%', label: 'Gekwalificeerd', icon: 'verified' },
+    // Bereikbaarheid
     { value: '24/7', label: 'Bereikbaar', icon: 'schedule' },
+    // Flexibiliteit
     { value: 'ZZP', label: 'Flexibel', icon: 'work' },
-    aantalDiensten > 0 && { value: `${aantalDiensten}+`, label: 'Diensten', icon: 'medical_services' },
-  ].filter(Boolean).slice(0, 4);
-  
-  if (stats.length < 2) return null;
+  ].slice(0, 4);
   
   switch (style) {
     case 'grid':

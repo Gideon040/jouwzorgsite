@@ -38,9 +38,40 @@ const DEFAULT_FAQS = [
   },
 ];
 
+// Beroep-specifieke FAQs
+const BEROEP_FAQS: Record<string, typeof DEFAULT_FAQS> = {
+  kraamverzorgende: [
+    { vraag: "Wanneer moet ik kraamzorg aanvragen?", antwoord: "Het is aan te raden om rond de 12e-16e week van uw zwangerschap kraamzorg aan te vragen. Zo heeft u voldoende tijd om alles te regelen." },
+    { vraag: "Hoeveel uur kraamzorg krijg ik?", antwoord: "De indicatie wordt gesteld door het Landelijk Indicatieprotocol Kraamzorg (LIP). Gemiddeld ontvangt u 40-50 uur kraamzorg verspreid over 8-10 dagen." },
+    { vraag: "Wat doet een kraamverzorgende precies?", antwoord: "Ik ondersteun bij de verzorging van moeder en baby, geef voorlichting over borstvoeding, help bij het huishouden en signaleer eventuele gezondheidsproblemen." },
+    { vraag: "Komt u ook 's nachts?", antwoord: "Standaard werk ik overdag, maar in overleg zijn er mogelijkheden voor avond- of nachtdiensten bij bijzondere situaties." },
+    { vraag: "Vergoedt de verzekering kraamzorg?", antwoord: "Ja, kraamzorg zit in het basispakket van uw zorgverzekering. U betaalt alleen een eigen bijdrage van ongeveer €4,80 per uur." },
+  ],
+  ggz: [
+    { vraag: "Hoe ziet een eerste gesprek eruit?", antwoord: "In het eerste gesprek maken we kennis en bespreken we uw hulpvraag. Dit is vrijblijvend en geeft ons beiden de kans om te kijken of er een klik is." },
+    { vraag: "Is alles wat ik vertel vertrouwelijk?", antwoord: "Ja, ik heb een beroepsgeheim. Alles wat u met mij deelt blijft tussen ons, tenzij er sprake is van een noodsituatie." },
+    { vraag: "Hoelang duurt een behandeltraject?", antwoord: "Dit verschilt per persoon en hulpvraag. Samen stellen we doelen op en evalueren we regelmatig of de behandeling nog aansluit bij uw behoeften." },
+    { vraag: "Kan ik de zorg vergoed krijgen?", antwoord: "Veel GGZ-zorg wordt vergoed vanuit de basisverzekering of via een PGB. Ik help u graag om de mogelijkheden te verkennen." },
+    { vraag: "Wat als het niet klikt?", antwoord: "Een goede vertrouwensband is essentieel. Als het niet klikt, is dat geen probleem en help ik u graag verder naar een passende collega." },
+  ],
+};
+
 export function FaqSection({ style, theme, palette, content, generated, beroepLabel }: FaqSectionProps) {
-  // TODO: In de toekomst kan de AI FAQs genereren
-  const faqs = DEFAULT_FAQS;
+  // Kies FAQs op basis van beroep, of gebruik defaults
+  const beroep = beroepLabel?.toLowerCase() || '';
+  let faqs = DEFAULT_FAQS;
+  
+  if (beroep.includes('kraam')) {
+    faqs = BEROEP_FAQS.kraamverzorgende;
+  } else if (beroep.includes('ggz') || beroep.includes('psychi')) {
+    faqs = BEROEP_FAQS.ggz;
+  }
+  
+  // Als er generated FAQs zijn, gebruik die
+  const gen = generated as any;
+  if (gen?.faq?.items?.length) {
+    faqs = gen.faq.items;
+  }
   
   switch (style) {
     case 'accordion':
