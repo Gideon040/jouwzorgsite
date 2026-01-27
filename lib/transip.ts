@@ -102,7 +102,7 @@ async function apiRequest<T>(
     throw new Error(`TransIP API error: ${response.status} - ${text}`);
   }
 
-  return text ? JSON.parse(text) : {};
+  return (text ? JSON.parse(text) : {}) as T;
 }
 
 // ============ PUBLIC API FUNCTIONS ============
