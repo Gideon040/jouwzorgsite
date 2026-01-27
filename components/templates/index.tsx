@@ -1,35 +1,27 @@
 // components/templates/index.tsx
-// Template router - picks the right template based on site.template_id
+// Template router - supports both legacy templates and new modular system
 
 import { Site } from '@/types';
 
-// Import all templates - New standalone templates
-import { TemplateClassic } from './TemplateClassic';
-import { TemplateBold } from './TemplateBold';
-import { TemplateMinimal } from './TemplateMinimal';
-import { TemplateMagazine } from './TemplateMagazine';
-import { TemplateCards } from './TemplateCards';
+// New modular system
+import { TemplateRenderer } from './TemplateRenderer';
 
-// Legacy templates
+// Legacy templates (for backward compatibility)
 import { TemplateWarm } from './TemplateWarm';
 import { TemplateModern } from './TemplateModern';
 import { TemplateEditorial } from './TemplateEditorial';
 
-// Export all templates
-export { 
-  TemplateClassic,
-  TemplateBold,
-  TemplateMinimal,
-  TemplateMagazine,
-  TemplateCards,
-  // Legacy
-  TemplateWarm, 
-  TemplateModern, 
-  TemplateEditorial,
-};
+// Export new system
+export { TemplateRenderer };
+export * from './themes';
+export * from './sections';
+
+// Export legacy templates
+export { TemplateWarm, TemplateModern, TemplateEditorial };
 
 // Template metadata for display/selection
 export const TEMPLATES = {
+  // New modular templates
   classic: {
     id: 'classic',
     name: 'Klassiek & Warm',
@@ -37,6 +29,7 @@ export const TEMPLATES = {
     preview: '/previews/classic.png',
     forPersonality: ['warm'],
     forWorkfield: ['thuiszorg', 'ouderenzorg', 'kraamzorg'],
+    isModular: true,
   },
   bold: {
     id: 'bold',
@@ -45,6 +38,7 @@ export const TEMPLATES = {
     preview: '/previews/bold.png',
     forPersonality: ['zakelijk'],
     forWorkfield: ['ziekenhuis', 'IC', 'specialist'],
+    isModular: true,
   },
   minimal: {
     id: 'minimal',
@@ -53,6 +47,7 @@ export const TEMPLATES = {
     preview: '/previews/minimal.png',
     forPersonality: ['rustig'],
     forWorkfield: ['ggz', 'coaching', 'therapie'],
+    isModular: true,
   },
   magazine: {
     id: 'magazine',
@@ -61,6 +56,7 @@ export const TEMPLATES = {
     preview: '/previews/magazine.png',
     forPersonality: ['zakelijk'],
     forWorkfield: ['consultant', 'adviseur', 'expert'],
+    isModular: true,
   },
   cards: {
     id: 'cards',
@@ -69,6 +65,7 @@ export const TEMPLATES = {
     preview: '/previews/cards.png',
     forPersonality: ['energiek'],
     forWorkfield: ['starter', 'flexibel'],
+    isModular: true,
   },
   // Legacy templates
   warm: {
@@ -76,26 +73,33 @@ export const TEMPLATES = {
     name: 'Warm (Legacy)',
     description: 'Originele warme template',
     preview: '/previews/warm.png',
-    forPersonality: ['warm'],
-    forWorkfield: ['thuiszorg'],
+    isModular: false,
   },
   modern: {
     id: 'modern',
     name: 'Modern (Legacy)',
     description: 'Originele moderne template',
     preview: '/previews/modern.png',
-    forPersonality: ['zakelijk'],
-    forWorkfield: ['specialist'],
+    isModular: false,
   },
   editorial: {
     id: 'editorial',
     name: 'Editorial (Legacy)',
-    description: 'Originele editorial template met varianten',
+    description: 'Originele editorial template',
     preview: '/previews/editorial.png',
-    forPersonality: ['warm', 'zakelijk'],
-    forWorkfield: ['algemeen'],
+    isModular: false,
+  },
+  flex: {
+    id: 'flex',
+    name: 'Flex (Legacy)',
+    description: 'Flexibele template',
+    preview: '/previews/flex.png',
+    isModular: false,
   },
 };
+
+// List of modular template IDs
+const MODULAR_TEMPLATES = ['classic', 'bold', 'minimal', 'magazine', 'cards'];
 
 // Template renderer - picks the right template based on site.template_id
 interface SiteRendererProps {
@@ -107,25 +111,14 @@ export function SiteRenderer({ site }: SiteRendererProps) {
 
   console.log('🔍 SiteRenderer templateId:', templateId);
 
-  // New standalone templates (primary)
+  // Check if it's a modular template
+  if (MODULAR_TEMPLATES.includes(templateId)) {
+    console.log('✅ Using new TemplateRenderer for:', templateId);
+    return <TemplateRenderer site={site} />;
+  }
+
+  // Legacy templates
   switch (templateId) {
-    case 'classic':
-      console.log('✅ Rendering TemplateClassic');
-      return <TemplateClassic site={site} />;
-    case 'bold':
-      console.log('✅ Rendering TemplateBold');
-      return <TemplateBold site={site} />;
-    case 'minimal':
-      console.log('✅ Rendering TemplateMinimal');
-      return <TemplateMinimal site={site} />;
-    case 'magazine':
-      console.log('✅ Rendering TemplateMagazine');
-      return <TemplateMagazine site={site} />;
-    case 'cards':
-      console.log('✅ Rendering TemplateCards');
-      return <TemplateCards site={site} />;
-    
-    // Legacy templates (for backward compatibility)
     case 'modern':
       console.log('⚠️ Legacy: Rendering TemplateModern');
       return <TemplateModern site={site} />;
@@ -135,11 +128,14 @@ export function SiteRenderer({ site }: SiteRendererProps) {
     case 'warm':
       console.log('⚠️ Legacy: Rendering TemplateWarm');
       return <TemplateWarm site={site} />;
-    
-    // Default fallback
+    case 'flex':
+      // Flex wordt nu classic met modular system
+      console.log('⚠️ Migrating flex to classic');
+      return <TemplateRenderer site={{ ...site, template_id: 'classic' }} />;
     default:
-      console.log('❌ Unknown template, falling back to TemplateClassic. templateId was:', templateId);
-      return <TemplateClassic site={site} />;
+      // Default to modular classic
+      console.log('❓ Unknown template, using TemplateRenderer with classic. templateId was:', templateId);
+      return <TemplateRenderer site={{ ...site, template_id: 'classic' }} />;
   }
 }
 
@@ -147,3 +143,57 @@ export function SiteRenderer({ site }: SiteRendererProps) {
 export function getTemplateById(id: string) {
   return TEMPLATES[id as keyof typeof TEMPLATES] || TEMPLATES.classic;
 }
+
+// Helper to check if template supports sections customization
+export function isModularTemplate(templateId: string): boolean {
+  return MODULAR_TEMPLATES.includes(templateId);
+}
+
+// Available section types for the modular system
+export const SECTION_TYPES = {
+  hero: {
+    name: 'Hero',
+    styles: ['split', 'centered', 'fullwidth', 'minimal'],
+    required: true,
+  },
+  stats: {
+    name: 'Statistieken',
+    styles: ['grid', 'inline', 'cards'],
+    required: false,
+  },
+  diensten: {
+    name: 'Diensten',
+    styles: ['cards', 'numbered', 'list', 'grid'],
+    required: true,
+  },
+  over: {
+    name: 'Over Mij',
+    styles: ['split', 'centered', 'timeline'],
+    required: true,
+  },
+  quote: {
+    name: 'Quote',
+    styles: ['banner', 'minimal', 'dark'],
+    required: false,
+  },
+  testimonials: {
+    name: 'Testimonials',
+    styles: ['cards', 'carousel', 'single'],
+    required: false,
+  },
+  faq: {
+    name: 'FAQ',
+    styles: ['accordion', 'grid', 'simple'],
+    required: false,
+  },
+  cta: {
+    name: 'Call to Action',
+    styles: ['banner', 'card', 'minimal'],
+    required: false,
+  },
+  contact: {
+    name: 'Contact',
+    styles: ['split', 'centered', 'form-only'],
+    required: true,
+  },
+};

@@ -1,0 +1,138 @@
+// components/templates/sections/QuoteSection.tsx
+// Quote section met 3 style varianten: banner, minimal, dark
+
+'use client';
+
+import { BaseSectionProps, QuoteStyle, getBeroepImages, getRevealClass } from './types';
+
+interface QuoteSectionProps extends BaseSectionProps {
+  style: QuoteStyle;
+}
+
+const DEFAULT_QUOTES = [
+  "Zorgen voor wie ooit voor ons zorgde is een van de hoogste eerbetonen.",
+  "In aandacht en rust ligt de ware kracht van zorg.",
+  "Excellentie in zorg komt voort uit passie, precisie en toewijding.",
+  "Goede zorg begint met luisteren.",
+];
+
+export function QuoteSection({ style, theme, palette, content, generated }: QuoteSectionProps) {
+  const images = getBeroepImages(content.naam || '');
+  const quote = generated?.quote || DEFAULT_QUOTES[Math.floor(Math.random() * DEFAULT_QUOTES.length)];
+  
+  switch (style) {
+    case 'banner':
+      return <QuoteBanner {...{ theme, palette, quote, images }} />;
+    case 'minimal':
+      return <QuoteMinimal {...{ theme, palette, quote }} />;
+    case 'dark':
+      return <QuoteDark {...{ theme, palette, quote, images }} />;
+    default:
+      return <QuoteBanner {...{ theme, palette, quote, images }} />;
+  }
+}
+
+// ============================================
+// BANNER - Grote afbeelding met overlay
+// ============================================
+function QuoteBanner({ theme, palette, quote, images }: any) {
+  return (
+    <section className="relative w-full h-[500px] flex items-center justify-center overflow-hidden">
+      {/* Background */}
+      <div 
+        className="absolute inset-0 bg-fixed bg-center bg-cover scale-110"
+        style={{ backgroundImage: `url("${images.sfeer}")` }}
+      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+      
+      {/* Content */}
+      <div className={`relative z-10 text-center px-6 max-w-4xl ${getRevealClass('up')}`}>
+        <span 
+          className="material-symbols-outlined text-5xl md:text-6xl mb-6 block"
+          style={{ color: palette.primary }}
+        >
+          format_quote
+        </span>
+        <h2 
+          className="text-white text-3xl md:text-4xl lg:text-5xl italic leading-tight"
+          style={{ fontFamily: theme.fonts.heading }}
+        >
+          "{quote}"
+        </h2>
+        <div 
+          className="mt-8 w-24 h-1 mx-auto rounded-full"
+          style={{ backgroundColor: palette.primary }}
+        />
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// MINIMAL - Simpele quote zonder afbeelding
+// ============================================
+function QuoteMinimal({ theme, palette, quote }: any) {
+  return (
+    <section 
+      className="py-24 border-t border-b"
+      style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.background }}
+    >
+      <div className={`max-w-3xl mx-auto text-center px-6 ${getRevealClass('up')}`}>
+        <span 
+          className="material-symbols-outlined text-4xl mb-6 block"
+          style={{ color: `${palette.primary}40` }}
+        >
+          format_quote
+        </span>
+        <p 
+          className="text-2xl md:text-3xl font-light leading-relaxed italic"
+          style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+        >
+          "{quote}"
+        </p>
+        <div 
+          className="w-12 h-px mx-auto mt-8"
+          style={{ backgroundColor: palette.primary }}
+        />
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// DARK - Donkere achtergrond (voor light themes)
+// ============================================
+function QuoteDark({ theme, palette, quote, images }: any) {
+  return (
+    <section className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden">
+      {/* Background */}
+      <div 
+        className="absolute inset-0 bg-center bg-cover"
+        style={{ backgroundImage: `url("${images.sfeer}")` }}
+      />
+      <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+      
+      {/* Content */}
+      <div className={`relative z-10 text-center px-6 max-w-4xl ${getRevealClass('up')}`}>
+        <span 
+          className="material-symbols-outlined text-5xl mb-6 block"
+          style={{ color: palette.primary }}
+        >
+          format_quote
+        </span>
+        <h2 
+          className="text-white text-2xl md:text-4xl italic leading-relaxed"
+          style={{ fontFamily: theme.fonts.heading }}
+        >
+          "{quote}"
+        </h2>
+        <div 
+          className="mt-8 w-16 h-0.5 mx-auto"
+          style={{ backgroundColor: palette.primary }}
+        />
+      </div>
+    </section>
+  );
+}
+
+export default QuoteSection;
