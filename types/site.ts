@@ -52,8 +52,10 @@ export interface Socials {
 export interface Werkervaring {
   functie: string;
   werkgever: string;
-  start_jaar: number;
-  eind_jaar?: number; // undefined = "Heden"
+  start_jaar?: number;   // snake_case (database)
+  startJaar?: number;    // camelCase (legacy/frontend)
+  eind_jaar?: number;
+  eindJaar?: number;
   beschrijving?: string;
 }
 
@@ -244,15 +246,41 @@ export interface Site {
   updated_at: string;
 }
 
-// Helper functions
+// === HELPER FUNCTIONS ===
+
 export function hasProfessionalFeatures(site: Site): boolean {
   return true;
 }
 
-export function getJarenErvaring(startJaar?: number): number | null {
-  if (!startJaar) return null;
-  return new Date().getFullYear() - startJaar;
+/**
+ * Berekent jaren ervaring op basis van werkervaring array OF een start jaar
+ * Ondersteunt zowel snake_case (start_jaar) als camelCase (startJaar)
+ * 
+ * @param werkervaringOrStartJaar - Array van werkervaring OF een start jaar nummer
+ * @returns Aantal jaren ervaring of null
+ */
+export function getJarenErvaring(werkervaringOrStartJaar?: Werkervaring[] | number): number | null {
+  // Als het een nummer is (legacy: direct startjaar)
+  if (typeof werkervaringOrStartJaar === 'number') {
+    return new Date().getFullYear() - werkervaringOrStartJaar;
+  }
+  
+  // Als het een array is (werkervaring[])
+  if (Array.isArray(werkervaringOrStartJaar) && werkervaringOrStartJaar.length > 0) {
+    const startYears = werkervaringOrStartJaar
+      .map(w => w.start_jaar || w.startJaar)
+      .filter((year): year is number => typeof year === 'number');
+    
+    if (startYears.length === 0) return null;
+    
+    const earliest = Math.min(...startYears);
+    return new Date().getFullYear() - earliest;
+  }
+  
+  return null;
 }
+
+// === PROFILE & SUBSCRIPTION ===
 
 export interface Profile {
   id: string;
