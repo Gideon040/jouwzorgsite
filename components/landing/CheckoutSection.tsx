@@ -23,7 +23,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Custom domain state
+  // Custom domain state - nu optioneel
   const [wantCustomDomain, setWantCustomDomain] = useState(false);
   const [customDomain, setCustomDomain] = useState('');
   const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
@@ -139,6 +139,8 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
           template_id: site.template_id,
           beroep: site.beroep,
           content: content,
+          theme: site.theme || null,
+          generated_content: site.generated_content || null,
           published: false, // Unpublished until payment confirmed
         })
         .select()
@@ -173,138 +175,171 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-rose-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-rose-50 py-12 px-4">
+      <div className="max-w-md mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-4">
+            <span className="material-symbols-outlined text-3xl text-orange-600">rocket_launch</span>
+          </div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+            Laatste stap!
+          </h1>
+          <p className="text-slate-500">
+            Maak je account aan en je website gaat direct online
+          </p>
+        </div>
+        
+        {/* Back button */}
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-6 transition-colors"
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-6 transition-colors"
         >
-          <span className="material-symbols-outlined">arrow_back</span>
-          Terug naar preview
+          <span className="material-symbols-outlined text-sm">arrow_back</span>
+          Terug naar verificatie
         </button>
         
-        <div className="bg-white rounded-3xl shadow-2xl shadow-slate-200/50 p-8 md:p-10">
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-4">
-              <span className="material-symbols-outlined text-3xl text-orange-600">domain</span>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900">Claim je domein</h2>
-            <p className="text-slate-500 mt-2">Je eigen .nl adres voor je website</p>
-          </div>
+        {/* Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-8">
           
-          {/* Domain input */}
+          {/* Subdomain */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Kies je domein</label>
-            <div className="flex">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Jouw website adres
+            </label>
+            <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-orange-500 transition-colors">
               <input
                 type="text"
                 value={subdomain}
                 onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                className="flex-1 px-4 py-3 border-2 border-r-0 border-slate-200 rounded-l-xl focus:border-orange-500 focus:ring-0 outline-none font-mono"
+                className="flex-1 px-4 py-3 outline-none text-slate-900"
                 placeholder="jouw-naam"
               />
-              <span className="px-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-r-xl text-slate-500 font-mono">
-                .nl
+              <span className="px-4 py-3 bg-slate-50 text-slate-500 text-sm font-mono border-l border-slate-200">
+                .jouwzorgsite.nl
               </span>
             </div>
-            <DomainStatus 
-              isChecking={isChecking} 
-              isAvailable={isAvailable} 
-              subdomain={subdomain} 
-            />
-          </div>
-          
-          {/* Email (prefilled) */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              disabled
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl bg-slate-50 text-slate-500"
-            />
+            {isChecking && (
+              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                <span className="material-symbols-outlined animate-spin text-xs">progress_activity</span>
+                Controleren...
+              </p>
+            )}
+            {!isChecking && isAvailable === true && subdomain.length >= 3 && (
+              <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">check_circle</span>
+                Beschikbaar!
+              </p>
+            )}
+            {!isChecking && isAvailable === false && (
+              <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                <span className="material-symbols-outlined text-xs">error</span>
+                Helaas bezet, kies een andere naam
+              </p>
+            )}
           </div>
           
           {/* Custom domain toggle */}
-          <div className="mb-6 p-4 bg-orange-50 rounded-xl border border-orange-100">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={wantCustomDomain}
-                onChange={(e) => {
-                  setWantCustomDomain(e.target.checked);
-                  if (!e.target.checked) {
-                    setCustomDomain('');
-                    setDomainAvailable(null);
-                    setDomainError(null);
-                  }
-                }}
-                className="w-5 h-5 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
-              />
-              <div>
-                <span className="font-medium text-slate-900">Eigen .nl domein</span>
-                <p className="text-sm text-slate-500">Bijv. {subdomain}.nl in plaats van {subdomain}.jouwzorgsite.nl</p>
+          <div className="mb-6 p-4 bg-slate-50 rounded-xl">
+            <label className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <span className="material-symbols-outlined text-slate-500">language</span>
+                <div>
+                  <span className="font-medium text-slate-700">Eigen .nl domein</span>
+                  <p className="text-xs text-slate-400">Bijvoorbeeld: {subdomain || 'jouw-naam'}.nl</p>
+                </div>
+              </div>
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={wantCustomDomain}
+                  onChange={(e) => setWantCustomDomain(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-orange-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
               </div>
             </label>
             
             {wantCustomDomain && (
-              <div className="mt-4">
+              <div className="mt-4 pt-4 border-t border-slate-200">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Welk domein wil je?
+                </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={customDomain}
-                    onChange={(e) => setCustomDomain(e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, ''))}
-                    placeholder="jouw-domein.nl"
-                    className="flex-1 px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none font-mono"
+                    onChange={(e) => {
+                      setCustomDomain(e.target.value.toLowerCase());
+                      setDomainAvailable(null);
+                      setDomainError(null);
+                    }}
+                    placeholder="mijn-naam.nl"
+                    className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:border-orange-500 outline-none"
                   />
                   <button
                     onClick={() => checkCustomDomain(customDomain)}
                     disabled={!customDomain.includes('.') || isCheckingDomain}
-                    className="px-4 py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 transition-colors"
+                    className={`px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                      customDomain.includes('.') && !isCheckingDomain
+                        ? 'bg-slate-900 text-white hover:bg-slate-800'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    }`}
                   >
                     {isCheckingDomain ? (
-                      <span className="material-symbols-outlined animate-spin">progress_activity</span>
+                      <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
                     ) : (
                       'Check'
                     )}
                   </button>
                 </div>
-                
+                {domainError && (
+                  <p className="text-xs text-red-500 mt-2">{domainError}</p>
+                )}
                 {domainAvailable === true && (
-                  <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">check_circle</span>
-                    {customDomain} is beschikbaar! ({domainPrice})
+                  <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">check_circle</span>
+                    {customDomain} is beschikbaar voor {domainPrice}
                   </p>
                 )}
                 {domainAvailable === false && !domainError && (
-                  <p className="text-sm text-red-500 mt-2 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">error</span>
+                  <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-xs">error</span>
                     Dit domein is niet beschikbaar
-                  </p>
-                )}
-                {domainError && (
-                  <p className="text-sm text-red-500 mt-2 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-base">error</span>
-                    {domainError}
                   </p>
                 )}
               </div>
             )}
           </div>
           
+          {/* Email (read-only) */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              E-mailadres
+            </label>
+            <input
+              type="email"
+              value={email}
+              readOnly
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600"
+            />
+          </div>
+          
           {/* Password */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">Kies een wachtwoord</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Kies een wachtwoord
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none"
-              placeholder="Minimaal 8 karakters"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+              placeholder="Minimaal 8 tekens"
             />
             {password.length > 0 && password.length < 8 && (
-              <p className="text-sm text-amber-600 mt-2">
-                Nog {8 - password.length} karakter{8 - password.length !== 1 ? 's' : ''} nodig
+              <p className="text-xs text-amber-600 mt-2">
+                Nog {8 - password.length} teken{8 - password.length !== 1 ? 's' : ''} nodig
               </p>
             )}
           </div>
@@ -348,9 +383,9 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
           {/* Submit */}
           <button
             onClick={handleSubmit}
-            disabled={!isAvailable || password.length < 8 || isLoading || (wantCustomDomain && !domainAvailable)}
+            disabled={!isAvailable || password.length < 8 || isLoading}
             className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg transition-all ${
-              isAvailable && password.length >= 8 && !isLoading && (!wantCustomDomain || domainAvailable)
+              isAvailable && password.length >= 8 && !isLoading
                 ? 'bg-orange-500 text-white hover:bg-orange-600 hover:shadow-lg'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
@@ -358,7 +393,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             {isLoading ? (
               <>
                 <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                Bezig...
+                Account aanmaken...
               </>
             ) : (
               <>
@@ -368,49 +403,31 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             )}
           </button>
           
+          {/* Terms */}
           <p className="text-xs text-slate-400 text-center mt-4">
-            Door te starten ga je akkoord met onze voorwaarden en privacybeleid
+            Door te registreren ga je akkoord met onze{' '}
+            <a href="/voorwaarden" className="underline hover:text-slate-600">algemene voorwaarden</a>
+            {' '}en{' '}
+            <a href="/privacy" className="underline hover:text-slate-600">privacybeleid</a>.
           </p>
+        </div>
+        
+        {/* Trust badges */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-emerald-500 text-base">lock</span>
+            SSL beveiligd
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-emerald-500 text-base">verified</span>
+            AVG-compliant
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-emerald-500 text-base">support_agent</span>
+            Nederlandse support
+          </div>
         </div>
       </div>
     </div>
   );
-}
-
-// Domain availability status
-function DomainStatus({ 
-  isChecking, isAvailable, subdomain 
-}: { 
-  isChecking: boolean; 
-  isAvailable: boolean | null; 
-  subdomain: string;
-}) {
-  if (isChecking) {
-    return (
-      <p className="text-sm text-slate-400 mt-2 flex items-center gap-2">
-        <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
-        Beschikbaarheid controleren...
-      </p>
-    );
-  }
-  
-  if (isAvailable === true) {
-    return (
-      <p className="text-sm text-emerald-600 mt-2 flex items-center gap-2">
-        <span className="material-symbols-outlined text-base">check_circle</span>
-        {subdomain}.nl is beschikbaar!
-      </p>
-    );
-  }
-  
-  if (isAvailable === false) {
-    return (
-      <p className="text-sm text-red-500 mt-2 flex items-center gap-2">
-        <span className="material-symbols-outlined text-base">error</span>
-        Dit domein is niet beschikbaar
-      </p>
-    );
-  }
-  
-  return null;
 }

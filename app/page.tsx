@@ -12,13 +12,16 @@ import {
   HeroSection,
   WizardSection,
   PreviewSection,
+  VerificationSection,
   CheckoutSection,
   DoneSection,
 } from '@/components/landing';
 import type { StijlKeuze } from '@/components/landing/WizardSection';
 
-type FlowStep = 'hero' | 'wizard' | 'preview' | 'checkout' | 'done';
+type FlowStep = 'hero' | 'wizard' | 'preview' | 'verification' | 'checkout' | 'done';
 type WizardStep = 1 | 2 | 3 | 4;
+
+const MAX_REGENERATIONS = 3;
 
 export default function Home() {
   // Flow state
@@ -42,6 +45,10 @@ export default function Home() {
   // UI state
   const [isCustomizing, setIsCustomizing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Regeneration tracking
+  const [regenerateCount, setRegenerateCount] = useState(0);
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   // Handlers
   const handleStartWizard = () => {
@@ -71,10 +78,14 @@ export default function Home() {
     }
   };
 
-  const handleGenerateSite = async () => {
+  const handleGenerateSite = async (isRegeneration = false) => {
     if (!stijl) return;
     
-    setIsGenerating(true);
+    if (isRegeneration) {
+      setIsRegenerating(true);
+    } else {
+      setIsGenerating(true);
+    }
     
     try {
       const supabase = createClient();
@@ -89,6 +100,9 @@ export default function Home() {
             email,
             omschrijving: omschrijving.trim() || undefined,
             stijlKeuze: stijl,
+            // Pass regeneration flag for potentially different results
+            regeneration: isRegeneration,
+            regenerationCount: regenerateCount + 1,
           },
         }
       );
@@ -124,7 +138,7 @@ export default function Home() {
             werkgebied: [],
           },
           diensten: gen?.diensten?.items || generatePlaceholderContent({ naam, beroep, email }).diensten,
-          certificaten: [],
+          certificaten: customContent?.certificaten || [], // Keep existing certificaten if regenerating
           zakelijk: { kvk: '' },
           beschikbaar: true,
         };
@@ -159,8 +173,13 @@ export default function Home() {
       setPreviewSite(site);
       setCustomContent(content);
       setFinalSubdomain(generatedSubdomain);
-      trackSitePreview();
-      setFlowStep('preview');
+      
+      if (isRegeneration) {
+        setRegenerateCount(prev => prev + 1);
+      } else {
+        trackSitePreview();
+        setFlowStep('preview');
+      }
       
     } catch (err) {
       console.error('Fout bij genereren site:', err);
@@ -186,15 +205,35 @@ export default function Home() {
       setPreviewSite(site);
       setCustomContent(content);
       setFinalSubdomain(generatedSubdomain);
-      trackSitePreview();
-      setFlowStep('preview');
+      
+      if (!isRegeneration) {
+        trackSitePreview();
+        setFlowStep('preview');
+      }
     } finally {
       setIsGenerating(false);
+      setIsRegenerating(false);
     }
+  };
+
+  const handleRegenerate = async () => {
+    if (regenerateCount >= MAX_REGENERATIONS) return;
+    await handleGenerateSite(true);
   };
 
   const handleCheckoutComplete = () => {
     setFlowStep('done');
+  };
+
+  // Update content handler that preserves site object
+  const handleSetContent = (newContent: SiteContent) => {
+    setCustomContent(newContent);
+    if (previewSite) {
+      setPreviewSite({
+        ...previewSite,
+        content: newContent,
+      });
+    }
   };
 
   return (
@@ -226,10 +265,24 @@ export default function Home() {
         <PreviewSection
           site={previewSite}
           content={customContent}
-          setContent={setCustomContent}
-          onCheckout={() => setFlowStep('checkout')}
+          setContent={handleSetContent}
+          onCheckout={() => setFlowStep('verification')}
+          onRegenerate={handleRegenerate}
           isCustomizing={isCustomizing}
           setIsCustomizing={setIsCustomizing}
+          isRegenerating={isRegenerating}
+          regenerateCount={regenerateCount}
+          maxRegenerations={MAX_REGENERATIONS}
+        />
+      )}
+      
+      {flowStep === 'verification' && previewSite && customContent && (
+        <VerificationSection
+          site={previewSite}
+          content={customContent}
+          setContent={handleSetContent}
+          onContinue={() => setFlowStep('checkout')}
+          onBack={() => setFlowStep('preview')}
         />
       )}
       
@@ -238,7 +291,7 @@ export default function Home() {
           site={previewSite}
           content={customContent}
           email={email}
-          onBack={() => setFlowStep('preview')}
+          onBack={() => setFlowStep('verification')}
           onComplete={handleCheckoutComplete}
         />
       )}
