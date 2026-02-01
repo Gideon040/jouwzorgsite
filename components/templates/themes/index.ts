@@ -1,11 +1,12 @@
 // components/templates/themes/index.ts
-// Theme configurations voor alle 5 base themes
+// SINGLE SOURCE OF TRUTH voor palettes, fonts en theme configs
 
+// ============================================
+// THEME CONFIG INTERFACE
+// ============================================
 export interface ThemeConfig {
   id: string;
   name: string;
-  
-  // Colors (worden overschreven door palette)
   colors: {
     background: string;
     backgroundAlt: string;
@@ -14,36 +15,26 @@ export interface ThemeConfig {
     textMuted: string;
     border: string;
   };
-  
-  // Typography
   fonts: {
     heading: string;
     body: string;
   };
-  
-  // Spacing & Layout
   spacing: {
-    section: string;      // py voor sections
-    container: string;    // max-width
-    gap: string;          // gap tussen elementen
+    section: string;
+    container: string;
+    gap: string;
   };
-  
-  // Border radius
   radius: {
     small: string;
     medium: string;
     large: string;
     full: string;
   };
-  
-  // Shadows
   shadows: {
     small: string;
     medium: string;
     large: string;
   };
-  
-  // Special styles
   isDark: boolean;
   headerStyle: 'solid' | 'transparent' | 'floating';
   cardStyle: 'flat' | 'elevated' | 'bordered' | 'glass';
@@ -51,14 +42,142 @@ export interface ThemeConfig {
 }
 
 // ============================================
-// CLASSIC THEME - Warm, tijdloos, betrouwbaar
+// COLOR PALETTES (10 totaal)
+// ============================================
+export const palettes = {
+  sage: {
+    primary: '#5a7c6f',
+    primaryHover: '#4a6b5f',
+    primaryLight: 'rgba(90, 124, 111, 0.1)',
+    primaryDark: '#3d5a4f',
+    accent: '#5a7c6f',
+  },
+  lavender: {
+    primary: '#7c6f9e',
+    primaryHover: '#6b5f8d',
+    primaryLight: 'rgba(124, 111, 158, 0.1)',
+    primaryDark: '#5a4f7a',
+    accent: '#7c6f9e',
+  },
+  slate: {
+    primary: '#475569',
+    primaryHover: '#334155',
+    primaryLight: 'rgba(71, 85, 105, 0.1)',
+    primaryDark: '#1e293b',
+    accent: '#475569',
+  },
+  mint: {
+    primary: '#059669',
+    primaryHover: '#047857',
+    primaryLight: 'rgba(5, 150, 105, 0.1)',
+    primaryDark: '#065f46',
+    accent: '#059669',
+  },
+  sand: {
+    primary: '#b45309',
+    primaryHover: '#92400e',
+    primaryLight: 'rgba(180, 83, 9, 0.1)',
+    primaryDark: '#78350f',
+    accent: '#b45309',
+  },
+  rose: {
+    primary: '#be185d',
+    primaryHover: '#9d174d',
+    primaryLight: 'rgba(190, 24, 93, 0.1)',
+    primaryDark: '#831843',
+    accent: '#be185d',
+  },
+  ocean: {
+    primary: '#0369a1',
+    primaryHover: '#075985',
+    primaryLight: 'rgba(3, 105, 161, 0.1)',
+    primaryDark: '#0c4a6e',
+    accent: '#0369a1',
+  },
+  // NIEUWE PALETTES
+  forest: {
+    primary: '#1a3a2f',
+    primaryHover: '#2d5a47',
+    primaryLight: 'rgba(26, 58, 47, 0.1)',
+    primaryDark: '#0f251d',
+    accent: '#7cb342',
+  },
+  coral: {
+    primary: '#d4644a',
+    primaryHover: '#c25438',
+    primaryLight: 'rgba(212, 100, 74, 0.1)',
+    primaryDark: '#a34432',
+    accent: '#e07b5f',
+  },
+  teal: {
+    primary: '#0099cc',
+    primaryHover: '#007aa3',
+    primaryLight: 'rgba(0, 153, 204, 0.1)',
+    primaryDark: '#004466',
+    accent: '#ff6b35',
+  },
+};
+
+export type PaletteKey = keyof typeof palettes;
+
+export function getPalette(paletteId: string) {
+  return palettes[paletteId as PaletteKey] || palettes.sage;
+}
+
+// ============================================
+// FONT PAIRINGS (8 totaal)
+// ============================================
+export const fontPairings = {
+  classic: {
+    heading: "'Libre Baskerville', Georgia, serif",
+    body: "'Open Sans', system-ui, sans-serif",
+  },
+  modern: {
+    heading: "'DM Sans', system-ui, sans-serif",
+    body: "'Inter', system-ui, sans-serif",
+  },
+  elegant: {
+    heading: "'Playfair Display', Georgia, serif",
+    body: "'Lato', system-ui, sans-serif",
+  },
+  friendly: {
+    heading: "'Nunito', system-ui, sans-serif",
+    body: "'Open Sans', system-ui, sans-serif",
+  },
+  professional: {
+    heading: "'Manrope', system-ui, sans-serif",
+    body: "'Inter', system-ui, sans-serif",
+  },
+  // NIEUWE FONT PAIRINGS
+  editorial: {
+    heading: "'Playfair Display', Georgia, serif",
+    body: "'Inter', system-ui, sans-serif",
+  },
+  soft: {
+    heading: "'Libre Baskerville', Georgia, serif",
+    body: "'DM Sans', system-ui, sans-serif",
+  },
+  clean: {
+    heading: "'Poppins', system-ui, sans-serif",
+    body: "'Poppins', system-ui, sans-serif",
+  },
+};
+
+export type FontPairingKey = keyof typeof fontPairings;
+
+export function getFontPairing(pairingId: string) {
+  return fontPairings[pairingId as FontPairingKey] || fontPairings.classic;
+}
+
+// ============================================
+// BASE THEMES
 // ============================================
 export const classicTheme: ThemeConfig = {
   id: 'classic',
   name: 'Klassiek & Warm',
   colors: {
-    background: '#fcf9f5',      // Warm cream
-    backgroundAlt: '#f4f2f0',   // Slightly darker cream
+    background: '#fcf9f5',
+    backgroundAlt: '#f4f2f0',
     surface: '#ffffff',
     text: '#181411',
     textMuted: '#6b6560',
@@ -90,15 +209,12 @@ export const classicTheme: ThemeConfig = {
   buttonStyle: 'solid',
 };
 
-// ============================================
-// BOLD THEME - Dark, impactful, statement
-// ============================================
 export const boldTheme: ThemeConfig = {
   id: 'bold',
   name: 'Bold & Professioneel',
   colors: {
-    background: '#17191b',      // Dark charcoal
-    backgroundAlt: '#1e2124',   // Slightly lighter
+    background: '#17191b',
+    backgroundAlt: '#1e2124',
     surface: '#242729',
     text: '#ffffff',
     textMuted: 'rgba(255,255,255,0.6)',
@@ -130,9 +246,6 @@ export const boldTheme: ThemeConfig = {
   buttonStyle: 'solid',
 };
 
-// ============================================
-// MINIMAL THEME - Zen, rustig, whitespace
-// ============================================
 export const minimalTheme: ThemeConfig = {
   id: 'minimal',
   name: 'Minimaal & Rustig',
@@ -170,9 +283,6 @@ export const minimalTheme: ThemeConfig = {
   buttonStyle: 'outline',
 };
 
-// ============================================
-// MAGAZINE THEME - Editorial, premium
-// ============================================
 export const magazineTheme: ThemeConfig = {
   id: 'magazine',
   name: 'Magazine & Premium',
@@ -185,7 +295,7 @@ export const magazineTheme: ThemeConfig = {
     border: 'rgba(0,0,0,0.08)',
   },
   fonts: {
-    heading: "'Libre Baskerville', Georgia, serif",
+    heading: "'Playfair Display', Georgia, serif",
     body: "'Inter', system-ui, sans-serif",
   },
   spacing: {
@@ -210,9 +320,6 @@ export const magazineTheme: ThemeConfig = {
   buttonStyle: 'solid',
 };
 
-// ============================================
-// CARDS THEME - Modern, bento, app-like
-// ============================================
 export const cardsTheme: ThemeConfig = {
   id: 'cards',
   name: 'Modern & Fresh',
@@ -266,87 +373,28 @@ export function getTheme(themeId: string): ThemeConfig {
 }
 
 // ============================================
-// COLOR PALETTES
+// METADATA
 // ============================================
-export const palettes = {
-  sage: {
-    primary: '#5a7c6f',
-    primaryHover: '#4a6b5f',
-    primaryLight: 'rgba(90, 124, 111, 0.1)',
-    primaryDark: '#3d5a4f',
-  },
-  lavender: {
-    primary: '#7c6f9e',
-    primaryHover: '#6b5f8d',
-    primaryLight: 'rgba(124, 111, 158, 0.1)',
-    primaryDark: '#5a4f7a',
-  },
-  slate: {
-    primary: '#475569',
-    primaryHover: '#334155',
-    primaryLight: 'rgba(71, 85, 105, 0.1)',
-    primaryDark: '#1e293b',
-  },
-  mint: {
-    primary: '#059669',
-    primaryHover: '#047857',
-    primaryLight: 'rgba(5, 150, 105, 0.1)',
-    primaryDark: '#065f46',
-  },
-  sand: {
-    primary: '#b45309',
-    primaryHover: '#92400e',
-    primaryLight: 'rgba(180, 83, 9, 0.1)',
-    primaryDark: '#78350f',
-  },
-  rose: {
-    primary: '#be185d',
-    primaryHover: '#9d174d',
-    primaryLight: 'rgba(190, 24, 93, 0.1)',
-    primaryDark: '#831843',
-  },
-  ocean: {
-    primary: '#0369a1',
-    primaryHover: '#075985',
-    primaryLight: 'rgba(3, 105, 161, 0.1)',
-    primaryDark: '#0c4a6e',
-  },
+export const paletteMetadata: Record<PaletteKey, { name: string; description: string }> = {
+  sage: { name: 'Sage', description: 'Rustgevend groen' },
+  lavender: { name: 'Lavender', description: 'Zacht paars' },
+  slate: { name: 'Slate', description: 'Professioneel grijs' },
+  mint: { name: 'Mint', description: 'Fris groen' },
+  sand: { name: 'Sand', description: 'Warm amber' },
+  rose: { name: 'Rose', description: 'Zacht roze' },
+  ocean: { name: 'Ocean', description: 'Diep blauw' },
+  forest: { name: 'Forest', description: 'Donker groen' },
+  coral: { name: 'Coral', description: 'Warm terracotta' },
+  teal: { name: 'Teal', description: 'Modern cyaan' },
 };
 
-export type PaletteKey = keyof typeof palettes;
-
-export function getPalette(paletteId: string) {
-  return palettes[paletteId as PaletteKey] || palettes.sage;
-}
-
-// ============================================
-// FONT PAIRINGS
-// ============================================
-export const fontPairings = {
-  classic: {
-    heading: "'Libre Baskerville', Georgia, serif",
-    body: "'Open Sans', system-ui, sans-serif",
-  },
-  modern: {
-    heading: "'DM Sans', system-ui, sans-serif",
-    body: "'Inter', system-ui, sans-serif",
-  },
-  elegant: {
-    heading: "'Playfair Display', Georgia, serif",
-    body: "'Lato', system-ui, sans-serif",
-  },
-  friendly: {
-    heading: "'Nunito', system-ui, sans-serif",
-    body: "'Open Sans', system-ui, sans-serif",
-  },
-  professional: {
-    heading: "'Manrope', system-ui, sans-serif",
-    body: "'Inter', system-ui, sans-serif",
-  },
+export const fontPairingMetadata: Record<FontPairingKey, { name: string; description: string }> = {
+  classic: { name: 'Klassiek', description: 'Libre Baskerville + Open Sans' },
+  modern: { name: 'Modern', description: 'DM Sans + Inter' },
+  elegant: { name: 'Elegant', description: 'Playfair Display + Lato' },
+  friendly: { name: 'Vriendelijk', description: 'Nunito + Open Sans' },
+  professional: { name: 'Professioneel', description: 'Manrope + Inter' },
+  editorial: { name: 'Editorial', description: 'Playfair Display + Inter' },
+  soft: { name: 'Zacht', description: 'Libre Baskerville + DM Sans' },
+  clean: { name: 'Clean', description: 'Poppins' },
 };
-
-export type FontPairingKey = keyof typeof fontPairings;
-
-export function getFontPairing(pairingId: string) {
-  return fontPairings[pairingId as FontPairingKey] || fontPairings.classic;
-}

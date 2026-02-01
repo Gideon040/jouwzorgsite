@@ -21,6 +21,7 @@ import {
   HeaderSection,
   FooterSection,
 } from './sections';
+import { CredentialsSection } from './sections/CredentialsSection';
 
 interface TemplateRendererProps {
   site: Site;
@@ -34,6 +35,7 @@ const THEME_DEFAULT_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'cards' },
     { type: 'quote', style: 'banner' },
     { type: 'over', style: 'split' },
+    { type: 'credentials', style: 'full' },  // NEW
     { type: 'testimonials', style: 'cards' },
     { type: 'faq', style: 'accordion' },
     { type: 'cta', style: 'card' },
@@ -46,6 +48,7 @@ const THEME_DEFAULT_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'cards' },
     { type: 'quote', style: 'dark' },
     { type: 'over', style: 'timeline' },
+    { type: 'credentials', style: 'cards' },  // NEW
     { type: 'testimonials', style: 'carousel' },
     { type: 'faq', style: 'grid' },
     { type: 'cta', style: 'banner' },
@@ -57,6 +60,7 @@ const THEME_DEFAULT_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'list' },
     { type: 'quote', style: 'minimal' },
     { type: 'over', style: 'centered' },
+    { type: 'credentials', style: 'compact' },  // NEW
     { type: 'testimonials', style: 'single' },
     { type: 'faq', style: 'simple' },
     { type: 'cta', style: 'minimal' },
@@ -69,6 +73,7 @@ const THEME_DEFAULT_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'numbered' },
     { type: 'quote', style: 'minimal' },
     { type: 'over', style: 'timeline' },
+    { type: 'credentials', style: 'full' },  // NEW
     { type: 'testimonials', style: 'cards' },
     { type: 'faq', style: 'grid' },
     { type: 'cta', style: 'card' },
@@ -80,6 +85,7 @@ const THEME_DEFAULT_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'stats', style: 'cards' },
     { type: 'diensten', style: 'grid' },
     { type: 'over', style: 'split' },
+    { type: 'credentials', style: 'cards' },  // NEW
     { type: 'quote', style: 'minimal' },
     { type: 'testimonials', style: 'carousel' },
     { type: 'faq', style: 'accordion' },
@@ -89,8 +95,9 @@ const THEME_DEFAULT_SECTIONS: Record<string, SectionConfig[]> = {
 };
 
 // Global styles voor fonts en animaties
+// Includes Poppins for 'clean' font pairing
 const GLOBAL_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lato:wght@300;400;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
   
   .reveal { opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease; }
   .reveal-up { transform: translateY(40px); }
@@ -169,6 +176,8 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
         return <OverSection key={key} {...sectionProps} style={(section.style as any) || 'split'} />;
       case 'quote':
         return <QuoteSection key={key} {...sectionProps} style={(section.style as any) || 'banner'} />;
+      case 'credentials':
+        return <CredentialsSection key={key} {...sectionProps} style={(section.style as any) || 'full'} />;
       case 'testimonials':
         return <TestimonialsSection key={key} {...sectionProps} style={(section.style as any) || 'cards'} />;
       case 'faq':
@@ -200,7 +209,7 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
       {/* Dynamic sections */}
       <main>
         {sections
-          .filter(s => s.type !== 'footer') // Footer apart renderen
+          .filter(s => s.type !== 'footer')
           .map((section, index) => renderSection(section, index))}
       </main>
       

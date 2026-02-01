@@ -10,14 +10,15 @@ export type StatsStyle = 'grid' | 'inline' | 'cards';
 export type DienstenStyle = 'cards' | 'numbered' | 'list' | 'grid';
 export type OverStyle = 'split' | 'centered' | 'timeline';
 export type QuoteStyle = 'banner' | 'minimal' | 'dark';
+export type CredentialsStyle = 'full' | 'compact' | 'cards';  // NEW
 export type TestimonialsStyle = 'cards' | 'carousel' | 'single';
 export type FaqStyle = 'accordion' | 'grid' | 'simple';
 export type CtaStyle = 'banner' | 'card' | 'minimal';
 export type ContactStyle = 'split' | 'centered' | 'form-only';
 
-// Section configuration
+// Section configuration - UPDATED with 'credentials'
 export interface SectionConfig {
-  type: 'hero' | 'stats' | 'diensten' | 'over' | 'quote' | 'testimonials' | 'faq' | 'cta' | 'contact' | 'footer';
+  type: 'hero' | 'stats' | 'diensten' | 'over' | 'quote' | 'credentials' | 'testimonials' | 'faq' | 'cta' | 'contact' | 'footer';
   style?: string;
   visible?: boolean;
 }

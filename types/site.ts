@@ -1,14 +1,18 @@
 // types/site.ts - Core site content types
 
+// Certificaat types - inclusief compliance registraties
 export type CertificaatType = 
-  | 'big' 
-  | 'agb' 
-  | 'kvk' 
-  | 'btw' 
-  | 'vog' 
-  | 'kiwa' 
-  | 'diploma' 
-  | 'verzekering';
+  | 'big'               // BIG-registratie (verplicht voor veel zorgberoepen)
+  | 'agb'               // AGB-code (voor declaraties)
+  | 'kvk'               // KvK-nummer
+  | 'btw'               // BTW-nummer
+  | 'vog'               // Verklaring Omtrent Gedrag
+  | 'kiwa'              // KIWA/HKZ Keurmerk
+  | 'diploma'           // Diploma of certificaat
+  | 'verzekering'       // Beroepsaansprakelijkheidsverzekering
+  | 'wtza'              // Wtza-melding bij IGJ (verplicht sinds 2022)
+  | 'wkkgz'             // Wkkgz compliant (klachten- en geschillenregeling)
+  | 'klachtenregeling'; // Aangesloten bij klachtenfunctionaris (SCAG, etc.)
 
 export interface Certificaat {
   type: CertificaatType;
@@ -17,6 +21,8 @@ export interface Certificaat {
   sublabel?: string;
   image_url?: string | null;
   expires_at?: string | null;
+  verified?: boolean;        // Voor BIG: via API geverifieerd
+  verified_at?: string | null;
 }
 
 export interface Dienst {
@@ -34,6 +40,7 @@ export interface Contact {
 export interface Zakelijk {
   kvk: string;
   btw?: string;
+  handelsnaam?: string;      // Voor weergave in credentials sectie
 }
 
 export interface Kleuren {
@@ -52,8 +59,8 @@ export interface Socials {
 export interface Werkervaring {
   functie: string;
   werkgever: string;
-  start_jaar?: number;   // snake_case (database)
-  startJaar?: number;    // camelCase (legacy/frontend)
+  start_jaar?: number;
+  startJaar?: number;
   eind_jaar?: number;
   eindJaar?: number;
   beschrijving?: string;
@@ -65,7 +72,7 @@ export interface Testimonial {
   relatie?: string;
 }
 
-// === AI GENERATED CONTENT (van Edge Functions) ===
+// === AI GENERATED CONTENT ===
 
 export interface HeroContent {
   titel: string;
@@ -131,14 +138,10 @@ export interface SEOContent {
   metaDescription: string;
 }
 
-// === SECTION CONFIG (voor TemplateFlex) ===
-
 export interface SectionConfig {
-  type: string;
+  type: 'hero' | 'stats' | 'diensten' | 'over' | 'quote' | 'credentials' | 'testimonials' | 'faq' | 'cta' | 'contact' | 'footer';
   style?: string;
 }
-
-// === GENERATED CONTENT (van generate-site Edge Function) ===
 
 export interface GeneratedContent {
   hero?: HeroContent;
@@ -157,9 +160,16 @@ export interface GeneratedContent {
 
 // === THEME CONFIGURATIE ===
 
-export type ThemePalette = 'sage' | 'lavender' | 'slate' | 'mint' | 'sand' | 'rose' | 'ocean';
+export type ThemePalette = 
+  | 'sage' | 'lavender' | 'slate' | 'mint' | 'sand' | 'rose' | 'ocean'
+  | 'forest' | 'coral' | 'teal';
+
 export type ThemeFonts = 'friendly' | 'soft' | 'modern' | 'contemporary' | 'traditional';
-export type ThemeFontPairing = 'classic' | 'modern' | 'elegant' | 'friendly' | 'professional';
+
+export type ThemeFontPairing = 
+  | 'classic' | 'modern' | 'elegant' | 'friendly' | 'professional'
+  | 'editorial' | 'soft' | 'clean';
+
 export type ThemeVariant = 'classic' | 'bold' | 'minimal' | 'magazine' | 'cards';
 export type BorderRadius = 'none' | 'sm' | 'small' | 'medium' | 'lg' | 'large' | 'full';
 export type Spacing = 'compact' | 'comfortable' | 'normal' | 'relaxed' | 'airy';
@@ -184,7 +194,6 @@ export interface ThemeSections {
   ctaBanner?: boolean;
 }
 
-// Flexible Theme interface (supports both old and new formats)
 export interface Theme {
   palette?: ThemePalette;
   fonts?: ThemeFonts;
@@ -252,20 +261,11 @@ export function hasProfessionalFeatures(site: Site): boolean {
   return true;
 }
 
-/**
- * Berekent jaren ervaring op basis van werkervaring array OF een start jaar
- * Ondersteunt zowel snake_case (start_jaar) als camelCase (startJaar)
- * 
- * @param werkervaringOrStartJaar - Array van werkervaring OF een start jaar nummer
- * @returns Aantal jaren ervaring of null
- */
 export function getJarenErvaring(werkervaringOrStartJaar?: Werkervaring[] | number): number | null {
-  // Als het een nummer is (legacy: direct startjaar)
   if (typeof werkervaringOrStartJaar === 'number') {
     return new Date().getFullYear() - werkervaringOrStartJaar;
   }
   
-  // Als het een array is (werkervaring[])
   if (Array.isArray(werkervaringOrStartJaar) && werkervaringOrStartJaar.length > 0) {
     const startYears = werkervaringOrStartJaar
       .map(w => w.start_jaar || w.startJaar)
@@ -278,6 +278,28 @@ export function getJarenErvaring(werkervaringOrStartJaar?: Werkervaring[] | numb
   }
   
   return null;
+}
+
+export function isOfficialCredential(type: CertificaatType): boolean {
+  return ['big', 'agb', 'kvk', 'wtza', 'wkkgz'].includes(type);
+}
+
+export function isComplianceCredential(type: CertificaatType): boolean {
+  return ['wtza', 'wkkgz', 'klachtenregeling', 'verzekering', 'vog'].includes(type);
+}
+
+export function groupCertificaten(certificaten: Certificaat[]): {
+  registraties: Certificaat[];
+  onderneming: Certificaat[];
+  compliance: Certificaat[];
+  kwalificaties: Certificaat[];
+} {
+  return {
+    registraties: certificaten.filter(c => ['big', 'agb'].includes(c.type)),
+    onderneming: certificaten.filter(c => ['kvk', 'btw'].includes(c.type)),
+    compliance: certificaten.filter(c => ['wtza', 'wkkgz', 'klachtenregeling', 'verzekering', 'vog'].includes(c.type)),
+    kwalificaties: certificaten.filter(c => ['diploma', 'kiwa'].includes(c.type)),
+  };
 }
 
 // === PROFILE & SUBSCRIPTION ===
