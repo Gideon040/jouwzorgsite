@@ -13,7 +13,9 @@ export type StatsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | '
 export type DienstenStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'cards' | 'numbered' | 'list' | 'grid';
 export type OverStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'split' | 'centered' | 'timeline';
 export type CredentialsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'full' | 'compact' | 'cards' | 'badges';
+export type WerkervaringStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'timeline' | 'cards' | 'compact';
 export type VoorWieStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'cards' | 'grid' | 'list';
+export type QuoteStyle = 'banner' | 'minimal' | 'dark';
 export type WerkwijzeStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'steps' | 'timeline' | 'cards' | 'bento';
 export type TestimonialsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'cards' | 'carousel' | 'single';
 export type FaqStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'accordion' | 'grid' | 'simple';
@@ -21,7 +23,6 @@ export type CtaStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'ba
 export type ContactStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'split' | 'centered' | 'form-only';
 export type FooterStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'simple' | 'detailed' | 'minimal';
 export type HeaderStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'solid' | 'transparent' | 'floating';
-export type QuoteStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'banner' | 'minimal' | 'dark';
 
 // ============================================
 // SECTION CONFIGURATION
@@ -33,9 +34,10 @@ export type SectionType =
   | 'stats' 
   | 'diensten' 
   | 'over' 
-  | 'credentials' 
+  | 'credentials'
+  | 'werkervaring'
   | 'voorwie'
-  | 'quote'        // ← VOEG TOE
+  | 'quote'
   | 'werkwijze'
   | 'testimonials' 
   | 'faq' 
@@ -129,56 +131,14 @@ export const DEFAULT_TESTIMONIALS = [
     functie: "Cliënt thuiszorg"
   },
   {
-    tekst: "Altijd bereikbaar, flexibel en met een warm hart voor de zorg. Absolute aanrader!",
+    tekst: "Eindelijk iemand die echt luistert en meedenkt. De zorg is precies afgestemd op onze situatie.",
     naam: "M. de Vries",
     functie: "Mantelzorger"
   },
   {
-    tekst: "De rust en aandacht die wordt gegeven is precies wat we zochten. Heel tevreden.",
+    tekst: "Betrouwbaar, flexibel en altijd vriendelijk. Een absolute aanrader voor iedereen die zorg nodig heeft.",
     naam: "R. Bakker",
     functie: "Familie van cliënt"
-  },
-];
-
-export const DEFAULT_FAQS = [
-  {
-    vraag: "Wat zijn uw werktijden?",
-    antwoord: "Ik ben flexibel inzetbaar, ook in de avonden en weekenden. Samen bekijken we wat het beste past bij uw situatie."
-  },
-  {
-    vraag: "Werkt u ook met PGB?",
-    antwoord: "Ja, ik werk zowel met zorg in natura als met PGB (persoonsgebonden budget). Ik help u graag met de administratie hiervan."
-  },
-  {
-    vraag: "In welke regio bent u werkzaam?",
-    antwoord: "Ik ben werkzaam in de regio en omstreken. Neem contact op om te kijken of ik bij u in de buurt kan komen."
-  },
-  {
-    vraag: "Hoe verloopt een eerste kennismaking?",
-    antwoord: "Bij een eerste kennismaking kom ik vrijblijvend langs om kennis te maken en uw zorgvraag te bespreken. Zo kunnen we samen kijken wat u nodig heeft."
-  },
-  {
-    vraag: "Bent u BIG-geregistreerd?",
-    antwoord: "Ja, ik ben BIG-geregistreerd. Dit garandeert dat ik voldoe aan de kwaliteitseisen voor zorgverleners in Nederland."
-  },
-];
-
-export const DEFAULT_WERKWIJZE_STAPPEN = [
-  {
-    titel: "Contact",
-    beschrijving: "Neem vrijblijvend contact op om mijn beschikbaarheid te checken voor uw opdracht."
-  },
-  {
-    titel: "Kennismaken",
-    beschrijving: "We bespreken de opdracht, werkzaamheden en wederzijdse verwachtingen."
-  },
-  {
-    titel: "Aan de slag",
-    beschrijving: "Flexibele inzet op locatie. Ik sluit naadloos aan bij uw team."
-  },
-  {
-    titel: "Evaluatie",
-    beschrijving: "Goede communicatie en afstemming voor een prettige samenwerking."
   },
 ];
 
@@ -247,3 +207,61 @@ export function getJarenErvaring(werkervaring?: Array<{ start_jaar?: number; sta
   
   return new Date().getFullYear() - earliestYear;
 }
+
+// ============================================
+// DEFAULT WERKWIJZE STAPPEN
+// ============================================
+
+export const DEFAULT_WERKWIJZE_STAPPEN = [
+  {
+    nummer: 1,
+    titel: 'Kennismaking',
+    beschrijving: 'We beginnen met een persoonlijk gesprek waarin ik uw situatie en wensen in kaart breng.',
+    icon: 'handshake',
+  },
+  {
+    nummer: 2,
+    titel: 'Plan op Maat',
+    beschrijving: 'Op basis van uw behoeften stel ik een persoonlijk zorgplan op dat bij u past.',
+    icon: 'assignment',
+  },
+  {
+    nummer: 3,
+    titel: 'Zorg Verlenen',
+    beschrijving: 'Ik lever de afgesproken zorg met aandacht voor uw comfort en welzijn.',
+    icon: 'favorite',
+  },
+  {
+    nummer: 4,
+    titel: 'Evaluatie',
+    beschrijving: 'Regelmatig bespreken we samen hoe de zorg verloopt en passen we aan waar nodig.',
+    icon: 'verified',
+  },
+];
+
+// ============================================
+// DEFAULT FAQS
+// ============================================
+
+export const DEFAULT_FAQS = [
+  {
+    vraag: 'Wat zijn uw werktijden?',
+    antwoord: 'Ik werk flexibel en pas mijn tijden aan uw behoeften aan. Overdag ben ik het meest beschikbaar, maar voor dringende zaken ben ik ook \'s avonds en in het weekend bereikbaar.',
+  },
+  {
+    vraag: 'Werkt u ook met PGB?',
+    antwoord: 'Ja, ik werk met zowel PGB als zorg in natura. Ik help u graag met de administratieve afhandeling en kan u adviseren over de mogelijkheden.',
+  },
+  {
+    vraag: 'In welke regio bent u werkzaam?',
+    antwoord: 'Ik ben werkzaam in de regio en directe omgeving. Neem gerust contact op om te bespreken of ik bij u in de buurt kan komen.',
+  },
+  {
+    vraag: 'Hoe verloopt een eerste kennismaking?',
+    antwoord: 'Bij een eerste kennismaking kom ik vrijblijvend bij u langs om uw situatie en wensen te bespreken. Samen kijken we wat de beste zorgoplossing is.',
+  },
+  {
+    vraag: 'Bent u BIG-geregistreerd?',
+    antwoord: 'Ja, ik ben BIG-geregistreerd en voldoe aan alle wettelijke eisen voor zorgverlening. Mijn registratie is te controleren via het BIG-register.',
+  },
+];

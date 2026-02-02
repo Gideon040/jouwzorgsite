@@ -1,6 +1,7 @@
 'use client';
 
 // app/page.tsx - Single page funnel
+// UPDATED: Nu met werkervaring en certificaten uit edge function
 
 import { useState } from 'react';
 import { Site, SiteContent, Theme, GeneratedContent } from '@/types';
@@ -126,6 +127,12 @@ export default function Home() {
         // Gebruik gegenereerde content
         const gen = generated.generated_content as GeneratedContent;
         
+        // ============================================
+        // NIEUW: Haal input_data uit response
+        // Bevat werkervaring, certificaten, zakelijk etc.
+        // ============================================
+        const inputData = generated.input_data || {};
+        
         content = {
           naam,
           foto: undefined,
@@ -135,11 +142,21 @@ export default function Home() {
             : generatePlaceholderContent({ naam, beroep, email }).over_mij,
           contact: {
             email,
-            werkgebied: [],
+            werkgebied: inputData.werkgebied || [],
           },
           diensten: gen?.diensten?.items || generatePlaceholderContent({ naam, beroep, email }).diensten,
-          certificaten: customContent?.certificaten || [], // Keep existing certificaten if regenerating
-          zakelijk: { kvk: '' },
+          
+          // ============================================
+          // NIEUW: Werkervaring en Certificaten uit edge function
+          // Deze worden altijd meegegeven (default data als user niets invulde)
+          // ============================================
+          werkervaring: inputData.werkervaring || [],
+          certificaten: inputData.certificaten || [],
+          zakelijk: inputData.zakelijk || { 
+            kvk: '',
+            handelsnaam: `${naam} Zorg`,
+          },
+          
           beschikbaar: true,
         };
         
@@ -169,6 +186,8 @@ export default function Home() {
       };
 
       console.log('🎨 Final site object:', site);
+      console.log('🎨 Werkervaring:', content.werkervaring);
+      console.log('🎨 Certificaten:', content.certificaten);
       
       setPreviewSite(site);
       setCustomContent(content);
