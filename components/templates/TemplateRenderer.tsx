@@ -1,5 +1,6 @@
 // components/templates/TemplateRenderer.tsx
 // De kern van het systeem - combineert theme + sections dynamisch
+// UPDATED: Nu met support voor mixed section styles van edge function
 
 'use client';
 
@@ -9,9 +10,6 @@ import { getBeroepLabel } from '@/constants';
 import { getTheme, getPalette, getFontPairing, getTemplatePreset } from './themes';
 
 // Import all sections
-// NOTE: Adjust this path based on where you place the sections folder:
-// - If in components/sections/: use '@/components/sections'
-// - If in components/templates/sections/: use './sections'
 import {
   HeaderSection,
   HeroSection,
@@ -37,9 +35,9 @@ interface TemplateRendererProps {
 }
 
 // ============================================
-// TEMPLATE SECTION CONFIGURATIONS
+// TEMPLATE SECTION CONFIGURATIONS (FALLBACKS)
 // ============================================
-// Elke template heeft een vaste sectie-volgorde met bijbehorende stijlen
+// Alleen gebruikt als edge function GEEN sections meestuurt
 
 const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
   // Editorial - Klassiek & Warm
@@ -172,7 +170,6 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
 // ============================================
 // GLOBAL STYLES
 // ============================================
-// Includes all fonts needed for 4 templates
 
 const GLOBAL_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lato:wght@300;400;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap');
@@ -220,7 +217,6 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   const theme = getTheme(isMainTemplate ? templateStyle : 'classic');
   
   // Get color palette
-  // For main templates, use matching palette; otherwise use custom or default
   const paletteId = isMainTemplate 
     ? templateStyle 
     : ((siteTheme as any)?.palette || 'sage');
@@ -240,6 +236,14 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
     (Array.isArray((siteTheme as any)?.sections) ? (siteTheme as any).sections : null) ||
     TEMPLATE_SECTIONS[templateStyle] ||
     TEMPLATE_SECTIONS.editorial;
+  
+  // DEBUG: Log section styles from edge function
+  if (generated_content?.sections) {
+    console.log('🎨 Section styles from edge function:');
+    (generated_content.sections as SectionConfig[]).forEach(s => {
+      console.log(`   ${s.type}: ${s.style}`);
+    });
+  }
   
   // Get beroep label
   const beroepLabel = getBeroepLabel(beroep);
@@ -268,13 +272,21 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
     beroepLabel,
   };
 
-  // Get the style for a section
-  // For main templates, use template style; otherwise use section-specific style
+  // ============================================
+  // FIXED: Get the style for a section
+  // Priority: section.style from edge function > templateStyle > 'editorial'
+  // ============================================
   const getSectionStyle = (section: SectionConfig) => {
+    // Als de sectie een expliciete style heeft (van edge function), gebruik die
+    if (section.style) {
+      return section.style;
+    }
+    // Anders fallback naar template style voor main templates
     if (isMainTemplate) {
       return templateStyle;
     }
-    return section.style || 'editorial';
+    // Default
+    return 'editorial';
   };
 
   // Render section based on type
@@ -313,6 +325,14 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
     }
   };
 
+  // Get header style - use section style if provided, otherwise template style
+  const headerSection = sections.find(s => s.type === 'header');
+  const headerStyle = headerSection?.style || (isMainTemplate ? templateStyle : 'solid');
+  
+  // Get footer style - use section style if provided, otherwise template style
+  const footerSection = sections.find(s => s.type === 'footer');
+  const footerStyle = footerSection?.style || (isMainTemplate ? templateStyle : 'simple');
+
   return (
     <div 
       className={`min-h-screen theme-${templateStyle}`}
@@ -326,7 +346,7 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
       {/* Header - altijd bovenaan */}
       <HeaderSection 
         {...sectionProps} 
-        style={isMainTemplate ? templateStyle as any : 'solid'} 
+        style={headerStyle as any} 
       />
       
       {/* Dynamic sections */}
@@ -339,7 +359,7 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
       {/* Footer - altijd onderaan */}
       <FooterSection 
         {...sectionProps} 
-        style={isMainTemplate ? templateStyle as any : 'simple'} 
+        style={footerStyle as any} 
       />
       
       {/* WhatsApp Button (optional) */}
