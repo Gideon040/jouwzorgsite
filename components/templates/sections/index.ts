@@ -13,6 +13,7 @@ export { OverSection } from './OverSection';
 export { CredentialsSection } from './CredentialsSection';
 export { VoorWieSection } from './VoorWieSection';
 export { WerkwijzeSection } from './WerkwijzeSection';
+export { QuoteSection } from './QuoteSection';       // ← NIEUW!
 export { TestimonialsSection } from './TestimonialsSection';
 export { FaqSection } from './FaqSection';
 export { CtaSection } from './CtaSection';

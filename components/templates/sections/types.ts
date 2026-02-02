@@ -35,6 +35,7 @@ export type SectionType =
   | 'over' 
   | 'credentials' 
   | 'voorwie'
+  | 'quote'        // ← VOEG TOE
   | 'werkwijze'
   | 'testimonials' 
   | 'faq' 
