@@ -1,73 +1,144 @@
 // components/templates/sections/StatsSection.tsx
-// Stats section met 3 style varianten: grid, inline, cards
+// Stats section - OPTIONELE sectie (AI bepaalt aan/uit)
 
 'use client';
 
-import { BaseSectionProps, StatsStyle, getRevealClass } from './types';
-import { getJarenErvaring } from '@/types';
+import { BaseSectionProps, StatsStyle, getRevealClass, getJarenErvaring } from './types';
 
 interface StatsSectionProps extends BaseSectionProps {
-  style: StatsStyle;
+  style?: StatsStyle;
 }
 
-export function StatsSection({ style, theme, palette, content }: StatsSectionProps) {
-  const bigCert = content.certificaten?.some((c: any) => c.type === 'big');
+interface Stat {
+  value: string;
+  label: string;
+  icon?: string;
+}
+
+export function StatsSection({ 
+  style = 'editorial', 
+  theme, 
+  palette, 
+  content,
+  generated,
+}: StatsSectionProps) {
+  // Build stats from content
   const jarenErvaring = getJarenErvaring(content.werkervaring);
   const aantalDiensten = content.diensten?.length || 0;
+  const aantalCertificaten = content.certificaten?.length || 0;
+  const werkgebieden = content.contact?.werkgebied?.length || 0;
+
+  // Generate stats array
+  const stats: Stat[] = [];
   
-  // Build stats array - ALTIJD minimaal 3-4 stats tonen
-  const stats = [
-    // Jaren ervaring - simuleer als niet bekend (5-15 jaar)
-    { 
-      value: jarenErvaring ? `${jarenErvaring}+` : `${Math.floor(Math.random() * 10) + 5}+`, 
-      label: 'Jaar Ervaring', 
-      icon: 'calendar_month' 
-    },
-    // BIG of algemene kwalificatie
-    bigCert 
-      ? { value: 'BIG', label: 'Geregistreerd', icon: 'verified' }
-      : { value: '100%', label: 'Gekwalificeerd', icon: 'verified' },
-    // Bereikbaarheid
-    { value: '24/7', label: 'Bereikbaar', icon: 'schedule' },
-    // Flexibiliteit
-    { value: 'ZZP', label: 'Flexibel', icon: 'work' },
-  ].slice(0, 4);
+  if (jarenErvaring) {
+    stats.push({ value: `${jarenErvaring}+`, label: 'Jaar ervaring', icon: 'timeline' });
+  }
   
+  if (aantalDiensten > 0) {
+    stats.push({ value: `${aantalDiensten}`, label: 'Diensten', icon: 'medical_services' });
+  }
+  
+  stats.push({ value: '100%', label: 'Inzet', icon: 'favorite' });
+  
+  if (werkgebieden > 0) {
+    stats.push({ value: `${werkgebieden}`, label: `Regio${werkgebieden > 1 ? "'s" : ''}`, icon: 'location_on' });
+  }
+
+  // Don't render if no meaningful stats
+  if (stats.length < 2) return null;
+
   switch (style) {
+    case 'editorial':
+      return <StatsEditorial {...{ theme, palette, stats }} />;
+    case 'proactief':
+      return <StatsProactief {...{ theme, palette, stats }} />;
+    case 'portfolio':
+      return <StatsPortfolio {...{ theme, palette, stats }} />;
+    case 'mindoor':
+      return <StatsMindoor {...{ theme, palette, stats }} />;
     case 'grid':
       return <StatsGrid {...{ theme, palette, stats }} />;
     case 'inline':
       return <StatsInline {...{ theme, palette, stats }} />;
     case 'cards':
       return <StatsCards {...{ theme, palette, stats }} />;
+    case 'minimal':
+      return <StatsMinimal {...{ theme, palette, stats }} />;
     default:
-      return <StatsGrid {...{ theme, palette, stats }} />;
+      return <StatsEditorial {...{ theme, palette, stats }} />;
   }
 }
 
 // ============================================
-// GRID - 4 kolommen grid
+// EDITORIAL - Horizontale rij met dividers
 // ============================================
-function StatsGrid({ theme, palette, stats }: any) {
+function StatsEditorial({ theme, palette, stats }: any) {
   return (
     <section 
-      className="py-12 px-6 border-t border-b"
-      style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.backgroundAlt }}
+      className="px-6 md:px-16 lg:px-32 py-12 border-y"
+      style={{ 
+        backgroundColor: theme.colors.backgroundAlt,
+        borderColor: theme.colors.border 
+      }}
     >
-      <div className={`${theme.spacing.container} mx-auto`}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {stats.map((stat: any, i: number) => (
+      <div className="max-w-6xl mx-auto">
+        <div className={`flex flex-wrap justify-center gap-8 md:gap-16 ${getRevealClass('up')}`}>
+          {stats.map((stat: Stat, index: number) => (
             <div 
-              key={i}
-              className={`text-center ${getRevealClass('up', i + 1)}`}
+              key={index} 
+              className="flex flex-col items-center text-center"
             >
-              <p 
+              <span 
                 className="text-4xl md:text-5xl font-bold mb-2"
-                style={{ color: palette.primary }}
+                style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
               >
                 {stat.value}
+              </span>
+              <span 
+                className="text-sm uppercase tracking-widest"
+                style={{ color: theme.colors.textMuted }}
+              >
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// PROACTIEF - Gradient achtergrond, grote nummers, decoratieve cirkels
+// ============================================
+function StatsProactief({ theme, palette, stats }: any) {
+  return (
+    <section 
+      className="py-20 px-6 md:px-12 relative overflow-hidden"
+      style={{ 
+        background: `linear-gradient(135deg, ${palette.primary} 0%, ${palette.primaryDark || palette.primary} 100%)`
+      }}
+    >
+      {/* Decorative circles */}
+      <div 
+        className="absolute -top-24 -left-24 w-72 h-72 rounded-full bg-white/5"
+      />
+      <div 
+        className="absolute -bottom-36 -right-24 w-96 h-96 rounded-full bg-white/[0.03]"
+      />
+      
+      <div className="max-w-6xl mx-auto relative z-10">
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-10 ${getRevealClass('up')}`}>
+          {stats.map((stat: Stat, index: number) => (
+            <div 
+              key={index} 
+              className="text-center"
+            >
+              <p className="text-5xl md:text-[52px] font-bold text-white leading-none mb-2">
+                {stat.value}
               </p>
-              <p style={{ color: theme.colors.textMuted }}>
+              <p className="text-[15px] text-white/85">
                 {stat.label}
               </p>
             </div>
@@ -79,38 +150,32 @@ function StatsGrid({ theme, palette, stats }: any) {
 }
 
 // ============================================
-// INLINE - Horizontale rij
+// PORTFOLIO - Gradient achtergrond, Playfair cijfers
 // ============================================
-function StatsInline({ theme, palette, stats }: any) {
+function StatsPortfolio({ theme, palette, stats }: any) {
   return (
     <section 
-      className="py-8 px-6"
-      style={{ backgroundColor: theme.colors.background }}
+      className="py-20 px-8 md:px-12"
+      style={{ 
+        background: `linear-gradient(135deg, ${palette.primary} 0%, ${palette.primaryLight || palette.primary} 100%)`
+      }}
     >
-      <div className={`${theme.spacing.container} mx-auto`}>
-        <div className={`flex flex-wrap justify-center gap-8 md:gap-16 ${getRevealClass('up')}`}>
-          {stats.map((stat: any, i: number) => (
-            <div key={i} className="flex items-center gap-3">
-              <span 
-                className="material-symbols-outlined text-2xl"
-                style={{ color: palette.primary }}
+      <div className="max-w-[1000px] mx-auto">
+        <div className={`grid grid-cols-2 md:grid-cols-4 gap-10 ${getRevealClass('up')}`}>
+          {stats.map((stat: Stat, index: number) => (
+            <div 
+              key={index} 
+              className="text-center"
+            >
+              <p 
+                className="text-[52px] font-semibold text-white leading-none mb-2"
+                style={{ fontFamily: theme.fonts.heading }}
               >
-                {stat.icon}
-              </span>
-              <div>
-                <p 
-                  className="text-xl font-bold"
-                  style={{ color: theme.colors.text }}
-                >
-                  {stat.value}
-                </p>
-                <p 
-                  className="text-sm"
-                  style={{ color: theme.colors.textMuted }}
-                >
-                  {stat.label}
-                </p>
-              </div>
+                {stat.value}
+              </p>
+              <p className="text-sm text-white/80 font-medium">
+                {stat.label}
+              </p>
             </div>
           ))}
         </div>
@@ -120,26 +185,132 @@ function StatsInline({ theme, palette, stats }: any) {
 }
 
 // ============================================
-// CARDS - Kaarten met icons (bold theme)
+// MINDOOR - Sage bg met decorative circles
 // ============================================
-function StatsCards({ theme, palette, stats }: any) {
-  const isDark = theme.isDark;
-  
+function StatsMindoor({ theme, palette, stats }: any) {
   return (
     <section 
-      className="py-16 px-6 border-t"
-      style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.background }}
+      className="py-16 relative overflow-hidden"
+      style={{ backgroundColor: palette.primary }}
     >
-      <div className={`${theme.spacing.container} mx-auto`}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {stats.map((stat: any, i: number) => (
+      {/* Decorative circles */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full -translate-x-1/2 -translate-y-1/2" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full translate-x-1/2 translate-y-1/2" />
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className={`grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 ${getRevealClass('up')}`}>
+          {stats.map((stat: Stat, index: number) => (
             <div 
-              key={i}
-              className={`p-6 ${theme.radius.large} ${theme.shadows.small} ${getRevealClass('up', i + 1)}`}
+              key={index} 
+              className="text-center"
+            >
+              <p 
+                className="text-4xl lg:text-5xl text-white font-light"
+                style={{ fontFamily: theme.fonts.heading }}
+              >
+                {stat.value}
+              </p>
+              <p className="mt-2 text-sm lg:text-base" style={{ color: `${palette.primaryLight || 'rgba(255,255,255,0.8)'}` }}>
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// GRID - 2x2 of 4-kolom grid
+// ============================================
+function StatsGrid({ theme, palette, stats }: any) {
+  return (
+    <section 
+      className="py-16 px-6 md:px-12"
+      style={{ backgroundColor: theme.colors.background }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          {stats.map((stat: Stat, index: number) => (
+            <div 
+              key={index} 
+              className={`text-center p-6 rounded-xl ${getRevealClass('up', index + 1)}`}
+              style={{ backgroundColor: theme.colors.backgroundAlt }}
+            >
+              <span 
+                className="material-symbols-outlined text-3xl mb-4 block"
+                style={{ color: palette.primary }}
+              >
+                {stat.icon}
+              </span>
+              <p 
+                className="text-3xl md:text-4xl font-bold mb-2"
+                style={{ color: palette.primary }}
+              >
+                {stat.value}
+              </p>
+              <p 
+                className="text-sm"
+                style={{ color: theme.colors.textMuted }}
+              >
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// INLINE - Horizontale strip
+// ============================================
+function StatsInline({ theme, palette, stats }: any) {
+  return (
+    <section 
+      className="py-8 px-6"
+      style={{ backgroundColor: palette.primary }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+          {stats.map((stat: Stat, index: number) => (
+            <div key={index} className="flex items-center gap-3 text-white">
+              <span className="text-3xl md:text-4xl font-bold">
+                {stat.value}
+              </span>
+              <span className="text-sm opacity-80">
+                {stat.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// CARDS - Kaarten met icons
+// ============================================
+function StatsCards({ theme, palette, stats }: any) {
+  return (
+    <section 
+      className="py-16 px-6 md:px-12"
+      style={{ backgroundColor: theme.colors.backgroundAlt }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {stats.map((stat: Stat, index: number) => (
+            <div 
+              key={index} 
+              className={`p-6 rounded-xl border ${getRevealClass('up', index + 1)}`}
               style={{ 
-                backgroundColor: isDark ? 'rgba(255,255,255,0.05)' : theme.colors.surface,
-                borderColor: theme.colors.border,
-                border: `1px solid ${theme.colors.border}`
+                backgroundColor: theme.colors.surface,
+                borderColor: theme.colors.border
               }}
             >
               <span 
@@ -160,6 +331,33 @@ function StatsCards({ theme, palette, stats }: any) {
               >
                 {stat.label}
               </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// MINIMAL - Simpele tekst
+// ============================================
+function StatsMinimal({ theme, palette, stats }: any) {
+  return (
+    <section 
+      className="py-12 px-6 border-y"
+      style={{ borderColor: theme.colors.border }}
+    >
+      <div className="max-w-4xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-12">
+          {stats.slice(0, 3).map((stat: Stat, index: number) => (
+            <div key={index} className="text-center">
+              <span 
+                className="text-2xl font-light"
+                style={{ color: theme.colors.text }}
+              >
+                <strong style={{ color: palette.primary }}>{stat.value}</strong> {stat.label}
+              </span>
             </div>
           ))}
         </div>

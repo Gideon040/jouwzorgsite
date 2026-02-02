@@ -4,7 +4,8 @@ import { BEROEPEN } from '@/constants';
 
 type WizardStep = 1 | 2 | 3 | 4;
 
-export type StijlKeuze = 'warm' | 'calm' | 'modern' | 'fresh' | 'classic';
+// Updated: Stijl opties die direct mappen naar de 4 templates
+export type StijlKeuze = 'warm' | 'modern' | 'zakelijk' | 'energiek' | 'calm';
 
 interface WizardSectionProps {
   step: WizardStep;
@@ -23,41 +24,52 @@ interface WizardSectionProps {
   isGenerating?: boolean;
 }
 
-const STIJL_OPTIES: { id: StijlKeuze; label: string; description: string; icon: string; color: string }[] = [
+// Stijl opties - mappen naar templates via edge function:
+// warm → editorial/mindoor
+// modern → proactief
+// zakelijk → portfolio
+// energiek → proactief/mindoor
+// calm → editorial/mindoor
+const STIJL_OPTIES: { id: StijlKeuze; label: string; description: string; icon: string; color: string; templates: string }[] = [
   {
     id: 'warm',
     label: 'Warm & Persoonlijk',
-    description: 'Uitnodigend, vriendelijk, huiselijk',
+    description: 'Uitnodigend, vriendelijk, klassieke uitstraling',
     icon: 'favorite',
     color: 'from-orange-400 to-rose-400',
+    templates: 'Editorial of Mindoor',
   },
   {
     id: 'calm',
     label: 'Zacht & Kalmerend',
-    description: 'Rustgevend, sereen, vertrouwd',
+    description: 'Rustgevend, sereen, zachte kleuren',
     icon: 'spa',
     color: 'from-violet-400 to-purple-400',
+    templates: 'Editorial of Mindoor',
   },
   {
     id: 'modern',
-    label: 'Modern & Professioneel',
-    description: 'Strak, zakelijk, betrouwbaar',
-    icon: 'business_center',
-    color: 'from-slate-500 to-slate-700',
+    label: 'Modern & Fris',
+    description: 'Dynamisch, energiek, met gradients',
+    icon: 'bolt',
+    color: 'from-cyan-400 to-blue-500',
+    templates: 'ProActief',
   },
   {
-    id: 'fresh',
-    label: 'Fris & Energiek',
-    description: 'Levendig, positief, dynamisch',
-    icon: 'eco',
-    color: 'from-emerald-400 to-teal-400',
+    id: 'zakelijk',
+    label: 'Zakelijk & Premium',
+    description: 'Elegant, sophisticated, professioneel',
+    icon: 'workspace_premium',
+    color: 'from-emerald-600 to-teal-700',
+    templates: 'Portfolio',
   },
   {
-    id: 'classic',
-    label: 'Klassiek & Betrouwbaar',
-    description: 'Tijdloos, professioneel, ervaren',
-    icon: 'verified',
-    color: 'from-amber-500 to-orange-500',
+    id: 'energiek',
+    label: 'Energiek & Dynamisch',
+    description: 'Levendig, jong, opvallend',
+    icon: 'rocket_launch',
+    color: 'from-orange-500 to-pink-500',
+    templates: 'ProActief of Mindoor',
   },
 ];
 
@@ -340,7 +352,7 @@ function StepStijl({
                   {optie.icon}
                 </span>
               </div>
-              <div>
+              <div className="flex-1">
                 <div className={`font-semibold ${stijl === optie.id ? 'text-orange-700' : 'text-slate-700'}`}>
                   {optie.label}
                 </div>

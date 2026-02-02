@@ -1,18 +1,13 @@
 // types/site.ts - Core site content types
+// ALIGNED: Types matchen EXACT met edge function output
 
-// Certificaat types - inclusief compliance registraties
+// ============================================
+// CERTIFICAAT TYPES
+// ============================================
+
 export type CertificaatType = 
-  | 'big'               // BIG-registratie (verplicht voor veel zorgberoepen)
-  | 'agb'               // AGB-code (voor declaraties)
-  | 'kvk'               // KvK-nummer
-  | 'btw'               // BTW-nummer
-  | 'vog'               // Verklaring Omtrent Gedrag
-  | 'kiwa'              // KIWA/HKZ Keurmerk
-  | 'diploma'           // Diploma of certificaat
-  | 'verzekering'       // Beroepsaansprakelijkheidsverzekering
-  | 'wtza'              // Wtza-melding bij IGJ (verplicht sinds 2022)
-  | 'wkkgz'             // Wkkgz compliant (klachten- en geschillenregeling)
-  | 'klachtenregeling'; // Aangesloten bij klachtenfunctionaris (SCAG, etc.)
+  | 'big' | 'agb' | 'kvk' | 'btw' | 'vog' | 'kiwa' 
+  | 'diploma' | 'verzekering' | 'wtza' | 'wkkgz' | 'klachtenregeling';
 
 export interface Certificaat {
   type: CertificaatType;
@@ -21,9 +16,13 @@ export interface Certificaat {
   sublabel?: string;
   image_url?: string | null;
   expires_at?: string | null;
-  verified?: boolean;        // Voor BIG: via API geverifieerd
+  verified?: boolean;
   verified_at?: string | null;
 }
+
+// ============================================
+// BASIS CONTENT TYPES
+// ============================================
 
 export interface Dienst {
   naam: string;
@@ -40,7 +39,7 @@ export interface Contact {
 export interface Zakelijk {
   kvk: string;
   btw?: string;
-  handelsnaam?: string;      // Voor weergave in credentials sectie
+  handelsnaam?: string;
 }
 
 export interface Kleuren {
@@ -53,8 +52,6 @@ export interface Socials {
   instagram?: string;
   facebook?: string;
 }
-
-// === PROFESSIONAL FEATURES ===
 
 export interface Werkervaring {
   functie: string;
@@ -70,24 +67,39 @@ export interface Testimonial {
   tekst: string;
   naam: string;
   relatie?: string;
+  functie?: string;
 }
 
-// === AI GENERATED CONTENT ===
+// ============================================
+// GENERATED CONTENT - EXACT MATCH MET EDGE FUNCTION
+// ============================================
 
+// Hero sectie
 export interface HeroContent {
   titel: string;
   subtitel: string;
-  beschrijving?: string;
 }
 
+// Over mij sectie
 export interface OverMijContent {
+  titel?: string;
   intro: string;
   body: string;
   persoonlijk?: string;
 }
 
+// Diensten sectie
+export interface DienstenContent {
+  titel: string;
+  intro?: string;
+  items: Dienst[];
+}
+
+// Voor wie sectie
+export type DoelgroepType = 'instellingen' | 'bemiddelaars' | 'pgb' | 'particulieren' | 'thuiszorg' | 'ziekenhuizen';
+
 export interface Doelgroep {
-  type: 'instellingen' | 'bemiddelaars' | 'pgb';
+  type: DoelgroepType;
   titel: string;
   tekst: string;
 }
@@ -98,117 +110,150 @@ export interface VoorWieContent {
   doelgroepen: Doelgroep[];
 }
 
-export interface DienstenContent {
+// Werkwijze sectie
+export interface WerkwijzeStap {
+  nummer?: number;
   titel: string;
-  intro?: string;
-  items: Dienst[];
+  beschrijving: string;  // Edge function gebruikt "beschrijving"
+  icon?: string;
 }
 
 export interface WerkwijzeContent {
   titel: string;
-  stappen: { titel: string; beschrijving: string }[];
+  intro?: string;
+  stappen: WerkwijzeStap[];
+  footer?: string;
 }
 
-export interface BeschikbaarheidContent {
+// Credentials sectie
+export interface CredentialsContent {
   titel: string;
-  status: string;
-  details: string;
-  regio: string;
+  intro?: string;
 }
 
+// Testimonials sectie
+export interface TestimonialItem {
+  tekst: string;
+  naam: string;
+  functie?: string;
+}
+
+export interface TestimonialsContent {
+  titel: string;
+  intro?: string;
+  items: TestimonialItem[];
+}
+
+// FAQ sectie
+export interface FaqItem {
+  vraag: string;
+  antwoord: string;
+}
+
+export interface FaqContent {
+  titel: string;
+  intro?: string;
+  items: FaqItem[];
+}
+
+// CTA sectie - Let op: "tekst" en "button" (niet subtitel/buttonText)
+export interface CtaContent {
+  titel: string;
+  tekst: string;    // Edge function gebruikt "tekst"
+  button: string;   // Edge function gebruikt "button"
+}
+
+// Contact sectie
 export interface ContactContent {
   titel: string;
   intro: string;
-  cta: string;
+  cta?: string;
 }
 
-export interface CtaContent {
-  titel: string;
-  tekst: string;
+// Stats
+export interface StatItem {
+  value: string;
+  label: string;
 }
 
-export interface TestimonialGenerated {
-  tekst: string;
-  naam: string;
-  functie: string;
-}
-
+// SEO
 export interface SEOContent {
   metaTitle: string;
   metaDescription: string;
 }
 
+// Section config
 export interface SectionConfig {
-  type: 'hero' | 'stats' | 'diensten' | 'over' | 'quote' | 'credentials' | 'testimonials' | 'faq' | 'cta' | 'contact' | 'footer';
+  type: string;
   style?: string;
+  visible?: boolean;
 }
 
+// ============================================
+// GENERATED CONTENT - COMPLETE INTERFACE
+// ============================================
+
+// Updated: complete GeneratedContent
 export interface GeneratedContent {
   hero?: HeroContent;
   overMij?: OverMijContent;
-  voorWie?: VoorWieContent;
   diensten?: DienstenContent;
+  voorWie?: VoorWieContent;
   werkwijze?: WerkwijzeContent;
-  beschikbaarheid?: BeschikbaarheidContent;
-  contact?: ContactContent;
+  credentials?: CredentialsContent;
+  testimonials?: TestimonialsContent;
+  faq?: FaqContent;
   cta?: CtaContent;
-  quote?: string;
-  testimonials?: TestimonialGenerated[];
+  contact?: ContactContent;
+  stats?: StatItem[];
   seo?: SEOContent;
   sections?: SectionConfig[];
+  quote?: string;
 }
 
-// === THEME CONFIGURATIE ===
+// ============================================
+// THEME TYPES
+// ============================================
 
 export type ThemePalette = 
   | 'sage' | 'lavender' | 'slate' | 'mint' | 'sand' | 'rose' | 'ocean'
-  | 'forest' | 'coral' | 'teal';
-
-export type ThemeFonts = 'friendly' | 'soft' | 'modern' | 'contemporary' | 'traditional';
+  | 'forest' | 'coral' | 'teal'
+  | 'editorial' | 'proactief' | 'portfolio' | 'mindoor';
 
 export type ThemeFontPairing = 
   | 'classic' | 'modern' | 'elegant' | 'friendly' | 'professional'
-  | 'editorial' | 'soft' | 'clean';
+  | 'editorial' | 'proactief' | 'portfolio' | 'mindoor'
+  | 'soft' | 'clean';
 
-export type ThemeVariant = 'classic' | 'bold' | 'minimal' | 'magazine' | 'cards';
+export type ThemeVariant = 
+  | 'classic' | 'bold' | 'minimal' | 'magazine' | 'cards'
+  | 'editorial' | 'proactief' | 'portfolio' | 'mindoor';
+
+export type TemplateId = 'editorial' | 'proactief' | 'portfolio' | 'mindoor';
+
 export type BorderRadius = 'none' | 'sm' | 'small' | 'medium' | 'lg' | 'large' | 'full';
 export type Spacing = 'compact' | 'comfortable' | 'normal' | 'relaxed' | 'airy';
 export type CardStyle = 'flat' | 'elevated' | 'bordered' | 'glass';
 export type ImageTreatment = 'square' | 'rounded' | 'circle' | 'blob-mask';
 export type Animation = 'none' | 'fade' | 'slide-up' | 'stagger';
 
-export type HeroLayout = 'centered' | 'split' | 'editorial' | 'fullwidth';
-export type DienstenLayout = 'cards' | 'list' | 'icons-only' | 'numbered' | null;
-export type CertificatenLayout = 'badges' | 'inline' | 'grid' | null;
-export type WerkervaringLayout = 'timeline' | 'cards' | 'simple' | null;
-export type TestimonialsLayout = 'carousel' | 'grid' | 'single-quote' | 'cards' | null;
-export type ContactLayout = 'form' | 'details-only' | 'split' | 'centered';
-
-export interface ThemeSections {
-  hero: HeroLayout;
-  diensten: DienstenLayout;
-  certificaten: CertificatenLayout;
-  werkervaring: WerkervaringLayout;
-  testimonials: TestimonialsLayout;
-  contact: ContactLayout;
-  ctaBanner?: boolean;
-}
-
 export interface Theme {
   palette?: ThemePalette;
-  fonts?: ThemeFonts;
+  fonts?: ThemeFontPairing;
   fontPairing?: ThemeFontPairing;
   variant?: ThemeVariant;
+  template?: TemplateId;
   borderRadius?: BorderRadius;
   spacing?: Spacing;
   cardStyle?: CardStyle;
   imageTreatment?: ImageTreatment;
   animation?: Animation;
-  sections?: ThemeSections | SectionConfig[];
-  generatedContent?: GeneratedContent;
+  sections?: Record<string, string | null>;
 }
 
-// === SITE CONTENT ===
+// ============================================
+// SITE CONTENT
+// ============================================
 
 export interface SiteContent {
   naam: string;
@@ -226,16 +271,13 @@ export interface SiteContent {
   werkervaring?: Werkervaring[];
   expertises?: string[];
   testimonials?: Testimonial[];
-  generated?: {
-    hero?: HeroContent;
-    overMij?: OverMijContent;
-    voorWie?: VoorWieContent;
-    diensten?: DienstenContent;
-    beschikbaarheid?: BeschikbaarheidContent;
-    contact?: ContactContent;
-    seo?: SEOContent;
-  };
+  telefoon?: string;
+  generated?: GeneratedContent;
 }
+
+// ============================================
+// SITE
+// ============================================
 
 export type SubscriptionPlan = 'starter' | 'professional';
 
@@ -255,7 +297,9 @@ export interface Site {
   updated_at: string;
 }
 
-// === HELPER FUNCTIONS ===
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
 
 export function hasProfessionalFeatures(site: Site): boolean {
   return true;
@@ -302,7 +346,13 @@ export function groupCertificaten(certificaten: Certificaat[]): {
   };
 }
 
-// === PROFILE & SUBSCRIPTION ===
+export function isNewTemplateSystem(site: Site): boolean {
+  return ['editorial', 'proactief', 'portfolio', 'mindoor'].includes(site.template_id);
+}
+
+// ============================================
+// PROFILE & SUBSCRIPTION
+// ============================================
 
 export interface Profile {
   id: string;

@@ -7,6 +7,7 @@ import { Theme } from '@/types';
 
 // ============ THEME PALETTES ============
 export const PALETTES = {
+  // === ORIGINELE PALETTES ===
   sage: {
     primary: '#5a7c6f',
     primaryHover: '#4a6b5f',
@@ -55,6 +56,81 @@ export const PALETTES = {
     primaryLight: 'rgba(3, 105, 161, 0.08)',
     primaryBorder: 'rgba(3, 105, 161, 0.2)',
     gradient: 'from-sky-50 to-blue-50',
+  },
+  
+  // === TEMPLATE-SPECIFIEKE PALETTES ===
+  
+  // Editorial - klassiek sage groen
+  editorial: {
+    primary: '#5a7c6f',
+    primaryHover: '#4a6b5f',
+    primaryLight: 'rgba(90, 124, 111, 0.15)',
+    primaryBorder: 'rgba(90, 124, 111, 0.2)',
+    primaryDark: '#3d5a4f',
+    accent: '#5a7c6f',
+    gradient: 'from-emerald-50 to-teal-50',
+  },
+  
+  // ProActief - cyaan + oranje
+  proactief: {
+    primary: '#0099cc',
+    primaryHover: '#007aa3',
+    primaryLight: 'rgba(0, 153, 204, 0.1)',
+    primaryBorder: 'rgba(0, 153, 204, 0.2)',
+    primaryDark: '#004466',
+    accent: '#ff6b35',
+    accentLight: '#f7931e',
+    gradient: 'from-cyan-50 to-blue-50',
+  },
+  
+  // Portfolio - forest green + lime
+  portfolio: {
+    primary: '#1a3a2f',
+    primaryHover: '#2d5a47',
+    primaryLight: '#3d7a5f',
+    primaryBorder: 'rgba(26, 58, 47, 0.2)',
+    primaryDark: '#0f251d',
+    accent: '#7cb342',
+    accentLight: '#9ccc65',
+    gradient: 'from-green-50 to-emerald-50',
+  },
+  
+  // Mindoor - sage green + coral
+  mindoor: {
+    primary: '#5a7c5a',
+    primaryHover: '#4a6349',
+    primaryLight: 'rgba(90, 124, 90, 0.1)',
+    primaryBorder: 'rgba(90, 124, 90, 0.2)',
+    primaryDark: '#3d503d',
+    accent: '#d4644a',
+    accentLight: '#e07b5f',
+    gradient: 'from-amber-50 to-orange-50',
+  },
+  
+  // Legacy aliases
+  forest: {
+    primary: '#1a3a2f',
+    primaryHover: '#2d5a47',
+    primaryLight: 'rgba(26, 58, 47, 0.1)',
+    primaryBorder: 'rgba(26, 58, 47, 0.2)',
+    accent: '#7cb342',
+    gradient: 'from-green-50 to-emerald-50',
+  },
+  coral: {
+    primary: '#d4644a',
+    primaryHover: '#c25438',
+    primaryLight: 'rgba(212, 100, 74, 0.1)',
+    primaryBorder: 'rgba(212, 100, 74, 0.2)',
+    accent: '#e07b5f',
+    gradient: 'from-orange-50 to-red-50',
+  },
+  teal: {
+    primary: '#0099cc',
+    primaryHover: '#007aa3',
+    primaryLight: 'rgba(0, 153, 204, 0.1)',
+    primaryBorder: 'rgba(0, 153, 204, 0.2)',
+    accent: '#ff6b35',
+    gradient: 'from-cyan-50 to-blue-50',
   },
 };
 
@@ -118,19 +194,19 @@ export function getColors(palette: string) {
 export const DEFAULT_THEME: Theme = {
   palette: 'sage',
   fonts: 'friendly',
-  variant: 'classic',
+  variant: 'editorial', // Changed from 'classic'
   borderRadius: 'lg',
   spacing: 'relaxed',
   cardStyle: 'elevated',
   imageTreatment: 'rounded',
   animation: 'fade',
   sections: {
-    hero: 'split',
-    diensten: 'cards',
-    certificaten: 'badges',
-    werkervaring: 'timeline',
-    testimonials: null,
-    contact: 'split',
+    hero: 'editorial',
+    diensten: 'editorial',
+    certificaten: 'editorial',
+    werkervaring: 'editorial',
+    testimonials: 'editorial',
+    contact: 'editorial',
   },
 };
 
@@ -275,13 +351,19 @@ export function useScrollReveal() {
 
 // ============ GLOBAL STYLES ============
 export const GLOBAL_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Newsreader:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lato:wght@300;400;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+  
+  @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
   
   .font-display { font-family: 'Libre Baskerville', Georgia, serif; }
   .font-body { font-family: 'Inter', system-ui, sans-serif; }
   .font-modern { font-family: 'DM Sans', system-ui, sans-serif; }
   .font-manrope { font-family: 'Manrope', system-ui, sans-serif; }
   .font-heading { font-family: 'Newsreader', Georgia, serif; }
+  .font-editorial { font-family: 'Newsreader', Georgia, serif; }
+  .font-proactief { font-family: 'Poppins', system-ui, sans-serif; }
+  .font-portfolio { font-family: 'Playfair Display', Georgia, serif; }
+  .font-mindoor { font-family: 'Playfair Display', Georgia, serif; }
   
   .reveal { opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease; }
   .reveal-up { transform: translateY(40px); }
@@ -291,4 +373,36 @@ export const GLOBAL_STYLES = `
   .reveal-delay-1 { transition-delay: 0.1s; }
   .reveal-delay-2 { transition-delay: 0.2s; }
   .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+  
+  html { scroll-behavior: smooth; }
 `;
+
+// ============ TEMPLATE STYLE HELPERS ============
+
+// Get the recommended palette for a template
+export function getTemplatePalette(templateId: string): PaletteKey {
+  const templatePalettes: Record<string, PaletteKey> = {
+    editorial: 'editorial',
+    proactief: 'proactief',
+    portfolio: 'portfolio',
+    mindoor: 'mindoor',
+    classic: 'sage',
+    bold: 'slate',
+    minimal: 'sage',
+    magazine: 'forest',
+    cards: 'teal',
+  };
+  return templatePalettes[templateId] || 'sage';
+}
+
+// Get the recommended fonts for a template
+export function getTemplateFonts(templateId: string): { heading: string; body: string } {
+  const templateFonts: Record<string, { heading: string; body: string }> = {
+    editorial: { heading: "'Newsreader', Georgia, serif", body: "'Open Sans', system-ui, sans-serif" },
+    proactief: { heading: "'Poppins', system-ui, sans-serif", body: "'Poppins', system-ui, sans-serif" },
+    portfolio: { heading: "'Playfair Display', Georgia, serif", body: "'Inter', system-ui, sans-serif" },
+    mindoor: { heading: "'Playfair Display', Georgia, serif", body: "'DM Sans', system-ui, sans-serif" },
+  };
+  return templateFonts[templateId] || templateFonts.editorial;
+}
