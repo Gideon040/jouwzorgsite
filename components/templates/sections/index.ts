@@ -27,24 +27,27 @@ export { WhatsAppButton } from './WhatsAppButton';
 // ============================================
 // SECTION ORDER (VASTE VOLGORDE)
 // ============================================
-// 1. Header        ✅ VERPLICHT
-// 2. Hero          ✅ VERPLICHT
-// 3. Diensten      ✅ VERPLICHT
-// 4. Over          ✅ VERPLICHT
-// 5. Credentials   ✅ VERPLICHT
-// 6. Werkervaring  ✅ VERPLICHT (NIEUW)
-// 7. VoorWie       ✅ VERPLICHT
-// 8. Quote         ✅ VERPLICHT (NIEUW)
-// 9. Werkwijze     ✅ VERPLICHT
-// 10. Testimonials ✅ VERPLICHT
-// 11. FAQ          ✅ VERPLICHT
-// 12. Contact      ✅ VERPLICHT
-// 13. Footer       ✅ VERPLICHT
+// 1.  Header        ✅ VERPLICHT
+// 2.  Hero          ✅ VERPLICHT
+// 3.  Stats         ✅ OPTIONEEL
+// 4.  Diensten      ✅ VERPLICHT
+// 5.  Over          ✅ VERPLICHT
+// 6.  Credentials   ✅ VERPLICHT
+// 7.  Werkervaring  ✅ VERPLICHT
+// 8.  VoorWie       ✅ VERPLICHT
+// 9.  Quote         ✅ VERPLICHT
+// 10. Werkwijze     ✅ VERPLICHT
+// 11. Testimonials  ✅ VERPLICHT
+// 12. FAQ           ✅ VERPLICHT
+// 13. CTA           ✅ OPTIONEEL
+// 14. Contact       ✅ VERPLICHT
+// 15. Footer        ✅ VERPLICHT
 // ============================================
 
 export const SECTION_ORDER = [
   'header',
   'hero',
+  'stats',
   'diensten',
   'over',
   'credentials',
@@ -54,6 +57,7 @@ export const SECTION_ORDER = [
   'werkwijze',
   'testimonials',
   'faq',
+  'cta',
   'contact',
   'footer',
 ] as const;
@@ -67,6 +71,7 @@ export const THEME_DEFAULT_STYLES = {
   editorial: {
     header: 'editorial',
     hero: 'editorial',
+    stats: 'editorial',
     diensten: 'editorial',
     over: 'editorial',
     credentials: 'editorial',
@@ -76,12 +81,14 @@ export const THEME_DEFAULT_STYLES = {
     werkwijze: 'editorial',
     testimonials: 'editorial',
     faq: 'editorial',
+    cta: 'editorial',
     contact: 'editorial',
     footer: 'editorial',
   },
   proactief: {
     header: 'proactief',
     hero: 'proactief',
+    stats: 'proactief',
     diensten: 'proactief',
     over: 'proactief',
     credentials: 'proactief',
@@ -91,12 +98,14 @@ export const THEME_DEFAULT_STYLES = {
     werkwijze: 'proactief',
     testimonials: 'proactief',
     faq: 'proactief',
+    cta: 'proactief',
     contact: 'proactief',
     footer: 'proactief',
   },
   portfolio: {
     header: 'portfolio',
     hero: 'portfolio',
+    stats: 'portfolio',
     diensten: 'portfolio',
     over: 'portfolio',
     credentials: 'portfolio',
@@ -106,12 +115,14 @@ export const THEME_DEFAULT_STYLES = {
     werkwijze: 'portfolio',
     testimonials: 'portfolio',
     faq: 'portfolio',
+    cta: 'portfolio',
     contact: 'portfolio',
     footer: 'portfolio',
   },
   mindoor: {
     header: 'mindoor',
     hero: 'mindoor',
+    stats: 'mindoor',
     diensten: 'mindoor',
     over: 'mindoor',
     credentials: 'mindoor',
@@ -121,8 +132,26 @@ export const THEME_DEFAULT_STYLES = {
     werkwijze: 'mindoor',
     testimonials: 'mindoor',
     faq: 'mindoor',
+    cta: 'mindoor',
     contact: 'mindoor',
     footer: 'mindoor',
+  },
+  serene: {
+    header: 'serene',
+    hero: 'serene',
+    stats: 'serene',
+    diensten: 'serene',
+    over: 'serene',
+    credentials: 'serene',
+    werkervaring: 'serene',
+    voorwie: 'serene',
+    quote: 'serene',
+    werkwijze: 'serene',
+    testimonials: 'serene',
+    faq: 'serene',
+    cta: 'serene',
+    contact: 'serene',
+    footer: 'serene',
   },
 } as const;
 

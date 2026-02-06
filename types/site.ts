@@ -196,6 +196,7 @@ export interface SectionConfig {
   type: string;
   style?: string;
   visible?: boolean;
+  variant?: number;
 }
 
 // ============================================

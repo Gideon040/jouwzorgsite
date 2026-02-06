@@ -145,9 +145,10 @@ export type SectionType =
   | 'footer';
 
 export interface SectionConfig {
-  type: SectionType;
+  type: string;
   style?: string;
   visible?: boolean;
+  variant?: number;
 }
 
 // ============================================

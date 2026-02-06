@@ -266,7 +266,7 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
     return 'editorial';
   };
 
-  // Render section based on type
+// Render section based on type
   const renderSection = (section: SectionConfig, index: number) => {
     const key = `${section.type}-${index}`;
     const style = getSectionStyle(section);
@@ -286,8 +286,8 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
         return <WerkervaringSection key={key} {...sectionProps} style={style as any} />;
       case 'voorwie':
         return <VoorWieSection key={key} {...sectionProps} style={style as any} />;
-      case 'werkwijze':
-        return <WerkwijzeSection key={key} {...sectionProps} style={style as any} />;
+case 'werkwijze':
+  return <WerkwijzeSection key={key} {...sectionProps} style={style as any} variant={section.variant as 1 | 2 | 3} />;
       case 'quote':
         return <QuoteSection key={key} {...sectionProps} style={style as any} />;
       case 'testimonials':
