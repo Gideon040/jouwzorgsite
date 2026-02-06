@@ -96,12 +96,21 @@ export interface DienstenContent {
 }
 
 // Voor wie sectie
-export type DoelgroepType = 'instellingen' | 'bemiddelaars' | 'pgb' | 'particulieren' | 'thuiszorg' | 'ziekenhuizen';
+export type DoelgroepType = 
+  | 'thuiszorg' | 'verpleeghuis' | 'verzorgingshuis' | 'ziekenhuis' | 'kliniek'
+  | 'bemiddelaar' | 'intermediair' | 'instellingen'
+  | 'ggz' | 'gehandicaptenzorg' | 'revalidatie'
+  | 'hospice' | 'palliatief'
+  | 'jeugdzorg' | 'kraamzorg'
+  | 'huisarts' | 'ouderenzorg' | 'wijkverpleging'
+  | 'pgb' | 'particulieren';
 
 export interface Doelgroep {
   type: DoelgroepType;
   titel: string;
   tekst: string;
+  tags?: string[];
+  highlight?: string;
 }
 
 export interface VoorWieContent {

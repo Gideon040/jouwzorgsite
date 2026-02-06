@@ -106,6 +106,22 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'footer', style: 'mindoor' },
   ],
   
+  // Serene - Rustig & Kalm
+  serene: [
+    { type: 'hero', style: 'serene' },
+    { type: 'diensten', style: 'serene' },
+    { type: 'over', style: 'serene' },
+    { type: 'credentials', style: 'serene' },
+    { type: 'werkervaring', style: 'serene' },
+    { type: 'voorwie', style: 'serene' },
+    { type: 'quote', style: 'minimal' },
+    { type: 'werkwijze', style: 'serene' },
+    { type: 'testimonials', style: 'serene' },
+    { type: 'faq', style: 'serene' },
+    { type: 'contact', style: 'serene' },
+    { type: 'footer', style: 'serene' },
+  ],
+  
   // ============================================
   // LEGACY TEMPLATES (backwards compatibility)
   // ============================================
@@ -155,6 +171,9 @@ const GLOBAL_STYLES = `
   .theme-portfolio::-webkit-scrollbar-thumb { background: #1a3a2f; border-radius: 4px; }
   .theme-mindoor::-webkit-scrollbar-track { background: #f5f0e8; }
   .theme-mindoor::-webkit-scrollbar-thumb { background: #5a7c5a; border-radius: 4px; }
+  .theme-serene::-webkit-scrollbar { width: 8px; }
+  .theme-serene::-webkit-scrollbar-track { background: #f8f9fa; }
+  .theme-serene::-webkit-scrollbar-thumb { background: #6b8e9f; border-radius: 4px; }
 `;
 
 // ============================================
@@ -168,8 +187,8 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   // Priority: template_id > siteTheme.template > 'editorial' (default)
   const templateStyle = template_id || (siteTheme as any)?.template || 'editorial';
   
-  // Check if it's one of our 4 main templates
-  const isMainTemplate = ['editorial', 'proactief', 'portfolio', 'mindoor'].includes(templateStyle);
+  // Check if it's one of our 5 main templates (FIX: serene toegevoegd)
+  const isMainTemplate = ['editorial', 'proactief', 'portfolio', 'mindoor', 'serene'].includes(templateStyle);
   
   // Get theme configuration
   const theme = getTheme(isMainTemplate ? templateStyle : 'classic');

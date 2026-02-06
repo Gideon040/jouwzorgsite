@@ -8,19 +8,118 @@ import { SiteContent, GeneratedContent } from '@/types';
 // SECTION STYLE VARIANTS
 // ============================================
 
-export type HeroStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'split' | 'centered' | 'fullwidth' | 'minimal';
+export type HeroStyle = 
+  // Editorial varianten
+  | 'editorial' 
+  | 'editorial-2' 
+  | 'editorial-3'
+  // Proactief varianten
+  | 'proactief' 
+  | 'proactief-2' 
+  | 'proactief-3'
+  // Portfolio varianten
+  | 'portfolio' 
+  | 'portfolio-2' 
+  | 'portfolio-3'
+  // Mindoor varianten
+  | 'mindoor' 
+  | 'mindoor-2' 
+  | 'mindoor-3'
+  // Serene varianten
+  | 'serene' 
+  | 'serene-2' 
+  | 'serene-3'
+  // Legacy (niet template-specifiek)
+  | 'split' 
+  | 'centered' 
+  | 'fullwidth' 
+  | 'minimal';
+
 export type StatsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'grid' | 'inline' | 'cards' | 'minimal';
-export type DienstenStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'cards' | 'numbered' | 'list' | 'grid';
-export type OverStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'split' | 'centered' | 'timeline';
-export type CredentialsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'full' | 'compact' | 'cards' | 'badges';
+export type DienstenStyle = 
+  | 'editorial' 
+  | 'editorial-2' 
+  | 'editorial-3'
+  | 'proactief' 
+  | 'proactief-2' 
+  | 'proactief-3'
+  | 'portfolio' 
+  | 'portfolio-2' 
+  | 'portfolio-3'
+  | 'mindoor' 
+  | 'mindoor-2' 
+  | 'mindoor-3'
+  | 'serene' 
+  | 'serene-2' 
+  | 'serene-3'
+  | 'cards' 
+  | 'numbered' 
+  | 'list' 
+  | 'grid';
+export type OverStyle = 
+  | 'editorial' | 'editorial-2' | 'editorial-3'
+  | 'proactief' | 'proactief-2' | 'proactief-3'
+  | 'portfolio' | 'portfolio-2' | 'portfolio-3'
+  | 'mindoor' | 'mindoor-2' | 'mindoor-3'
+  | 'serene' | 'serene-2' | 'serene-3'
+  | 'split' | 'centered' | 'timeline';
+export type CredentialsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'full' | 'compact' | 'cards' | 'badges';
 export type WerkervaringStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'timeline' | 'cards' | 'compact';
-export type VoorWieStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'cards' | 'grid' | 'list';
-export type QuoteStyle = 'banner' | 'minimal' | 'dark';
-export type WerkwijzeStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'steps' | 'timeline' | 'cards' | 'bento';
-export type TestimonialsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'cards' | 'carousel' | 'single';
-export type FaqStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'accordion' | 'grid' | 'simple';
+export type VoorWieStyle =
+  | 'editorial' | 'editorial-2' | 'editorial-3'
+  | 'proactief' | 'proactief-2' | 'proactief-3'
+  | 'portfolio' | 'portfolio-2' | 'portfolio-3'
+  | 'mindoor' | 'mindoor-2' | 'mindoor-3'
+  | 'serene' | 'serene-2' | 'serene-3'
+  | 'cards' | 'grid' | 'list';
+  export type QuoteStyle = 'banner' | 'minimal' | 'dark';
+export type WerkwijzeStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'steps' | 'timeline' | 'cards' | 'bento';
+export type TestimonialsStyle = 
+  | 'editorial' | 'editorial-2' | 'editorial-3'
+  | 'proactief' | 'proactief-2' | 'proactief-3'
+  | 'portfolio' | 'portfolio-2' | 'portfolio-3'
+  | 'mindoor'   | 'mindoor-2'   | 'mindoor-3'
+  | 'serene'    | 'serene-2'    | 'serene-3'
+  | 'cards' | 'carousel' | 'single';
+export type FaqStyle = 
+  | 'editorial' 
+  | 'editorial-2' 
+  | 'editorial-3'
+  | 'proactief' 
+  | 'proactief-2' 
+  | 'proactief-3'
+  | 'portfolio' 
+  | 'portfolio-2' 
+  | 'portfolio-3'
+  | 'mindoor' 
+  | 'mindoor-2' 
+  | 'mindoor-3'
+  | 'serene' 
+  | 'serene-2' 
+  | 'serene-3'
+  | 'accordion' 
+  | 'grid' 
+  | 'simple';
 export type CtaStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'banner' | 'card' | 'minimal';
-export type ContactStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'split' | 'centered' | 'form-only';
+export type ContactStyle = 
+  | 'editorial' 
+  | 'editorial-2' 
+  | 'editorial-3'
+  | 'proactief' 
+  | 'proactief-2' 
+  | 'proactief-3'
+  | 'portfolio' 
+  | 'portfolio-2' 
+  | 'portfolio-3'
+  | 'mindoor' 
+  | 'mindoor-2' 
+  | 'mindoor-3'
+  | 'serene' 
+  | 'serene-2' 
+  | 'serene-3'
+  | 'split' 
+  | 'centered' 
+  | 'form-only';
 export type FooterStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'simple' | 'detailed' | 'minimal';
 export type HeaderStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'solid' | 'transparent' | 'floating';
 

@@ -1,5 +1,5 @@
 // components/templates/sections/FaqSection.tsx
-// FAQ sectie met clickable accordion
+// FAQ sectie met clickable accordion - 3 varianten per template
 
 'use client';
 
@@ -18,7 +18,6 @@ export function FaqSection({
   generated,
   beroepLabel,
 }: FaqSectionProps) {
-  // Edge function genereert: { titel, intro, items: [{ vraag, antwoord }] }
   const faqContent = generated?.faq;
   const faqs = faqContent?.items || DEFAULT_FAQS;
   const titel = faqContent?.titel || 'Veelgestelde vragen';
@@ -26,35 +25,89 @@ export function FaqSection({
   
   if (!faqs || !faqs.length) return null;
   
+  // Shared props for all variants
+  const sharedProps = { theme, palette, faqs, titel, intro };
+  
   switch (style) {
+    // ============================================
+    // EDITORIAL VARIANTEN
+    // ============================================
     case 'editorial':
-      return <FaqEditorial {...{ theme, palette, faqs }} />;
+      return <FaqEditorial {...sharedProps} />;
+    case 'editorial-2':
+      return <FaqEditorial2 {...sharedProps} />;
+    case 'editorial-3':
+      return <FaqEditorial3 {...sharedProps} />;
+    
+    // ============================================
+    // PROACTIEF VARIANTEN
+    // ============================================
     case 'proactief':
-      return <FaqProactief {...{ theme, palette, faqs }} />;
+      return <FaqProactief {...sharedProps} />;
+    case 'proactief-2':
+      return <FaqProactief2 {...sharedProps} />;
+    case 'proactief-3':
+      return <FaqProactief3 {...sharedProps} />;
+    
+    // ============================================
+    // PORTFOLIO VARIANTEN
+    // ============================================
     case 'portfolio':
-      return <FaqPortfolio {...{ theme, palette, faqs }} />;
+      return <FaqPortfolio {...sharedProps} />;
+    case 'portfolio-2':
+      return <FaqPortfolio2 {...sharedProps} />;
+    case 'portfolio-3':
+      return <FaqPortfolio3 {...sharedProps} />;
+    
+    // ============================================
+    // MINDOOR VARIANTEN
+    // ============================================
     case 'mindoor':
-      return <FaqMindoor {...{ theme, palette, faqs }} />;
+      return <FaqMindoor {...sharedProps} />;
+    case 'mindoor-2':
+      return <FaqMindoor2 {...sharedProps} />;
+    case 'mindoor-3':
+      return <FaqMindoor3 {...sharedProps} />;
+    
+    // ============================================
+    // SERENE VARIANTEN
+    // ============================================
+    case 'serene':
+      return <FaqSerene {...sharedProps} />;
+    case 'serene-2':
+      return <FaqSerene2 {...sharedProps} />;
+    case 'serene-3':
+      return <FaqSerene3 {...sharedProps} />;
+    
+    // ============================================
+    // LEGACY STYLES
+    // ============================================
     case 'accordion':
-      return <FaqAccordion {...{ theme, palette, faqs }} />;
+      return <FaqAccordion {...sharedProps} />;
     case 'grid':
-      return <FaqGrid {...{ theme, palette, faqs }} />;
+      return <FaqGrid {...sharedProps} />;
     case 'simple':
-      return <FaqSimple {...{ theme, palette, faqs }} />;
+      return <FaqSimple {...sharedProps} />;
+    
     default:
-      return <FaqEditorial {...{ theme, palette, faqs }} />;
+      return <FaqEditorial {...sharedProps} />;
   }
 }
 
+// Shared props interface
+interface FaqComponentProps {
+  theme: any;
+  palette: any;
+  faqs: any[];
+  titel: string;
+  intro?: string;
+}
+
 // ============================================
-// EDITORIAL - Stijlvolle accordion in editorial stijl
+// EDITORIAL - Centered Accordion with Cards
 // ============================================
-function FaqEditorial({ theme, palette, faqs }: any) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-  
-  const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+function FaqEditorial({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
   
   return (
     <section 
@@ -68,7 +121,7 @@ function FaqEditorial({ theme, palette, faqs }: any) {
         <div className={`text-center mb-14 ${getRevealClass('up')}`}>
           <span 
             className="text-xs font-semibold uppercase tracking-[0.15em] block mb-3"
-            style={{ fontVariant: 'small-caps', color: palette.primary }}
+            style={{ color: palette.primary }}
           >
             Veelgestelde vragen
           </span>
@@ -85,17 +138,15 @@ function FaqEditorial({ theme, palette, faqs }: any) {
           {faqs.map((faq: any, index: number) => (
             <div 
               key={index}
-              className={`rounded-lg overflow-hidden border transition-all duration-300 ${getRevealClass('up', Math.min(index + 1, 3))}`}
+              className={`rounded-lg overflow-hidden border cursor-pointer transition-all duration-300 ${getRevealClass('up', Math.min(index + 1, 3) * 100)}`}
               style={{ 
                 backgroundColor: theme.colors.surface,
                 borderColor: openIndex === index ? palette.primary : theme.colors.border
               }}
+              onClick={() => setOpenIndex(openIndex === index ? null : index)}
             >
-              {/* Question - Clickable */}
-              <button
-                onClick={() => toggleFaq(index)}
-                className="w-full flex items-center justify-between p-6 text-left transition-colors hover:bg-black/5"
-              >
+              {/* Question */}
+              <div className="flex items-center justify-between p-6">
                 <span 
                   className="font-semibold pr-4"
                   style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
@@ -108,9 +159,9 @@ function FaqEditorial({ theme, palette, faqs }: any) {
                 >
                   expand_more
                 </span>
-              </button>
+              </div>
               
-              {/* Answer - Collapsible */}
+              {/* Answer */}
               <div 
                 className={`overflow-hidden transition-all duration-300 ${
                   openIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
@@ -128,7 +179,7 @@ function FaqEditorial({ theme, palette, faqs }: any) {
         </div>
         
         {/* CTA */}
-        <div className={`text-center mt-12 ${getRevealClass('up', 3)}`}>
+        <div className={`text-center mt-12 ${getRevealClass('up', 300)}`}>
           <p 
             className="text-sm mb-4"
             style={{ color: theme.colors.textMuted }}
@@ -137,7 +188,7 @@ function FaqEditorial({ theme, palette, faqs }: any) {
           </p>
           <a 
             href="#contact"
-            className="inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold uppercase tracking-widest rounded transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold uppercase tracking-widest transition-colors"
             style={{ backgroundColor: palette.primary }}
           >
             Neem contact op
@@ -151,22 +202,229 @@ function FaqEditorial({ theme, palette, faqs }: any) {
 }
 
 // ============================================
-// PROACTIEF - 2-kolom grid, + icon toggle, cards
+// EDITORIAL 2 - Split Layout + Numbered
 // ============================================
-function FaqProactief({ theme, palette, faqs }: any) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+function FaqEditorial2({ theme, palette, faqs, titel, intro }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
   
-  const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
   
   return (
     <section 
       id="faq"
-      className="py-24 px-6 md:px-12"
+      className="px-6 md:px-12 py-20 lg:py-28"
       style={{ backgroundColor: theme.colors.backgroundAlt }}
     >
       <div className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-20">
+          
+          {/* Left: Sticky header */}
+          <div className="lg:col-span-4">
+            <div className={`lg:sticky lg:top-24 ${getRevealClass('up')}`}>
+              <span 
+                className="text-xs font-semibold uppercase tracking-[0.15em] block mb-3"
+                style={{ color: palette.primary }}
+              >
+                FAQ
+              </span>
+              <h2 
+                className="text-3xl md:text-4xl mb-6"
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+              >
+                {restTitle}{' '}
+                <em className="italic">{lastWord}</em>
+              </h2>
+              <p 
+                className="text-sm mb-8"
+                style={{ color: theme.colors.textMuted }}
+              >
+                {intro || 'Hier vindt u antwoorden op de meest gestelde vragen over mijn zorgdiensten.'}
+              </p>
+              <a 
+                href="#contact"
+                className="inline-flex items-center gap-2 text-sm font-medium"
+                style={{ color: theme.colors.text }}
+              >
+                Andere vraag? Neem contact op <span>→</span>
+              </a>
+            </div>
+          </div>
+          
+          {/* Right: FAQ list */}
+          <div className="lg:col-span-8">
+            <div className="space-y-0">
+              {faqs.map((faq: any, index: number) => (
+                <div 
+                  key={index}
+                  className={`border-b cursor-pointer py-8 ${getRevealClass('up', (index + 1) * 50)}`}
+                  style={{ borderColor: theme.colors.border }}
+                  onClick={() => setOpenIndex(openIndex === index ? null : index)}
+                >
+                  <div className="flex gap-6">
+                    <span 
+                      className="text-4xl font-light opacity-20"
+                      style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                    >
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 
+                          className="text-lg font-medium pr-4"
+                          style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                        >
+                          {faq.vraag}
+                        </h3>
+                        <span 
+                          className={`material-symbols-outlined flex-shrink-0 transition-transform duration-300 ${openIndex === index ? 'rotate-180' : ''}`}
+                          style={{ color: theme.colors.text }}
+                        >
+                          expand_more
+                        </span>
+                      </div>
+                      <div 
+                        className={`overflow-hidden transition-all duration-300 ${
+                          openIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                        }`}
+                      >
+                        <p 
+                          className="text-sm leading-relaxed mt-4"
+                          style={{ color: theme.colors.textMuted }}
+                        >
+                          {faq.antwoord}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// EDITORIAL 3 - Full Width Minimal
+// ============================================
+function FaqEditorial3({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
+  
+  return (
+    <section 
+      id="faq"
+      className="px-6 md:px-12 py-20 lg:py-28"
+      style={{ backgroundColor: theme.colors.surface }}
+    >
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <div className={`text-center mb-16 ${getRevealClass('up')}`}>
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <div className="w-12 h-px" style={{ backgroundColor: theme.colors.text }} />
+            <span 
+              className="text-xs font-semibold uppercase tracking-[0.2em]"
+              style={{ color: theme.colors.text }}
+            >
+              FAQ
+            </span>
+            <div className="w-12 h-px" style={{ backgroundColor: theme.colors.text }} />
+          </div>
+          <h2 
+            className="text-3xl md:text-4xl"
+            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+          >
+            {restTitle}{' '}
+            <em className="italic">{lastWord}</em>
+          </h2>
+        </div>
+        
+        {/* FAQ - Full width rows */}
+        <div>
+          {faqs.map((faq: any, index: number) => (
+            <div 
+              key={index}
+              className={`border-t cursor-pointer ${index === faqs.length - 1 ? 'border-b' : ''} ${getRevealClass('up', (index + 1) * 50)}`}
+              style={{ borderColor: theme.colors.border }}
+              onClick={() => setOpenIndex(openIndex === index ? null : index)}
+            >
+              <div className="py-6 flex items-center justify-between">
+                <h3 
+                  className="text-lg md:text-xl pr-4"
+                  style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                >
+                  {faq.vraag}
+                </h3>
+                <span 
+                  className={`material-symbols-outlined flex-shrink-0 transition-transform duration-300 text-xl ${openIndex === index ? 'rotate-180' : ''}`}
+                  style={{ color: theme.colors.text }}
+                >
+                  expand_more
+                </span>
+              </div>
+              <div 
+                className={`overflow-hidden transition-all duration-300 ${
+                  openIndex === index ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <p 
+                  className="pb-6 text-sm leading-relaxed max-w-2xl"
+                  style={{ color: theme.colors.textMuted }}
+                >
+                  {faq.antwoord}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* Bottom CTA */}
+        <div className={`text-center mt-12 ${getRevealClass('up', 300)}`}>
+          <a 
+            href="#contact"
+            className="inline-flex items-center gap-2 text-sm"
+            style={{ color: theme.colors.text }}
+          >
+            Staat uw vraag er niet bij?{' '}
+            <span className="underline">Neem contact op</span> →
+          </a>
+        </div>
+        
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// PROACTIEF 1 - FAQ Cards + Sticky CTA Card
+// ============================================
+function FaqProactief({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  return (
+    <section 
+      id="faq"
+      className="py-24 px-6 md:px-12 relative overflow-hidden"
+      style={{ backgroundColor: theme.colors.backgroundAlt }}
+    >
+      {/* Decorative circle */}
+      <div 
+        className="absolute -top-12 -right-24 w-72 h-72 rounded-full opacity-[0.03]"
+        style={{ backgroundColor: palette.primary }}
+      />
+      
+      <div className="max-w-6xl mx-auto relative">
         {/* Header */}
         <div className={`text-center max-w-xl mx-auto mb-16 ${getRevealClass('up')}`}>
           <span 
@@ -179,56 +437,97 @@ function FaqProactief({ theme, palette, faqs }: any) {
             className="text-4xl font-bold"
             style={{ fontFamily: theme.fonts.heading, color: palette.primaryDark || palette.primary }}
           >
-            Heeft u vragen?
+            {titel}
           </h2>
         </div>
         
-        {/* 2-column Grid */}
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          {faqs.map((faq: any, idx: number) => (
-            <div 
-              key={idx}
-              className={`bg-white rounded-2xl p-7 shadow-[0_5px_20px_rgba(0,0,0,0.03)] cursor-pointer transition-shadow hover:shadow-[0_10px_30px_rgba(0,153,204,0.08)] ${getRevealClass('up', idx * 100)}`}
-              onClick={() => toggleFaq(idx)}
-            >
-              {/* Question */}
-              <div className="flex justify-between items-center gap-4">
-                <h4 
-                  className="font-semibold"
-                  style={{ color: theme.colors.text }}
-                >
-                  {faq.vraag}
-                </h4>
+        <div className="grid lg:grid-cols-12 gap-8">
+          
+          {/* FAQ Cards - stacked */}
+          <div className="lg:col-span-7 space-y-4">
+            {faqs.map((faq: any, idx: number) => (
+              <div 
+                key={idx}
+                className={`bg-white p-7 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] cursor-pointer relative overflow-hidden group hover:shadow-[0_20px_50px_rgba(37,99,235,0.12)] transition-all ${getRevealClass('up', idx * 50)}`}
+                onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+              >
+                {/* Top border on hover */}
                 <div 
-                  className="w-8 h-8 min-w-[32px] rounded-full flex items-center justify-center transition-colors"
-                  style={{ backgroundColor: palette.primaryLight || `${palette.primary}15` }}
-                >
-                  <svg 
-                    className={`w-4 h-4 transition-transform ${openIndex === idx ? 'rotate-45' : ''}`}
-                    viewBox="0 0 24 24"
-                    fill={palette.primary}
+                  className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ background: `linear-gradient(90deg, ${palette.primary}, ${palette.primaryLight || palette.primary})` }}
+                />
+                
+                <div className="flex justify-between items-center gap-4">
+                  <h4 
+                    className="font-semibold"
+                    style={{ color: theme.colors.text }}
                   >
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                  </svg>
+                    {faq.vraag}
+                  </h4>
+                  <div 
+                    className="w-8 h-8 min-w-[32px] rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: palette.primaryLight || `${palette.primary}15` }}
+                  >
+                    <svg 
+                      className={`w-4 h-4 transition-transform duration-300 ${openIndex === idx ? 'rotate-45' : ''}`}
+                      viewBox="0 0 24 24"
+                      fill={palette.primary}
+                    >
+                      <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    </svg>
+                  </div>
+                </div>
+                
+                <div 
+                  className={`overflow-hidden transition-all duration-300 ${
+                    openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <div 
+                    className="mt-4 pt-4 border-t"
+                    style={{ borderColor: theme.colors.border }}
+                  >
+                    <p 
+                      className="text-sm leading-relaxed"
+                      style={{ color: theme.colors.textMuted }}
+                    >
+                      {faq.antwoord}
+                    </p>
+                  </div>
                 </div>
               </div>
-              
-              {/* Answer */}
+            ))}
+          </div>
+          
+          {/* Sticky CTA Card */}
+          <div className="lg:col-span-5">
+            <div className={`lg:sticky lg:top-24 ${getRevealClass('left', 200)}`}>
               <div 
-                className={`overflow-hidden transition-all duration-300 ${
-                  openIndex === idx ? 'max-h-48 mt-4 pt-4 border-t' : 'max-h-0'
-                }`}
-                style={{ borderColor: theme.colors.border }}
+                className="rounded-[20px] p-8 lg:p-10"
+                style={{ background: `linear-gradient(135deg, ${palette.primary} 0%, ${palette.primaryDark || palette.primary} 100%)` }}
               >
-                <p 
-                  className="text-sm leading-relaxed"
-                  style={{ color: theme.colors.textMuted }}
+                <span className="material-symbols-outlined text-4xl text-white/80 mb-6 block">contact_support</span>
+                <h3 
+                  className="text-2xl font-bold text-white mb-4"
+                  style={{ fontFamily: theme.fonts.heading }}
                 >
-                  {faq.antwoord}
+                  Staat uw vraag er niet bij?
+                </h3>
+                <p className="text-white/80 mb-8">
+                  Neem gerust contact op. Ik help u graag verder met al uw vragen over thuiszorg.
                 </p>
+                <a 
+                  href="#contact"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-sm font-semibold rounded-lg transition-transform hover:scale-105"
+                  style={{ color: palette.primary }}
+                >
+                  Neem contact op
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </a>
               </div>
             </div>
-          ))}
+          </div>
+          
         </div>
       </div>
     </section>
@@ -236,20 +535,252 @@ function FaqProactief({ theme, palette, faqs }: any) {
 }
 
 // ============================================
-// PORTFOLIO - 2-kolom grid, cream cards, + toggle
+// PROACTIEF 2 - Split met Border-Left Accent
 // ============================================
-function FaqPortfolio({ theme, palette, faqs }: any) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+function FaqProactief2({ theme, palette, faqs, titel, intro }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
   
-  const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  return (
+    <section 
+      id="faq"
+      className="py-24 px-6 md:px-12"
+      style={{ backgroundColor: theme.colors.surface }}
+    >
+      <div className="max-w-6xl mx-auto">
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
+          
+          {/* Left: Header */}
+          <div className="lg:col-span-5">
+            <div className="lg:sticky lg:top-24">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
+                <span 
+                  className="text-xs font-semibold uppercase tracking-[0.15em]"
+                  style={{ color: palette.primary }}
+                >
+                  FAQ
+                </span>
+              </div>
+              <h2 
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-6"
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+              >
+                {titel}
+              </h2>
+              <p 
+                className="text-base leading-relaxed mb-8"
+                style={{ color: theme.colors.textMuted }}
+              >
+                {intro || 'Hier vindt u antwoorden op de meest gestelde vragen over mijn zorgdiensten.'}
+              </p>
+              <a 
+                href="#contact"
+                className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-colors"
+                style={{ backgroundColor: palette.primary }}
+              >
+                Andere vraag?
+                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+          
+          {/* Right: FAQ list with border-left */}
+          <div className="lg:col-span-7">
+            <div className="space-y-0">
+              {faqs.map((faq: any, idx: number) => (
+                <div 
+                  key={idx}
+                  className={`group border-l-4 cursor-pointer transition-all ${getRevealClass('up', idx * 50)}`}
+                  style={{ 
+                    borderColor: openIndex === idx ? palette.primary : 'transparent',
+                    backgroundColor: openIndex === idx ? (palette.primaryLight || `${palette.primary}10`) : theme.colors.backgroundAlt
+                  }}
+                  onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                >
+                  <div className="p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <h4 
+                        className="font-semibold"
+                        style={{ color: theme.colors.text }}
+                      >
+                        {faq.vraag}
+                      </h4>
+                      <span 
+                        className={`material-symbols-outlined transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`}
+                        style={{ color: palette.primary }}
+                      >
+                        expand_more
+                      </span>
+                    </div>
+                    <div 
+                      className={`overflow-hidden transition-all duration-300 ${
+                        openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <p 
+                        className="mt-4 text-sm leading-relaxed"
+                        style={{ color: theme.colors.textMuted }}
+                      >
+                        {faq.antwoord}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// PROACTIEF 3 - Grid met Nummers + Hover Kleur
+// ============================================
+function FaqProactief3({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  return (
+    <section 
+      id="faq"
+      className="py-24 px-6 md:px-12"
+      style={{ backgroundColor: theme.colors.backgroundAlt }}
+    >
+      <div className="max-w-5xl mx-auto">
+        
+        {/* Header */}
+        <div className={`text-center mb-16 ${getRevealClass('up')}`}>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
+            <span 
+              className="text-xs font-semibold uppercase tracking-[0.15em]"
+              style={{ color: palette.primary }}
+            >
+              FAQ
+            </span>
+            <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
+          </div>
+          <h2 
+            className="text-3xl sm:text-4xl font-bold"
+            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+          >
+            {titel}
+          </h2>
+        </div>
+        
+        {/* Grid */}
+        <div 
+          className="grid md:grid-cols-2 gap-px"
+          style={{ backgroundColor: theme.colors.border }}
+        >
+          {faqs.map((faq: any, idx: number) => (
+            <div 
+              key={idx}
+              className={`group p-8 cursor-pointer transition-colors duration-300 ${getRevealClass('up', idx * 50)}`}
+              style={{ backgroundColor: theme.colors.surface }}
+              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = palette.primary;
+                e.currentTarget.querySelectorAll('.faq-number').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.3)');
+                e.currentTarget.querySelectorAll('.faq-title').forEach(el => (el as HTMLElement).style.color = 'white');
+                e.currentTarget.querySelectorAll('.faq-icon').forEach(el => (el as HTMLElement).style.color = 'white');
+                e.currentTarget.querySelectorAll('.faq-text').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.8)');
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = theme.colors.surface;
+                e.currentTarget.querySelectorAll('.faq-number').forEach(el => (el as HTMLElement).style.color = palette.primary);
+                e.currentTarget.querySelectorAll('.faq-title').forEach(el => (el as HTMLElement).style.color = theme.colors.text);
+                e.currentTarget.querySelectorAll('.faq-icon').forEach(el => (el as HTMLElement).style.color = palette.primary);
+                e.currentTarget.querySelectorAll('.faq-text').forEach(el => (el as HTMLElement).style.color = theme.colors.textMuted);
+              }}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <span 
+                  className="faq-number text-4xl font-bold transition-colors"
+                  style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
+                >
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <span 
+                  className={`faq-icon material-symbols-outlined transition-all duration-300 ${openIndex === idx ? 'rotate-180' : ''}`}
+                  style={{ color: palette.primary }}
+                >
+                  expand_more
+                </span>
+              </div>
+              <h4 
+                className="faq-title font-bold mb-2 transition-colors"
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+              >
+                {faq.vraag}
+              </h4>
+              <div 
+                className={`overflow-hidden transition-all duration-300 ${
+                  openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <p 
+                  className="faq-text text-sm transition-colors"
+                  style={{ color: theme.colors.textMuted }}
+                >
+                  {faq.antwoord}
+                </p>
+              </div>
+            </div>
+          ))}
+          
+          {/* CTA cell */}
+          <a 
+            href="#contact"
+            className={`group relative p-8 overflow-hidden flex flex-col justify-center ${getRevealClass('up', faqs.length * 50)}`}
+          >
+            <img 
+              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div 
+              className="absolute inset-0 transition-colors"
+              style={{ backgroundColor: `${palette.primary}dd` }}
+            />
+            <div className="relative z-10">
+              <h4 
+                className="font-bold mb-2 text-white"
+                style={{ fontFamily: theme.fonts.heading }}
+              >
+                Andere vraag?
+              </h4>
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-white">
+                Neem contact op
+                <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </span>
+            </div>
+          </a>
+        </div>
+        
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// PORTFOLIO 1 - 2-kolom Grid, Cream Cards
+// ============================================
+function FaqPortfolio({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
   
   return (
     <section 
       id="faq"
       className="py-28 px-8 md:px-12"
-      style={{ backgroundColor: 'white' }}
+      style={{ backgroundColor: theme.colors.surface }}
     >
       <div className="max-w-[1200px] mx-auto">
         {/* Header */}
@@ -264,7 +795,8 @@ function FaqPortfolio({ theme, palette, faqs }: any) {
             className="text-[42px] font-semibold leading-[1.2]"
             style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
           >
-            Praktische <em className="italic" style={{ color: palette.accent || palette.primary }}>informatie</em>
+            {restTitle}{' '}
+            <em className="italic" style={{ color: palette.accent || palette.primary }}>{lastWord}</em>
           </h2>
         </div>
         
@@ -273,9 +805,9 @@ function FaqPortfolio({ theme, palette, faqs }: any) {
           {faqs.map((faq: any, idx: number) => (
             <div 
               key={idx}
-              className={`p-8 rounded-[20px] cursor-pointer transition-all hover:shadow-[0_15px_40px_rgba(26,58,47,0.08)] ${getRevealClass('up', idx * 100)}`}
+              className={`p-8 rounded-[20px] cursor-pointer transition-all hover:shadow-[0_15px_40px_rgba(26,58,47,0.08)] ${getRevealClass('up', idx * 50)}`}
               style={{ backgroundColor: theme.colors.backgroundAlt }}
-              onClick={() => toggleFaq(idx)}
+              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
             >
               {/* Question */}
               <div className="flex justify-between items-center gap-4">
@@ -286,13 +818,13 @@ function FaqPortfolio({ theme, palette, faqs }: any) {
                   {faq.vraag}
                 </h4>
                 <div 
-                  className="w-9 h-9 min-w-[36px] rounded-full flex items-center justify-center bg-white transition-colors"
+                  className="w-9 h-9 min-w-[36px] rounded-full flex items-center justify-center transition-colors"
                   style={{ 
-                    backgroundColor: openIndex === idx ? (palette.accent || palette.primary) : 'white'
+                    backgroundColor: openIndex === idx ? (palette.accent || palette.primary) : theme.colors.surface
                   }}
                 >
                   <svg 
-                    className={`w-3.5 h-3.5 transition-all ${openIndex === idx ? 'rotate-45' : ''}`}
+                    className={`w-3.5 h-3.5 transition-all duration-300 ${openIndex === idx ? 'rotate-45' : ''}`}
                     viewBox="0 0 24 24"
                     fill={openIndex === idx ? 'white' : palette.primary}
                   >
@@ -302,7 +834,11 @@ function FaqPortfolio({ theme, palette, faqs }: any) {
               </div>
               
               {/* Answer */}
-              {openIndex === idx && (
+              <div 
+                className={`overflow-hidden transition-all duration-300 ${
+                  openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
                 <div className="mt-5 pt-5 border-t border-black/10">
                   <p 
                     className="text-[15px] leading-[1.7]"
@@ -311,7 +847,7 @@ function FaqPortfolio({ theme, palette, faqs }: any) {
                     {faq.antwoord}
                   </p>
                 </div>
-              )}
+              </div>
             </div>
           ))}
         </div>
@@ -321,74 +857,430 @@ function FaqPortfolio({ theme, palette, faqs }: any) {
 }
 
 // ============================================
+// PORTFOLIO 2 - Split met Signature Corner Image
+// ============================================
+function FaqPortfolio2({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
+  
+  return (
+    <section 
+      id="faq"
+      className="py-28 px-8 md:px-12"
+      style={{ backgroundColor: theme.colors.backgroundAlt }}
+    >
+      <div className="max-w-[1200px] mx-auto">
+        <div className="grid lg:grid-cols-2 gap-16 items-start">
+          
+          {/* Left: Image with signature corner */}
+          <div className={`relative ${getRevealClass('right', 100)}`}>
+            <img 
+              src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80"
+              alt="Zorgverlener"
+              className="w-full aspect-[4/5] object-cover"
+              style={{ borderRadius: '0 80px 0 0' }}
+            />
+            {/* Accent corner */}
+            <div 
+              className="absolute -bottom-6 -right-6 w-32 h-32"
+              style={{ backgroundColor: palette.accent || palette.primary, borderRadius: '0 40px 0 0' }}
+            />
+          </div>
+          
+          {/* Right: FAQ */}
+          <div>
+            <span 
+              className={`text-[13px] font-semibold uppercase tracking-[2px] mb-4 block ${getRevealClass('up')}`}
+              style={{ color: palette.accent || palette.primary }}
+            >
+              FAQ
+            </span>
+            <h2 
+              className={`text-[38px] font-semibold leading-[1.2] mb-10 ${getRevealClass('up', 50)}`}
+              style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
+            >
+              {restTitle}{' '}
+              <em className="italic">{lastWord}</em>
+            </h2>
+            
+            <div className="space-y-0">
+              {faqs.map((faq: any, idx: number) => (
+                <div 
+                  key={idx}
+                  className={`border-b cursor-pointer py-6 ${getRevealClass('up', (idx + 2) * 50)}`}
+                  style={{ borderColor: `${palette.primary}25` }}
+                  onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <h4 
+                      className="text-[17px] font-medium"
+                      style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
+                    >
+                      {faq.vraag}
+                    </h4>
+                    <span 
+                      className={`material-symbols-outlined transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`}
+                      style={{ color: palette.accent || palette.primary }}
+                    >
+                      expand_more
+                    </span>
+                  </div>
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <p 
+                      className="mt-4 text-[15px] leading-[1.7]"
+                      style={{ color: theme.colors.textMuted }}
+                    >
+                      {faq.antwoord}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* CTA */}
+            <div className={`mt-10 ${getRevealClass('up', 300)}`}>
+              <a 
+                href="#contact"
+                className="inline-flex items-center gap-3 text-[13px] font-semibold uppercase tracking-[2px] transition-all hover:gap-4"
+                style={{ color: palette.primary }}
+              >
+                Andere vraag? Neem contact op
+                <span className="material-symbols-outlined">arrow_forward</span>
+              </a>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// PORTFOLIO 3 - Full Width Dark + Nummers
+// ============================================
+function FaqPortfolio3({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
+  
+  return (
+    <section 
+      id="faq"
+      className="py-28 px-8 md:px-12"
+      style={{ backgroundColor: palette.primary }}
+    >
+      <div className="max-w-[900px] mx-auto">
+        
+        {/* Header */}
+        <div className={`text-center mb-16 ${getRevealClass('up')}`}>
+          <span 
+            className="text-[13px] font-semibold uppercase tracking-[2px] mb-4 block"
+            style={{ color: palette.accent || '#c9a87c' }}
+          >
+            FAQ
+          </span>
+          <h2 
+            className="text-[42px] font-semibold leading-[1.2] text-white"
+            style={{ fontFamily: theme.fonts.heading }}
+          >
+            {restTitle}{' '}
+            <em className="italic" style={{ color: palette.accent || '#c9a87c' }}>{lastWord}</em>
+          </h2>
+        </div>
+        
+        {/* FAQ items */}
+        <div className="space-y-0">
+          {faqs.map((faq: any, idx: number) => (
+            <div 
+              key={idx}
+              className={`border-t cursor-pointer py-8 group ${idx === faqs.length - 1 ? 'border-b' : ''} ${getRevealClass('up', (idx + 1) * 50)}`}
+              style={{ borderColor: 'rgba(255,255,255,0.15)' }}
+              onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+            >
+              <div className="flex items-start gap-8">
+                <span 
+                  className="text-[48px] font-light leading-none"
+                  style={{ fontFamily: theme.fonts.heading, color: `${palette.accent || '#c9a87c'}66` }}
+                >
+                  {String(idx + 1).padStart(2, '0')}
+                </span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-4">
+                    <h4 
+                      className="text-[20px] font-medium text-white group-hover:opacity-80 transition-colors"
+                      style={{ fontFamily: theme.fonts.heading }}
+                    >
+                      {faq.vraag}
+                    </h4>
+                    <span 
+                      className={`material-symbols-outlined transition-transform duration-300 text-white/50 ${openIndex === idx ? 'rotate-180' : ''}`}
+                    >
+                      expand_more
+                    </span>
+                  </div>
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <p 
+                      className="mt-4 text-[15px] leading-[1.8] text-white/70"
+                    >
+                      {faq.antwoord}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* CTA */}
+        <div className={`text-center mt-12 ${getRevealClass('up', 300)}`}>
+          <a 
+            href="#contact"
+            className="inline-flex items-center gap-3 px-8 py-4 text-[13px] font-semibold uppercase tracking-[2px] transition-all hover:gap-4"
+            style={{ backgroundColor: palette.accent || '#c9a87c', color: palette.primary }}
+          >
+            Andere vraag? Neem contact op
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </a>
+        </div>
+        
+      </div>
+    </section>
+  );
+}
+
+// ============================================
 // MINDOOR - 2-col met image, white cards accordion
 // ============================================
-function FaqMindoor({ theme, palette, faqs }: any) {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+// ============================================
+// MINDOOR 1 - Split met Image + Hover
+// ============================================
+function FaqMindoor({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   
-  const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
   
   return (
     <section 
       id="faq"
       className="py-20 lg:py-32"
-      style={{ backgroundColor: theme.colors.backgroundAlt }}
+      style={{ backgroundColor: theme.colors.background }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className={`text-center mb-16 ${getRevealClass('up')}`}>
+          <span 
+            className="text-sm font-medium mb-3 block"
+            style={{ color: palette.primary }}
+          >
+            Voor instellingen & bemiddelaars
+          </span>
           <h2 
             className="text-3xl sm:text-4xl lg:text-5xl"
-            style={{ fontFamily: theme.fonts.heading }}
+            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
           >
-            Veelgestelde Vragen
+            {restTitle}{' '}
+            <em className="italic" style={{ color: palette.primary }}>{lastWord}</em>
           </h2>
-          <p className="mt-4 max-w-2xl mx-auto" style={{ color: theme.colors.textMuted }}>
-            Thuiszorg kan veel vragen oproepen. Hier vindt u antwoorden op de meest gestelde vragen.
-          </p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* FAQ Items */}
           <div className="space-y-4">
-            {faqs.map((faq: any, idx: number) => (
-              <div 
-                key={idx}
-                className={`bg-white rounded-2xl p-6 cursor-pointer transition-shadow hover:shadow-lg ${getRevealClass('up', (idx + 1) * 100)}`}
-                onClick={() => toggleFaq(idx)}
-              >
-                <div className="flex justify-between items-center">
-                  <h3 className="font-semibold pr-4" style={{ color: theme.colors.text }}>
-                    {faq.vraag}
-                  </h3>
-                  <span 
-                    className={`material-symbols-outlined transition-transform ${openIndex === idx ? 'rotate-180' : ''}`}
-                    style={{ color: theme.colors.textMuted }}
+            {faqs.map((faq: any, idx: number) => {
+              const isHovered = hoveredIndex === idx;
+              const isAccentHover = idx === 2; // Third item gets accent color
+              const hoverBg = isAccentHover ? (palette.accent || palette.primary) : palette.primary;
+              
+              return (
+                <div 
+                  key={idx}
+                  className={`rounded-2xl p-6 cursor-pointer transition-all duration-300 ${getRevealClass('up', (idx + 1) * 100)}`}
+                  style={{ 
+                    backgroundColor: isHovered ? hoverBg : 'white'
+                  }}
+                  onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                  onMouseEnter={() => setHoveredIndex(idx)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  <div className="flex justify-between items-center">
+                    <h3 
+                      className="font-semibold pr-4 transition-colors"
+                      style={{ color: isHovered ? 'white' : theme.colors.text }}
+                    >
+                      {faq.vraag}
+                    </h3>
+                    <span 
+                      className={`material-symbols-outlined transition-all duration-300 ${openIndex === idx ? 'rotate-180' : ''}`}
+                      style={{ color: isHovered ? 'white' : theme.colors.textMuted }}
+                    >
+                      expand_more
+                    </span>
+                  </div>
+                  
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openIndex === idx ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
                   >
-                    expand_more
-                  </span>
-                </div>
-                
-                {openIndex === idx && (
-                  <div className="mt-4 pt-4 border-t" style={{ borderColor: theme.colors.border }}>
-                    <p style={{ color: theme.colors.textMuted }}>
+                    <p 
+                      className="mt-4 text-sm transition-colors"
+                      style={{ color: isHovered ? 'rgba(255,255,255,0.8)' : theme.colors.textMuted }}
+                    >
                       {faq.antwoord}
                     </p>
                   </div>
-                )}
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
           
           {/* Image */}
-          <div className={`hidden lg:block overflow-hidden rounded-3xl shadow-xl ${getRevealClass('left', 200)}`}>
+          <div className={`hidden lg:block overflow-hidden rounded-[32px] ${getRevealClass('left', 200)}`}>
             <img 
               src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80"
-              alt="Zorgprofessional in gesprek"
+              alt="Zorgprofessional"
               className="w-full aspect-[4/3] object-cover transition-transform duration-500 hover:scale-105"
             />
+          </div>
+        </div>
+        
+        {/* CTA */}
+        <div className={`text-center mt-12 ${getRevealClass('up', 400)}`}>
+          <a 
+            href="#contact"
+            className="inline-flex items-center gap-2 text-sm font-medium hover:gap-3 transition-all"
+            style={{ color: palette.primary }}
+          >
+            Interesse in samenwerking? Neem contact op <span>→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// MINDOOR 2 - Two Column Select Style
+// ============================================
+function FaqMindoor2({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
+  
+  // Icons for each FAQ (B2B focused)
+  const faqIcons = ['verified', 'receipt_long', 'event_available', 'workspace_premium', 'bolt'];
+  const faqCtas = ['Direct samenwerken?', 'Tarieven bespreken?', 'Beschikbaarheid checken?', 'CV opvragen?', 'Direct inplannen?'];
+  
+  return (
+    <section 
+      id="faq"
+      className="py-20 lg:py-28"
+      style={{ backgroundColor: theme.colors.background }}
+    >
+      <div className="max-w-6xl mx-auto px-6 md:px-12">
+        {/* Header */}
+        <div className={`text-center mb-16 ${getRevealClass('up')}`}>
+          <span 
+            className="text-sm font-medium mb-3 block"
+            style={{ color: palette.primary }}
+          >
+            Voor instellingen & bemiddelaars
+          </span>
+          <h2 
+            className="text-3xl sm:text-4xl lg:text-5xl"
+            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+          >
+            Waarom met mij{' '}
+            <em className="italic" style={{ color: palette.primary }}>samenwerken?</em>
+          </h2>
+        </div>
+        
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+          {/* Left: Question buttons */}
+          <div className="space-y-3">
+            {faqs.map((faq: any, idx: number) => (
+              <button
+                key={idx}
+                className={`w-full text-left p-5 rounded-2xl transition-all flex items-center justify-between gap-4 ${getRevealClass('up', (idx + 1) * 50)}`}
+                style={{ 
+                  backgroundColor: selectedIndex === idx ? palette.primary : 'white',
+                  color: selectedIndex === idx ? 'white' : theme.colors.text
+                }}
+                onClick={() => setSelectedIndex(idx)}
+              >
+                <span className="font-medium">{faq.vraag}</span>
+                <span 
+                  className="material-symbols-outlined text-xl"
+                  style={{ opacity: 0.7 }}
+                >
+                  arrow_forward
+                </span>
+              </button>
+            ))}
+          </div>
+          
+          {/* Right: Answer panel */}
+          <div className="relative">
+            <div className="lg:sticky lg:top-24">
+              <div 
+                className={`rounded-[28px] p-8 lg:p-10 ${getRevealClass('left', 100)}`}
+                style={{ backgroundColor: 'white' }}
+              >
+                <div 
+                  className="w-14 h-14 rounded-full flex items-center justify-center mb-6"
+                  style={{ backgroundColor: palette.primaryLight || '#d1fae5' }}
+                >
+                  <span 
+                    className="material-symbols-outlined text-2xl"
+                    style={{ color: palette.primary }}
+                  >
+                    {faqIcons[selectedIndex] || 'help'}
+                  </span>
+                </div>
+                <h3 
+                  className="text-2xl font-semibold mb-4"
+                  style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                >
+                  {faqs[selectedIndex]?.vraag}
+                </h3>
+                <p 
+                  className="text-lg leading-relaxed mb-6"
+                  style={{ color: theme.colors.textMuted }}
+                >
+                  {faqs[selectedIndex]?.antwoord}
+                </p>
+                <a 
+                  href="#contact"
+                  className="inline-flex items-center gap-2 text-sm font-medium hover:gap-3 transition-all"
+                  style={{ color: palette.primary }}
+                >
+                  {faqCtas[selectedIndex] || 'Neem contact op'} <span>→</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -397,9 +1289,646 @@ function FaqMindoor({ theme, palette, faqs }: any) {
 }
 
 // ============================================
-// ACCORDION - Klassieke accordion
+// MINDOOR 3 - Full Width Accordion + Sticky CTA
 // ============================================
-function FaqAccordion({ theme, palette, faqs }: any) {
+function FaqMindoor3({ theme, palette, faqs, titel }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  // Split title for italic accent
+  const titleParts = titel.split(' ');
+  const lastWord = titleParts.pop() || '';
+  const restTitle = titleParts.join(' ');
+  
+  return (
+    <section 
+      id="faq"
+      className="py-20 lg:py-28"
+      style={{ backgroundColor: theme.colors.backgroundAlt }}
+    >
+      <div className="max-w-6xl mx-auto px-6 md:px-12">
+        <div className="grid lg:grid-cols-12 gap-12">
+          
+          {/* FAQ Items */}
+          <div className="lg:col-span-8">
+            {/* Header */}
+            <div className={`mb-10 ${getRevealClass('up')}`}>
+              <span 
+                className="text-sm font-medium mb-3 block"
+                style={{ color: palette.primary }}
+              >
+                Voor instellingen & bemiddelaars
+              </span>
+              <h2 
+                className="text-3xl sm:text-4xl"
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+              >
+                Vragen over{' '}
+                <em className="italic" style={{ color: palette.primary }}>samenwerken?</em>
+              </h2>
+            </div>
+            
+            {/* Accordion */}
+            <div className="space-y-0">
+              {faqs.map((faq: any, idx: number) => (
+                <div 
+                  key={idx}
+                  className={`border-b py-6 cursor-pointer ${getRevealClass('up', (idx + 1) * 50)}`}
+                  style={{ borderColor: `${palette.primary}33` }}
+                  onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                >
+                  <div className="flex justify-between items-center gap-4">
+                    <h4 
+                      className="text-lg font-medium"
+                      style={{ color: theme.colors.text }}
+                    >
+                      {faq.vraag}
+                    </h4>
+                    <span 
+                      className={`material-symbols-outlined transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`}
+                      style={{ color: palette.primary }}
+                    >
+                      expand_more
+                    </span>
+                  </div>
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openIndex === idx ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <p 
+                      className="mt-4 leading-relaxed"
+                      style={{ color: theme.colors.textMuted }}
+                    >
+                      {faq.antwoord}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Sticky CTA */}
+          <div className="lg:col-span-4">
+            <div className="lg:sticky lg:top-24">
+              <div 
+                className={`rounded-[28px] p-8 text-center ${getRevealClass('left', 100)}`}
+                style={{ backgroundColor: palette.primary }}
+              >
+                <span className="material-symbols-outlined text-4xl text-white/70 mb-4 block">
+                  handshake
+                </span>
+                <h3 
+                  className="text-xl font-medium text-white mb-3"
+                  style={{ fontFamily: theme.fonts.heading }}
+                >
+                  Klaar om samen te werken?
+                </h3>
+                <p className="text-white/70 text-sm mb-6">
+                  Neem contact op voor een vrijblijvende kennismaking.
+                </p>
+                <a 
+                  href="#contact"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-sm font-medium rounded-full transition-transform hover:scale-105"
+                  style={{ color: palette.primary }}
+                >
+                  Contact opnemen
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </a>
+              </div>
+              
+              {/* Small image */}
+              <div className="mt-5 rounded-[24px] overflow-hidden hidden lg:block">
+                <img 
+                  src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80"
+                  alt="Zorg sfeer"
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// SERENE 1 - FAQ + Sticky DBA Statement Rechts
+// ============================================
+function FaqSerene({ theme, palette, faqs, titel, intro }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  return (
+    <section 
+      id="faq"
+      className="px-6 md:px-12 py-24 lg:py-32"
+      style={{ backgroundColor: theme.colors.surface, fontFamily: theme.fonts.body }}
+    >
+      <div className="max-w-6xl mx-auto">
+        
+        {/* Header */}
+        <div className={`mb-16 ${getRevealClass('up')}`}>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-12 h-px" style={{ backgroundColor: palette.primary }} />
+            <p 
+              className="text-[9px] uppercase tracking-[3px]"
+              style={{ color: theme.colors.textMuted }}
+            >
+              FAQ
+            </p>
+          </div>
+          <h2 
+            className="text-4xl lg:text-5xl"
+            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+          >
+            {titel}
+          </h2>
+        </div>
+        
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
+          
+          {/* Left: FAQ accordion */}
+          <div className="lg:col-span-7">
+            <div className="border-t" style={{ borderColor: theme.colors.border }}>
+              {faqs.map((faq: any, idx: number) => (
+                <div 
+                  key={idx}
+                  className={`cursor-pointer ${getRevealClass('up', idx * 50)}`}
+                  onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                >
+                  <div 
+                    className="py-6 flex justify-between items-center gap-6 border-b"
+                    style={{ borderColor: theme.colors.border }}
+                  >
+                    <h4 
+                      className="text-lg lg:text-xl"
+                      style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                    >
+                      {faq.vraag}
+                    </h4>
+                    <span 
+                      className="text-xl font-light transition-all duration-300"
+                      style={{ color: palette.primary }}
+                    >
+                      {openIndex === idx ? '−' : '+'}
+                    </span>
+                  </div>
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <p 
+                      className="py-5 leading-[1.9] text-sm"
+                      style={{ color: theme.colors.textMuted }}
+                    >
+                      {faq.antwoord}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* CTA onder FAQ */}
+            <div className={`mt-10 flex items-center gap-4 ${getRevealClass('up', 300)}`}>
+              <a 
+                href="#contact" 
+                className="text-[10px] uppercase tracking-[2px]"
+                style={{ color: palette.primary }}
+              >
+                Andere vraag? Neem contact op
+              </a>
+              <div className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
+              <span 
+                className="material-symbols-outlined text-sm"
+                style={{ color: palette.primary }}
+              >
+                arrow_forward
+              </span>
+            </div>
+          </div>
+          
+          {/* Right: Sticky DBA Statement */}
+          <div className="lg:col-span-5">
+            <div className={`lg:sticky lg:top-24 ${getRevealClass('left', 200)}`}>
+              <div 
+                className="p-8 lg:p-10"
+                style={{ backgroundColor: theme.colors.backgroundAlt }}
+              >
+                <div 
+                  className="w-8 h-px mb-6"
+                  style={{ backgroundColor: palette.primary }}
+                />
+                <p 
+                  className="text-[9px] uppercase tracking-[3px] mb-4"
+                  style={{ color: theme.colors.textMuted }}
+                >
+                  Zekerheid
+                </p>
+                <h3 
+                  className="text-2xl lg:text-3xl mb-6"
+                  style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                >
+                  Ik werk 100%<br />DBA-compliant
+                </h3>
+                <p 
+                  className="text-sm leading-[1.8] mb-8"
+                  style={{ color: theme.colors.textMuted }}
+                >
+                  Dit betekent dat u als instelling of bemiddelaar zonder risico op schijnzelfstandigheid met mij kunt samenwerken. Alle documentatie en werkwijzen zijn hierop ingericht.
+                </p>
+                <div className="space-y-3 text-sm" style={{ color: theme.colors.text }}>
+                  <div className="flex items-center gap-3">
+                    <span 
+                      className="material-symbols-outlined text-base"
+                      style={{ color: palette.primary }}
+                    >
+                      check
+                    </span>
+                    <span>Eigen opdrachten</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span 
+                      className="material-symbols-outlined text-base"
+                      style={{ color: palette.primary }}
+                    >
+                      check
+                    </span>
+                    <span>Vrije vervanging mogelijk</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span 
+                      className="material-symbols-outlined text-base"
+                      style={{ color: palette.primary }}
+                    >
+                      check
+                    </span>
+                    <span>Geen gezagsverhouding</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// SERENE 2 - Statement Boven + 2-Koloms FAQ
+// ============================================
+function FaqSerene2({ theme, palette, faqs, titel, intro }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  // Split faqs into two columns
+  const midpoint = Math.ceil(faqs.length / 2);
+  const leftFaqs = faqs.slice(0, midpoint);
+  const rightFaqs = faqs.slice(midpoint);
+  
+  return (
+    <section 
+      id="faq"
+      className="px-6 md:px-12 py-24 lg:py-32"
+      style={{ backgroundColor: theme.colors.backgroundAlt, fontFamily: theme.fonts.body }}
+    >
+      <div className="max-w-5xl mx-auto">
+        
+        {/* Top: Statement Block */}
+        <div className={`mb-20 grid lg:grid-cols-2 gap-8 lg:gap-16 items-end ${getRevealClass('up')}`}>
+          <div>
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-px" style={{ backgroundColor: palette.primary }} />
+              <p 
+                className="text-[9px] uppercase tracking-[3px]"
+                style={{ color: theme.colors.textMuted }}
+              >
+                Voor opdrachtgevers
+              </p>
+            </div>
+            <h2 
+              className="text-4xl lg:text-5xl"
+              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+            >
+              Ik werk volledig DBA-compliant
+            </h2>
+          </div>
+          <div>
+            <p 
+              className="text-sm leading-[1.9] mb-6"
+              style={{ color: theme.colors.textMuted }}
+            >
+              U kunt zonder risico op schijnzelfstandigheid met mij samenwerken. Mijn werkwijze, facturatie en documentatie zijn volledig ingericht op de huidige wet- en regelgeving.
+            </p>
+            <div 
+              className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-sm"
+              style={{ color: theme.colors.text }}
+            >
+              <div className="flex items-center gap-2">
+                <span 
+                  className="material-symbols-outlined text-base"
+                  style={{ color: palette.primary }}
+                >
+                  check
+                </span>
+                <span>Eigen opdrachten</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span 
+                  className="material-symbols-outlined text-base"
+                  style={{ color: palette.primary }}
+                >
+                  check
+                </span>
+                <span>Vrije vervanging mogelijk</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span 
+                  className="material-symbols-outlined text-base"
+                  style={{ color: palette.primary }}
+                >
+                  check
+                </span>
+                <span>Geen gezagsverhouding</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Divider */}
+        <div 
+          className="h-px mb-16"
+          style={{ backgroundColor: theme.colors.border }}
+        />
+        
+        {/* FAQ in 2 columns */}
+        <div>
+          <p 
+            className={`text-[9px] uppercase tracking-[3px] mb-10 ${getRevealClass('up')}`}
+            style={{ color: theme.colors.textMuted }}
+          >
+            Veelgestelde vragen
+          </p>
+          
+          <div className="grid md:grid-cols-2 gap-x-12 lg:gap-x-20 gap-y-0">
+            {/* Column 1 */}
+            <div>
+              {leftFaqs.map((faq: any, idx: number) => (
+                <div 
+                  key={idx}
+                  className={`cursor-pointer ${getRevealClass('up', idx * 50)}`}
+                  onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+                >
+                  <div 
+                    className="py-5 flex justify-between items-start gap-4 border-b"
+                    style={{ borderColor: theme.colors.border }}
+                  >
+                    <h4 
+                      className="text-lg"
+                      style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                    >
+                      {faq.vraag}
+                    </h4>
+                    <span 
+                      className="text-base font-light mt-1"
+                      style={{ color: palette.primary }}
+                    >
+                      {openIndex === idx ? '−' : '+'}
+                    </span>
+                  </div>
+                  <div 
+                    className={`overflow-hidden transition-all duration-300 ${
+                      openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                    }`}
+                  >
+                    <p 
+                      className="py-4 text-sm leading-[1.8]"
+                      style={{ color: theme.colors.textMuted }}
+                    >
+                      {faq.antwoord}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Column 2 */}
+            <div>
+              {rightFaqs.map((faq: any, idx: number) => {
+                const actualIdx = idx + midpoint;
+                return (
+                  <div 
+                    key={actualIdx}
+                    className={`cursor-pointer ${getRevealClass('up', (idx + midpoint) * 50)}`}
+                    onClick={() => setOpenIndex(openIndex === actualIdx ? null : actualIdx)}
+                  >
+                    <div 
+                      className="py-5 flex justify-between items-start gap-4 border-b"
+                      style={{ borderColor: theme.colors.border }}
+                    >
+                      <h4 
+                        className="text-lg"
+                        style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                      >
+                        {faq.vraag}
+                      </h4>
+                      <span 
+                        className="text-base font-light mt-1"
+                        style={{ color: palette.primary }}
+                      >
+                        {openIndex === actualIdx ? '−' : '+'}
+                      </span>
+                    </div>
+                    <div 
+                      className={`overflow-hidden transition-all duration-300 ${
+                        openIndex === actualIdx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <p 
+                        className="py-4 text-sm leading-[1.8]"
+                        style={{ color: theme.colors.textMuted }}
+                      >
+                        {faq.antwoord}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        
+        {/* CTA */}
+        <div className={`mt-16 text-center ${getRevealClass('up', 300)}`}>
+          <a 
+            href="#contact"
+            className="inline-flex items-center gap-3 px-6 py-3 text-[10px] uppercase tracking-[2px] border transition-colors"
+            style={{ color: palette.primary, borderColor: palette.primary }}
+          >
+            Contact opnemen
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+          </a>
+        </div>
+        
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// SERENE 3 - FAQ Links + Groot Statement Rechts
+// ============================================
+function FaqSerene3({ theme, palette, faqs, titel, intro }: FaqComponentProps) {
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  
+  return (
+    <section 
+      id="faq"
+      className="px-6 md:px-12 py-24 lg:py-32"
+      style={{ backgroundColor: theme.colors.surface, fontFamily: theme.fonts.body }}
+    >
+      <div className="max-w-6xl mx-auto">
+        
+        <div className="grid lg:grid-cols-12 gap-12 lg:gap-0">
+          
+          {/* Left: FAQ */}
+          <div 
+            className="lg:col-span-5 lg:pr-12 xl:pr-16 lg:border-r"
+            style={{ borderColor: theme.colors.border }}
+          >
+            <div className={`flex items-center gap-4 mb-8 ${getRevealClass('up')}`}>
+              <div 
+                className="w-8 h-px"
+                style={{ backgroundColor: palette.primary }}
+              />
+              <p 
+                className="text-[9px] uppercase tracking-[3px]"
+                style={{ color: theme.colors.textMuted }}
+              >
+                FAQ
+              </p>
+            </div>
+            
+            {faqs.map((faq: any, idx: number) => (
+              <div 
+                key={idx}
+                className={`cursor-pointer ${getRevealClass('up', idx * 50)}`}
+                onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
+              >
+                <div 
+                  className="py-5 flex justify-between items-center gap-4 border-b"
+                  style={{ borderColor: theme.colors.border }}
+                >
+                  <h4 
+                    className="text-lg lg:text-xl"
+                    style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                  >
+                    {faq.vraag}
+                  </h4>
+                  <span 
+                    className="text-base font-light"
+                    style={{ color: palette.primary }}
+                  >
+                    {openIndex === idx ? '−' : '+'}
+                  </span>
+                </div>
+                <div 
+                  className={`overflow-hidden transition-all duration-300 ${
+                    openIndex === idx ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <p 
+                    className="py-5 text-sm leading-[1.8]"
+                    style={{ color: theme.colors.textMuted }}
+                  >
+                    {faq.antwoord}
+                  </p>
+                </div>
+              </div>
+            ))}
+            
+            <a 
+              href="#contact"
+              className={`inline-flex items-center gap-2 mt-8 text-[10px] uppercase tracking-[2px] ${getRevealClass('up', 300)}`}
+              style={{ color: palette.primary }}
+            >
+              Meer vragen?
+              <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            </a>
+          </div>
+          
+          {/* Right: Big Statement */}
+          <div className="lg:col-span-7 lg:pl-12 xl:pl-16 flex flex-col justify-center">
+            <div className={`lg:sticky lg:top-24 ${getRevealClass('left', 100)}`}>
+              <p 
+                className="text-[9px] uppercase tracking-[3px] mb-6"
+                style={{ color: theme.colors.textMuted }}
+              >
+                Compliance
+              </p>
+              <h2 
+                className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl mb-6 lg:mb-8 leading-[1.1]"
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+              >
+                Ik werk<br />DBA-compliant
+              </h2>
+              <div 
+                className="w-12 lg:w-16 h-px mb-6 lg:mb-8"
+                style={{ backgroundColor: palette.primary }}
+              />
+              <p 
+                className="text-sm leading-[1.9] max-w-md mb-8 lg:mb-10"
+                style={{ color: theme.colors.textMuted }}
+              >
+                U kunt zonder risico op schijnzelfstandigheid met mij samenwerken. Mijn werkwijze en documentatie zijn volledig ingericht op de huidige wet- en regelgeving.
+              </p>
+              <div 
+                className="flex flex-col sm:flex-row lg:flex-col gap-3 sm:gap-5 lg:gap-3 text-sm"
+                style={{ color: theme.colors.text }}
+              >
+                <div className="flex items-center gap-3">
+                  <span 
+                    className="material-symbols-outlined text-base"
+                    style={{ color: palette.primary }}
+                  >
+                    check
+                  </span>
+                  <span>Eigen opdrachten</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span 
+                    className="material-symbols-outlined text-base"
+                    style={{ color: palette.primary }}
+                  >
+                    check
+                  </span>
+                  <span>Vrije vervanging mogelijk</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span 
+                    className="material-symbols-outlined text-base"
+                    style={{ color: palette.primary }}
+                  >
+                    check
+                  </span>
+                  <span>Geen gezagsverhouding</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// ACCORDION - Klassieke accordion (legacy)
+// ============================================
+function FaqAccordion({ theme, palette, faqs }: FaqComponentProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   
   return (
@@ -472,9 +2001,9 @@ function FaqAccordion({ theme, palette, faqs }: any) {
 }
 
 // ============================================
-// GRID - 2-kolom grid layout
+// GRID - 2-kolom grid layout (legacy)
 // ============================================
-function FaqGrid({ theme, palette, faqs }: any) {
+function FaqGrid({ theme, palette, faqs }: FaqComponentProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   
   return (
@@ -545,9 +2074,9 @@ function FaqGrid({ theme, palette, faqs }: any) {
 }
 
 // ============================================
-// SIMPLE - Simpele lijst, altijd open
+// SIMPLE - Simpele lijst, altijd open (legacy)
 // ============================================
-function FaqSimple({ theme, palette, faqs }: any) {
+function FaqSimple({ theme, palette, faqs }: FaqComponentProps) {
   return (
     <section 
       id="faq"
