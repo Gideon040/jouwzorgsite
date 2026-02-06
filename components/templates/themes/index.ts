@@ -1,5 +1,14 @@
 // components/templates/themes/index.ts
-// SINGLE SOURCE OF TRUTH voor palettes, fonts en theme configs
+// v3: Complete Color Story System
+//
+// CHANGELOG v3:
+// - 20 unieke palettes (4 per template), GEEN klonen meer
+// - Elke palette bevat een volledig kleurenverhaal:
+//   primary, accent, bg, bgAlt, text, textMuted, border
+// - primary ≠ accent overal → natuurlijke sectie-variatie
+// - Achtergrondtinten per palette → hele pagina voelt anders aan
+// - Components die palette.bg/palette.text/etc. gebruiken
+//   krijgen automatisch palette-specifieke kleuren
 
 // ============================================
 // THEME CONFIG INTERFACE
@@ -42,133 +51,494 @@ export interface ThemeConfig {
 }
 
 // ============================================
-// COLOR PALETTES (14 totaal)
+// COLOR PALETTES — 20 unieke kleurenverhalen
 // ============================================
+//
+// Structuur per palette:
+//   primary      → Knoppen, links, headings, CTA
+//   primaryHover → Hover state
+//   primaryLight → Lichte tint voor badges, highlights
+//   primaryDark  → Donkere variant voor emphasis
+//   accent       → Secundaire kleur (ANDERS dan primary!)
+//   accentLight  → Lichte accent voor subtiele elementen
+//   bg           → Pagina achtergrond (overschrijft theme.colors.background)
+//   bgAlt        → Alternatieve sectie achtergrond
+//   text         → Tekst kleur
+//   textMuted    → Gedempt tekst
+//   border       → Border kleur
+//
+// Components kunnen palette.bg / palette.text etc. gebruiken
+// voor palette-specifieke kleuren. Als ze dat niet doen,
+// vallen ze terug op theme.colors.
+
 export const palettes = {
-  // === ORIGINELE PALETTES ===
+
+  // ╔══════════════════════════════════════════╗
+  // ║  EDITORIAL — Klassiek, Warm, Serif       ║
+  // ╚══════════════════════════════════════════╝
+
+  // 1. Editorial Sage — Standaard, rustgevend groen
+  editorial: {
+    primary: '#5a7c6f',
+    primaryHover: '#4a6b5f',
+    primaryLight: 'rgba(90, 124, 111, 0.12)',
+    primaryDark: '#3d5a4f',
+    accent: '#b8860b',         // Warm goud — contrast met koel groen
+    accentLight: '#d4a84b',
+    bg: '#faf9f6',
+    bgAlt: '#f5f3f0',
+    text: '#1a2e28',
+    textMuted: '#5a6b65',
+    border: 'rgba(90, 124, 111, 0.12)',
+  },
+
+  // 2. Burgundy — Sophisticated wijn rood
+  burgundy: {
+    primary: '#7c3a50',
+    primaryHover: '#6b2d42',
+    primaryLight: 'rgba(124, 58, 80, 0.10)',
+    primaryDark: '#5a2538',
+    accent: '#c4956a',         // Dusty goud — warm complement
+    accentLight: '#d4b08a',
+    bg: '#faf8f8',
+    bgAlt: '#f5f0f0',
+    text: '#2d1f24',
+    textMuted: '#6b5a60',
+    border: 'rgba(124, 58, 80, 0.10)',
+  },
+
+  // 3. Navy — Betrouwbaar, professioneel blauw
+  navy: {
+    primary: '#3d4a6b',
+    primaryHover: '#2d3a5a',
+    primaryLight: 'rgba(61, 74, 107, 0.10)',
+    primaryDark: '#252d45',
+    accent: '#c4855c',         // Warm koper — zachte warmte bij koel blauw
+    accentLight: '#d4a080',
+    bg: '#f8f9fc',
+    bgAlt: '#f0f2f6',
+    text: '#1a2030',
+    textMuted: '#5a6580',
+    border: 'rgba(61, 74, 107, 0.10)',
+  },
+
+  // 4. Caramel — Aards, warm bruin
+  caramel: {
+    primary: '#7c6a4f',
+    primaryHover: '#6b5a40',
+    primaryLight: 'rgba(124, 106, 79, 0.10)',
+    primaryDark: '#5a4d38',
+    accent: '#5a7c6f',         // Sage groen — fris contrast bij warm bruin
+    accentLight: '#7a9c8f',
+    bg: '#faf9f5',
+    bgAlt: '#f5f2ec',
+    text: '#2a2318',
+    textMuted: '#6b6255',
+    border: 'rgba(124, 106, 79, 0.10)',
+  },
+
+  // ╔══════════════════════════════════════════╗
+  // ║  PROACTIEF — Modern, Energiek, Sans      ║
+  // ╚══════════════════════════════════════════╝
+
+  // 5. ProActief Cyan — Standaard, dynamisch blauw
+  proactief: {
+    primary: '#0099cc',
+    primaryHover: '#007aa3',
+    primaryLight: 'rgba(0, 153, 204, 0.10)',
+    primaryDark: '#004466',
+    accent: '#ff6b35',         // Oranje — energiek complement
+    accentLight: '#ff8c5a',
+    bg: '#ffffff',
+    bgAlt: '#f0f8fc',
+    text: '#0f172a',
+    textMuted: '#64748b',
+    border: 'rgba(0, 153, 204, 0.08)',
+  },
+
+  // 6. Electric — Krachtig paars
+  electric: {
+    primary: '#7c3aed',
+    primaryHover: '#6d28d9',
+    primaryLight: 'rgba(124, 58, 237, 0.08)',
+    primaryDark: '#5b21b6',
+    accent: '#10b981',         // Smaragd groen — frisse tegenhanger
+    accentLight: '#34d399',
+    bg: '#faf8ff',
+    bgAlt: '#f3f0ff',
+    text: '#1a1033',
+    textMuted: '#6b6190',
+    border: 'rgba(124, 58, 237, 0.08)',
+  },
+
+  // 7. Sunset — Warm koraal-rood
+  sunset: {
+    primary: '#dc4a38',
+    primaryHover: '#c4392a',
+    primaryLight: 'rgba(220, 74, 56, 0.08)',
+    primaryDark: '#a52d1c',
+    accent: '#0891b2',         // Teal — koel contrast bij warm rood
+    accentLight: '#22d3ee',
+    bg: '#fffaf8',
+    bgAlt: '#fff5f2',
+    text: '#1a1210',
+    textMuted: '#6b5c58',
+    border: 'rgba(220, 74, 56, 0.08)',
+  },
+
+  // 8. Emerald — Fris, gezond groen
+  emerald: {
+    primary: '#059669',
+    primaryHover: '#047857',
+    primaryLight: 'rgba(5, 150, 105, 0.08)',
+    primaryDark: '#065f46',
+    accent: '#d97706',         // Amber — warm accent bij koel groen
+    accentLight: '#f59e0b',
+    bg: '#f8fffe',
+    bgAlt: '#f0faf5',
+    text: '#0a1f18',
+    textMuted: '#4a6b60',
+    border: 'rgba(5, 150, 105, 0.08)',
+  },
+
+  // ╔══════════════════════════════════════════╗
+  // ║  PORTFOLIO — Elegant, Sophisticated      ║
+  // ╚══════════════════════════════════════════╝
+
+  // 9. Portfolio Forest — Standaard, diep groen + lime
+  portfolio: {
+    primary: '#1a3a2f',
+    primaryHover: '#2d5a47',
+    primaryLight: 'rgba(26, 58, 47, 0.08)',
+    primaryDark: '#0f251d',
+    accent: '#7cb342',         // Lime groen — fris tegen donker
+    accentLight: '#9ccc65',
+    bg: '#f8f6f2',
+    bgAlt: '#ebe7df',
+    text: '#1a2e28',
+    textMuted: '#5a6b65',
+    border: 'rgba(26, 58, 47, 0.08)',
+  },
+
+  // 10. Charcoal — Strak, premium grijs + goud
+  charcoal: {
+    primary: '#2d3436',
+    primaryHover: '#1e2628',
+    primaryLight: 'rgba(45, 52, 54, 0.08)',
+    primaryDark: '#1a1e1f',
+    accent: '#d4a853',         // Goud — luxe accent bij neutraal grijs
+    accentLight: '#e4c478',
+    bg: '#f8f8f6',
+    bgAlt: '#eeedea',
+    text: '#1a1c1e',
+    textMuted: '#5a5e60',
+    border: 'rgba(45, 52, 54, 0.08)',
+  },
+
+  // 11. Midnight — Diep navy + staal blauw
+  midnight: {
+    primary: '#1e293b',
+    primaryHover: '#334155',
+    primaryLight: 'rgba(30, 41, 59, 0.08)',
+    primaryDark: '#0f172a',
+    accent: '#8b9dc3',         // Staal blauw — subtiel, sophisticated
+    accentLight: '#a8b8d8',
+    bg: '#f8f9fb',
+    bgAlt: '#eef0f4',
+    text: '#0f172a',
+    textMuted: '#475569',
+    border: 'rgba(30, 41, 59, 0.08)',
+  },
+
+  // 12. Espresso — Warm donkerbruin + sage
+  espresso: {
+    primary: '#3e2723',
+    primaryHover: '#4e342e',
+    primaryLight: 'rgba(62, 39, 35, 0.08)',
+    primaryDark: '#2a1a17',
+    accent: '#7cb342',         // Sage groen — fris leven bij donker bruin
+    accentLight: '#8bc34a',
+    bg: '#f9f7f5',
+    bgAlt: '#f0ece8',
+    text: '#2a1e1a',
+    textMuted: '#6b5d55',
+    border: 'rgba(62, 39, 35, 0.08)',
+  },
+
+  // ╔══════════════════════════════════════════╗
+  // ║  MINDOOR — Warm, Organisch, Friendly     ║
+  // ╚══════════════════════════════════════════╝
+
+  // 13. Mindoor Sage+Coral — Standaard, organisch warm
+  mindoor: {
+    primary: '#5a7c5a',
+    primaryHover: '#4a6349',
+    primaryLight: 'rgba(90, 124, 90, 0.10)',
+    primaryDark: '#3d503d',
+    accent: '#d4644a',         // Coral — warm, uitnodigend
+    accentLight: '#e07b5f',
+    bg: '#faf8f5',
+    bgAlt: '#f5f0e8',
+    text: '#1a1a1a',
+    textMuted: '#6b6560',
+    border: 'rgba(90, 124, 90, 0.08)',
+  },
+
+  // 14. Dusty Rose — Zacht roze + olijf
+  dustyrose: {
+    primary: '#b5838d',
+    primaryHover: '#a07078',
+    primaryLight: 'rgba(181, 131, 141, 0.10)',
+    primaryDark: '#8a5a64',
+    accent: '#6b705c',         // Olijf groen — aards, geaard
+    accentLight: '#858a76',
+    bg: '#fdf8f8',
+    bgAlt: '#f8f0f0',
+    text: '#2d2024',
+    textMuted: '#7a6a6e',
+    border: 'rgba(181, 131, 141, 0.08)',
+  },
+
+  // 15. Olive — Aards groen + terracotta
+  olive: {
+    primary: '#6b705c',
+    primaryHover: '#5a5f4e',
+    primaryLight: 'rgba(107, 112, 92, 0.10)',
+    primaryDark: '#4a4e3f',
+    accent: '#c4694a',         // Terracotta — warm aards complement
+    accentLight: '#d4845c',
+    bg: '#f9f9f6',
+    bgAlt: '#f2f2ec',
+    text: '#1e2018',
+    textMuted: '#5a5e50',
+    border: 'rgba(107, 112, 92, 0.08)',
+  },
+
+  // 16. Amber — Gouden warmte + bos groen
+  amber: {
+    primary: '#a17c38',
+    primaryHover: '#8a6a2e',
+    primaryLight: 'rgba(161, 124, 56, 0.10)',
+    primaryDark: '#7a5e28',
+    accent: '#4a6b4a',         // Bos groen — natuur accent
+    accentLight: '#6a8b6a',
+    bg: '#fdfaf5',
+    bgAlt: '#f8f2e6',
+    text: '#2a2418',
+    textMuted: '#6b6050',
+    border: 'rgba(161, 124, 56, 0.08)',
+  },
+
+  // ╔══════════════════════════════════════════╗
+  // ║  SERENE — Zen, Minimalistisch, Rustig    ║
+  // ╚══════════════════════════════════════════╝
+
+  // 17. Serene Sage — Standaard, gedempte sage
+  serene: {
+    primary: '#3d4a3d',
+    primaryHover: '#2d382d',
+    primaryLight: 'rgba(61, 74, 61, 0.08)',
+    primaryDark: '#2a332a',
+    accent: '#8a9680',         // Licht sage — zacht, zen
+    accentLight: '#a8b5a0',
+    bg: '#f9faf8',
+    bgAlt: '#f0f2ed',
+    text: '#2d3a2d',
+    textMuted: '#6b7b6b',
+    border: 'rgba(61, 74, 61, 0.08)',
+  },
+
+  // 18. Stone — Koel mineraal grijs
+  stone: {
+    primary: '#6b7280',
+    primaryHover: '#4b5563',
+    primaryLight: 'rgba(107, 114, 128, 0.08)',
+    primaryDark: '#374151',
+    accent: '#5a7c6f',         // Sage groen — organic touch
+    accentLight: '#7a9c8f',
+    bg: '#f9fafb',
+    bgAlt: '#f1f2f4',
+    text: '#1f2937',
+    textMuted: '#6b7280',
+    border: 'rgba(107, 114, 128, 0.08)',
+  },
+
+  // 19. Dusk — Gedempt blauw-paars
+  dusk: {
+    primary: '#5a6b8a',
+    primaryHover: '#4a5a78',
+    primaryLight: 'rgba(90, 107, 138, 0.08)',
+    primaryDark: '#3d4a62',
+    accent: '#8b7c6a',         // Warm taupe — aardse warmte bij koel blauw
+    accentLight: '#a89880',
+    bg: '#f8f9fc',
+    bgAlt: '#f0f2f8',
+    text: '#1a2030',
+    textMuted: '#5a6580',
+    border: 'rgba(90, 107, 138, 0.08)',
+  },
+
+  // 20. Moss — Diep mosgroen
+  moss: {
+    primary: '#4a5d4a',
+    primaryHover: '#3a4d3a',
+    primaryLight: 'rgba(74, 93, 74, 0.08)',
+    primaryDark: '#2d3d2d',
+    accent: '#7c6a5d',         // Warm hout — organisch complement
+    accentLight: '#9c8a7d',
+    bg: '#f8faf7',
+    bgAlt: '#eef2ec',
+    text: '#1e2a1e',
+    textMuted: '#5a6b5a',
+    border: 'rgba(74, 93, 74, 0.08)',
+  },
+
+  // ╔══════════════════════════════════════════╗
+  // ║  LEGACY — Backward compatibility         ║
+  // ╚══════════════════════════════════════════╝
+  // Oude palettes mappen naar nieuwe. Componenten die
+  // nog 'sage', 'ocean', etc. refereren blijven werken.
+
   sage: {
     primary: '#5a7c6f',
     primaryHover: '#4a6b5f',
-    primaryLight: 'rgba(90, 124, 111, 0.1)',
+    primaryLight: 'rgba(90, 124, 111, 0.12)',
     primaryDark: '#3d5a4f',
-    accent: '#5a7c6f',
+    accent: '#b8860b',
+    accentLight: '#d4a84b',
+    bg: '#faf9f6',
+    bgAlt: '#f5f3f0',
+    text: '#1a2e28',
+    textMuted: '#5a6b65',
+    border: 'rgba(90, 124, 111, 0.12)',
   },
   lavender: {
     primary: '#7c6f9e',
     primaryHover: '#6b5f8d',
-    primaryLight: 'rgba(124, 111, 158, 0.1)',
+    primaryLight: 'rgba(124, 111, 158, 0.10)',
     primaryDark: '#5a4f7a',
-    accent: '#7c6f9e',
+    accent: '#c49670',
+    accentLight: '#d4aa88',
+    bg: '#faf8fc',
+    bgAlt: '#f2f0f6',
+    text: '#1e1a28',
+    textMuted: '#6b6580',
+    border: 'rgba(124, 111, 158, 0.10)',
   },
   slate: {
     primary: '#475569',
     primaryHover: '#334155',
-    primaryLight: 'rgba(71, 85, 105, 0.1)',
+    primaryLight: 'rgba(71, 85, 105, 0.10)',
     primaryDark: '#1e293b',
-    accent: '#475569',
+    accent: '#d4a853',
+    accentLight: '#e4c478',
+    bg: '#f8f9fb',
+    bgAlt: '#f0f2f5',
+    text: '#0f172a',
+    textMuted: '#475569',
+    border: 'rgba(71, 85, 105, 0.10)',
   },
   mint: {
     primary: '#059669',
     primaryHover: '#047857',
-    primaryLight: 'rgba(5, 150, 105, 0.1)',
+    primaryLight: 'rgba(5, 150, 105, 0.08)',
     primaryDark: '#065f46',
-    accent: '#059669',
+    accent: '#d97706',
+    accentLight: '#f59e0b',
+    bg: '#f8fffe',
+    bgAlt: '#f0faf5',
+    text: '#0a1f18',
+    textMuted: '#4a6b60',
+    border: 'rgba(5, 150, 105, 0.08)',
   },
   sand: {
     primary: '#b45309',
     primaryHover: '#92400e',
-    primaryLight: 'rgba(180, 83, 9, 0.1)',
+    primaryLight: 'rgba(180, 83, 9, 0.10)',
     primaryDark: '#78350f',
-    accent: '#b45309',
+    accent: '#5a7c6f',
+    accentLight: '#7a9c8f',
+    bg: '#fdfaf5',
+    bgAlt: '#f8f2e6',
+    text: '#2a2418',
+    textMuted: '#6b6050',
+    border: 'rgba(180, 83, 9, 0.08)',
   },
   rose: {
     primary: '#be185d',
     primaryHover: '#9d174d',
-    primaryLight: 'rgba(190, 24, 93, 0.1)',
+    primaryLight: 'rgba(190, 24, 93, 0.08)',
     primaryDark: '#831843',
-    accent: '#be185d',
+    accent: '#6b705c',
+    accentLight: '#858a76',
+    bg: '#fdf8f9',
+    bgAlt: '#f8f0f2',
+    text: '#2d1020',
+    textMuted: '#7a5a68',
+    border: 'rgba(190, 24, 93, 0.08)',
   },
   ocean: {
     primary: '#0369a1',
     primaryHover: '#075985',
-    primaryLight: 'rgba(3, 105, 161, 0.1)',
+    primaryLight: 'rgba(3, 105, 161, 0.08)',
     primaryDark: '#0c4a6e',
-    accent: '#0369a1',
+    accent: '#d97706',
+    accentLight: '#f59e0b',
+    bg: '#f8faff',
+    bgAlt: '#f0f4fc',
+    text: '#0a1828',
+    textMuted: '#4a6580',
+    border: 'rgba(3, 105, 161, 0.08)',
   },
-  
-  // === TEMPLATE-SPECIFIEKE PALETTES ===
-  
-  // Editorial template - sage tones
-  editorial: {
-    primary: '#5a7c6f',
-    primaryHover: '#4a6b5f',
-    primaryLight: 'rgba(90, 124, 111, 0.15)',
-    primaryDark: '#3d5a4f',
-    accent: '#5a7c6f',
-  },
-  
-  // ProActief template - cyan + orange
-  proactief: {
-    primary: '#0099cc',
-    primaryHover: '#007aa3',
-    primaryLight: 'rgba(0, 153, 204, 0.1)',
-    primaryDark: '#004466',
-    accent: '#ff6b35',
-    accentLight: '#f7931e',
-  },
-  
-  // Portfolio template - forest green + lime
-  portfolio: {
-    primary: '#1a3a2f',
-    primaryHover: '#2d5a47',
-    primaryLight: '#3d7a5f',
-    primaryDark: '#0f251d',
-    accent: '#7cb342',
-    accentLight: '#9ccc65',
-  },
-  
-  // Mindoor template - sage green + coral
-  mindoor: {
-    primary: '#5a7c5a',
-    primaryHover: '#4a6349',
-    primaryLight: 'rgba(90, 124, 90, 0.1)',
-    primaryDark: '#3d503d',
-    accent: '#d4644a',
-    accentLight: '#e07b5f',
-  },
-  
-  // Legacy aliases
   forest: {
     primary: '#1a3a2f',
     primaryHover: '#2d5a47',
-    primaryLight: 'rgba(26, 58, 47, 0.1)',
+    primaryLight: 'rgba(26, 58, 47, 0.08)',
     primaryDark: '#0f251d',
     accent: '#7cb342',
+    accentLight: '#9ccc65',
+    bg: '#f8f6f2',
+    bgAlt: '#ebe7df',
+    text: '#1a2e28',
+    textMuted: '#5a6b65',
+    border: 'rgba(26, 58, 47, 0.08)',
   },
   coral: {
     primary: '#d4644a',
     primaryHover: '#c25438',
-    primaryLight: 'rgba(212, 100, 74, 0.1)',
+    primaryLight: 'rgba(212, 100, 74, 0.10)',
     primaryDark: '#a34432',
-    accent: '#e07b5f',
+    accent: '#5a7c5a',
+    accentLight: '#7a9c7a',
+    bg: '#fffaf8',
+    bgAlt: '#f8f2ee',
+    text: '#2a1a14',
+    textMuted: '#6b5850',
+    border: 'rgba(212, 100, 74, 0.08)',
   },
   teal: {
-    primary: '#0099cc',
-    primaryHover: '#007aa3',
-    primaryLight: 'rgba(0, 153, 204, 0.1)',
-    primaryDark: '#004466',
-    accent: '#ff6b35',
+    primary: '#0891b2',
+    primaryHover: '#0e7490',
+    primaryLight: 'rgba(8, 145, 178, 0.08)',
+    primaryDark: '#155e75',
+    accent: '#d97706',
+    accentLight: '#f59e0b',
+    bg: '#f8fdff',
+    bgAlt: '#f0f8fc',
+    text: '#0a1a20',
+    textMuted: '#4a6068',
+    border: 'rgba(8, 145, 178, 0.08)',
   },
 };
 
 export type PaletteKey = keyof typeof palettes;
 
 export function getPalette(paletteId: string) {
-  return palettes[paletteId as PaletteKey] || palettes.sage;
+  return palettes[paletteId as PaletteKey] || palettes.editorial;
 }
 
 // ============================================
-// FONT PAIRINGS (10 totaal)
+// FONT PAIRINGS (12 totaal)
 // ============================================
 export const fontPairings = {
   // === ORIGINELE PAIRINGS ===
@@ -194,29 +564,25 @@ export const fontPairings = {
   },
   
   // === TEMPLATE-SPECIFIEKE PAIRINGS ===
-  
-  // Editorial - Newsreader serif
   editorial: {
     heading: "'Newsreader', Georgia, serif",
     body: "'Open Sans', system-ui, sans-serif",
   },
-  
-  // ProActief - Poppins everywhere
   proactief: {
     heading: "'Poppins', system-ui, sans-serif",
     body: "'Poppins', system-ui, sans-serif",
   },
-  
-  // Portfolio - Playfair + Inter
   portfolio: {
     heading: "'Playfair Display', Georgia, serif",
     body: "'Inter', system-ui, sans-serif",
   },
-  
-  // Mindoor - Playfair + DM Sans
   mindoor: {
     heading: "'Playfair Display', Georgia, serif",
     body: "'DM Sans', system-ui, sans-serif",
+  },
+  serene: {
+    heading: "'Cormorant Garamond', Georgia, serif",
+    body: "'Nunito Sans', system-ui, sans-serif",
   },
   
   // Legacy
@@ -237,7 +603,7 @@ export function getFontPairing(pairingId: string) {
 }
 
 // ============================================
-// TEMPLATE THEMES (4 hoofdtemplates)
+// TEMPLATE THEMES (5 hoofdtemplates)
 // ============================================
 
 export const editorialTheme: ThemeConfig = {
@@ -376,8 +742,42 @@ export const mindoorTheme: ThemeConfig = {
   buttonStyle: 'solid',
 };
 
+export const sereneTheme: ThemeConfig = {
+  id: 'serene',
+  name: 'Serene - Rustig & Zen',
+  colors: {
+    background: '#f9faf8',
+    backgroundAlt: '#f0f2ed',
+    surface: '#ffffff',
+    text: '#2d3a2d',
+    textMuted: '#6b7b6b',
+    border: 'rgba(61,74,61,0.1)',
+  },
+  fonts: fontPairings.serene,
+  spacing: {
+    section: 'py-24 lg:py-36',
+    container: 'max-w-5xl',
+    gap: 'gap-10',
+  },
+  radius: {
+    small: 'rounded-lg',
+    medium: 'rounded-xl',
+    large: 'rounded-2xl',
+    full: 'rounded-full',
+  },
+  shadows: {
+    small: 'shadow-[0_4px_20px_rgba(61,74,61,0.04)]',
+    medium: 'shadow-[0_8px_30px_rgba(61,74,61,0.06)]',
+    large: 'shadow-[0_16px_50px_rgba(61,74,61,0.08)]',
+  },
+  isDark: false,
+  headerStyle: 'solid',
+  cardStyle: 'bordered',
+  buttonStyle: 'outline',
+};
+
 // ============================================
-// LEGACY BASE THEMES (voor backwards compatibility)
+// LEGACY BASE THEMES
 // ============================================
 
 export const classicTheme: ThemeConfig = editorialTheme;
@@ -457,12 +857,11 @@ export const cardsTheme: ThemeConfig = proActiefTheme;
 // THEME REGISTRY
 // ============================================
 export const themes: Record<string, ThemeConfig> = {
-  // Main 4 templates
   editorial: editorialTheme,
   proactief: proActiefTheme,
   portfolio: portfolioTheme,
   mindoor: mindoorTheme,
-  // Legacy aliases
+  serene: sereneTheme,
   classic: classicTheme,
   bold: boldTheme,
   minimal: minimalTheme,
@@ -475,15 +874,15 @@ export function getTheme(themeId: string): ThemeConfig {
 }
 
 // ============================================
-// TEMPLATE PRESETS (theme + palette + fonts)
+// TEMPLATE PRESETS
 // ============================================
 export interface TemplatePreset {
   id: string;
   name: string;
   description: string;
   theme: ThemeConfig;
-  palette: typeof palettes.sage;
-  sectionStyle: string; // maps to section component style prop
+  palette: typeof palettes.editorial;
+  sectionStyle: string;
 }
 
 export const templatePresets: Record<string, TemplatePreset> = {
@@ -519,6 +918,14 @@ export const templatePresets: Record<string, TemplatePreset> = {
     palette: palettes.mindoor,
     sectionStyle: 'mindoor',
   },
+  serene: {
+    id: 'serene',
+    name: 'Serene',
+    description: 'Rustig en zen, met elegante typografie en veel ademruimte',
+    theme: sereneTheme,
+    palette: palettes.serene,
+    sectionStyle: 'serene',
+  },
 };
 
 export function getTemplatePreset(presetId: string): TemplatePreset {
@@ -529,20 +936,42 @@ export function getTemplatePreset(presetId: string): TemplatePreset {
 // METADATA
 // ============================================
 export const paletteMetadata: Record<PaletteKey, { name: string; description: string }> = {
-  sage: { name: 'Sage', description: 'Rustgevend groen' },
-  lavender: { name: 'Lavender', description: 'Zacht paars' },
-  slate: { name: 'Slate', description: 'Professioneel grijs' },
-  mint: { name: 'Mint', description: 'Fris groen' },
-  sand: { name: 'Sand', description: 'Warm amber' },
-  rose: { name: 'Rose', description: 'Zacht roze' },
-  ocean: { name: 'Ocean', description: 'Diep blauw' },
-  editorial: { name: 'Editorial', description: 'Klassiek sage groen' },
-  proactief: { name: 'ProActief', description: 'Cyaan + oranje' },
-  portfolio: { name: 'Portfolio', description: 'Forest + lime' },
-  mindoor: { name: 'Mindoor', description: 'Sage + coral' },
-  forest: { name: 'Forest', description: 'Donker groen' },
-  coral: { name: 'Coral', description: 'Warm terracotta' },
-  teal: { name: 'Teal', description: 'Modern cyaan' },
+  // Editorial family
+  editorial: { name: 'Editorial Sage', description: 'Klassiek sage groen + warm goud' },
+  burgundy:  { name: 'Burgundy', description: 'Sophisticated wijn rood + dusty goud' },
+  navy:      { name: 'Navy', description: 'Betrouwbaar blauw + warm koper' },
+  caramel:   { name: 'Caramel', description: 'Warm bruin + sage groen' },
+  // ProActief family
+  proactief: { name: 'ProActief Cyan', description: 'Dynamisch blauw + oranje' },
+  electric:  { name: 'Electric', description: 'Krachtig paars + smaragd' },
+  sunset:    { name: 'Sunset', description: 'Warm koraal + teal' },
+  emerald:   { name: 'Emerald', description: 'Fris groen + amber' },
+  // Portfolio family
+  portfolio: { name: 'Portfolio Forest', description: 'Diep groen + lime' },
+  charcoal:  { name: 'Charcoal', description: 'Premium grijs + goud' },
+  midnight:  { name: 'Midnight', description: 'Diep navy + staal blauw' },
+  espresso:  { name: 'Espresso', description: 'Donker bruin + sage' },
+  // Mindoor family
+  mindoor:   { name: 'Mindoor Sage', description: 'Organisch sage + coral' },
+  dustyrose: { name: 'Dusty Rose', description: 'Zacht roze + olijf' },
+  olive:     { name: 'Olive', description: 'Aards groen + terracotta' },
+  amber:     { name: 'Amber', description: 'Gouden warmte + bosgroen' },
+  // Serene family
+  serene:    { name: 'Serene Sage', description: 'Gedempte sage + zachte tonen' },
+  stone:     { name: 'Stone', description: 'Mineraal grijs + sage' },
+  dusk:      { name: 'Dusk', description: 'Gedempt blauw + warm taupe' },
+  moss:      { name: 'Moss', description: 'Diep mos + warm hout' },
+  // Legacy
+  sage:      { name: 'Sage', description: 'Rustgevend groen + goud' },
+  lavender:  { name: 'Lavender', description: 'Zacht paars + warm goud' },
+  slate:     { name: 'Slate', description: 'Professioneel grijs + goud' },
+  mint:      { name: 'Mint', description: 'Fris groen + amber' },
+  sand:      { name: 'Sand', description: 'Warm amber + sage' },
+  rose:      { name: 'Rose', description: 'Zacht roze + olijf' },
+  ocean:     { name: 'Ocean', description: 'Diep blauw + amber' },
+  forest:    { name: 'Forest', description: 'Donker groen + lime' },
+  coral:     { name: 'Coral', description: 'Warm terracotta + sage' },
+  teal:      { name: 'Teal', description: 'Modern teal + amber' },
 };
 
 export const fontPairingMetadata: Record<FontPairingKey, { name: string; description: string }> = {
@@ -555,6 +984,7 @@ export const fontPairingMetadata: Record<FontPairingKey, { name: string; descrip
   proactief: { name: 'ProActief', description: 'Poppins' },
   portfolio: { name: 'Portfolio', description: 'Playfair Display + Inter' },
   mindoor: { name: 'Mindoor', description: 'Playfair Display + DM Sans' },
+  serene: { name: 'Serene', description: 'Cormorant Garamond + Nunito Sans' },
   soft: { name: 'Zacht', description: 'Libre Baskerville + DM Sans' },
   clean: { name: 'Clean', description: 'Poppins' },
 };
@@ -579,5 +1009,10 @@ export const templateMetadata: Record<string, { name: string; description: strin
     name: 'Mindoor', 
     description: 'Warm en organisch met zachte vormen',
     tags: ['warm', 'organisch', 'coral', 'friendly']
+  },
+  serene: {
+    name: 'Serene',
+    description: 'Rustgevend en zen met elegante typografie',
+    tags: ['rustig', 'zen', 'minimaal', 'vertrouwen']
   },
 };

@@ -1,6 +1,11 @@
 // components/templates/TemplateRenderer.tsx
-// De kern van het systeem - combineert theme + sections dynamisch
-// UPDATED: Nu met support voor mixed section styles van edge function
+// v3: Color Story System — palette overschrijft achtergrondkleuren
+//
+// CHANGELOG v3:
+// - FIX: palette.bg/bgAlt/text/textMuted/border overschrijven theme.colors
+//   zodat elke palette een compleet ander kleurenverhaal oplevert
+//   (niet alleen knoppen maar hele pagina-achtergrond en tekst)
+// - Inherited from v2: palette fix, Serene fonts, scrollbar fix
 
 'use client';
 
@@ -9,7 +14,6 @@ import { Site } from '@/types';
 import { getBeroepLabel } from '@/constants';
 import { getTheme, getPalette, getFontPairing, getTemplatePreset } from './themes';
 
-// Import all sections
 import {
   HeaderSection,
   HeroSection,
@@ -37,12 +41,17 @@ interface TemplateRendererProps {
 }
 
 // ============================================
+// CONSTANTS
+// ============================================
+
+const MAIN_TEMPLATES = ['editorial', 'proactief', 'portfolio', 'mindoor', 'serene'];
+
+// ============================================
 // TEMPLATE SECTION CONFIGURATIONS (FALLBACKS)
 // ============================================
 // Alleen gebruikt als edge function GEEN sections meestuurt
 
 const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
-  // Editorial - Klassiek & Warm
   editorial: [
     { type: 'hero', style: 'editorial' },
     { type: 'diensten', style: 'editorial' },
@@ -57,8 +66,6 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'contact', style: 'editorial' },
     { type: 'footer', style: 'editorial' },
   ],
-  
-  // ProActief - Modern & Energiek
   proactief: [
     { type: 'hero', style: 'proactief' },
     { type: 'diensten', style: 'proactief' },
@@ -73,8 +80,6 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'contact', style: 'proactief' },
     { type: 'footer', style: 'proactief' },
   ],
-  
-  // Portfolio - Elegant & Sophisticated
   portfolio: [
     { type: 'hero', style: 'portfolio' },
     { type: 'diensten', style: 'portfolio' },
@@ -89,8 +94,6 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'contact', style: 'portfolio' },
     { type: 'footer', style: 'portfolio' },
   ],
-  
-  // Mindoor - Warm & Organisch
   mindoor: [
     { type: 'hero', style: 'mindoor' },
     { type: 'diensten', style: 'mindoor' },
@@ -105,8 +108,6 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'contact', style: 'mindoor' },
     { type: 'footer', style: 'mindoor' },
   ],
-  
-  // Serene - Rustig & Kalm
   serene: [
     { type: 'hero', style: 'serene' },
     { type: 'diensten', style: 'serene' },
@@ -121,10 +122,7 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'contact', style: 'serene' },
     { type: 'footer', style: 'serene' },
   ],
-  
-  // ============================================
-  // LEGACY TEMPLATES (backwards compatibility)
-  // ============================================
+  // Legacy
   classic: [
     { type: 'hero', style: 'split' },
     { type: 'diensten', style: 'cards' },
@@ -144,13 +142,14 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
 // ============================================
 // GLOBAL STYLES
 // ============================================
+// v2: Cormorant Garamond + Nunito Sans + Mulish toegevoegd
 
 const GLOBAL_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lato:wght@300;400;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lato:wght@300;400;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap');
   
   @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
   
-  /* Scroll reveal animations */
+  /* Scroll reveal */
   .reveal { opacity: 0; transition: opacity 0.8s ease, transform 0.8s ease; }
   .reveal-up { transform: translateY(40px); }
   .reveal-left { transform: translateX(-40px); }
@@ -164,16 +163,16 @@ const GLOBAL_STYLES = `
   /* Smooth scroll */
   html { scroll-behavior: smooth; }
   
-  /* Custom scrollbar for portfolio/mindoor themes */
+  /* Custom scrollbar per theme */
   .theme-portfolio::-webkit-scrollbar,
-  .theme-mindoor::-webkit-scrollbar { width: 8px; }
+  .theme-mindoor::-webkit-scrollbar,
+  .theme-serene::-webkit-scrollbar { width: 8px; }
   .theme-portfolio::-webkit-scrollbar-track { background: #ebe7df; }
   .theme-portfolio::-webkit-scrollbar-thumb { background: #1a3a2f; border-radius: 4px; }
   .theme-mindoor::-webkit-scrollbar-track { background: #f5f0e8; }
   .theme-mindoor::-webkit-scrollbar-thumb { background: #5a7c5a; border-radius: 4px; }
-  .theme-serene::-webkit-scrollbar { width: 8px; }
-  .theme-serene::-webkit-scrollbar-track { background: #f8f9fa; }
-  .theme-serene::-webkit-scrollbar-thumb { background: #6b8e9f; border-radius: 4px; }
+  .theme-serene::-webkit-scrollbar-track { background: #f9faf8; }
+  .theme-serene::-webkit-scrollbar-thumb { background: #3d4a3d; border-radius: 4px; }
 `;
 
 // ============================================
@@ -182,50 +181,67 @@ const GLOBAL_STYLES = `
 
 export function TemplateRenderer({ site }: TemplateRendererProps) {
   const { content, beroep, theme: siteTheme, generated_content, template_id } = site;
-  
-  // Determine template style
-  // Priority: template_id > siteTheme.template > 'editorial' (default)
+
+  // ── 1. Template bepalen ─────────────────────────
+  // Priority: template_id > siteTheme.template > 'editorial'
   const templateStyle = template_id || (siteTheme as any)?.template || 'editorial';
-  
-  // Check if it's one of our 5 main templates (FIX: serene toegevoegd)
-  const isMainTemplate = ['editorial', 'proactief', 'portfolio', 'mindoor', 'serene'].includes(templateStyle);
-  
-  // Get theme configuration
+  const isMainTemplate = MAIN_TEMPLATES.includes(templateStyle);
+
+  // ── 2. Theme config (kleuren, fonts, spacing) ───
   const theme = getTheme(isMainTemplate ? templateStyle : 'classic');
-  
-  // Get color palette
-  const paletteId = isMainTemplate 
-    ? templateStyle 
-    : ((siteTheme as any)?.palette || 'sage');
+
+  // ── 3. Color palette ────────────────────────────
+  // v3: Palette bevat nu ook bg/text/border die theme.colors overschrijven
+  const paletteId = (siteTheme as any)?.palette
+    || (isMainTemplate ? templateStyle : 'sage');
   const palette = getPalette(paletteId);
-  
-  // Get font pairing (optional override)
+
+  // ── 3b. Palette → Theme override ───────────────
+  // Palette kleuren overschrijven theme.colors zodat de hele
+  // pagina de palette-specifieke achtergrond/tekst krijgt.
+  // Dit is de kern van het Color Story systeem: niet alleen
+  // knoppen veranderen, maar de complete visuele sfeer.
+  if ((palette as any).bg) {
+    theme.colors.background = (palette as any).bg;
+  }
+  if ((palette as any).bgAlt) {
+    theme.colors.backgroundAlt = (palette as any).bgAlt;
+  }
+  if ((palette as any).text) {
+    theme.colors.text = (palette as any).text;
+  }
+  if ((palette as any).textMuted) {
+    theme.colors.textMuted = (palette as any).textMuted;
+  }
+  if ((palette as any).border) {
+    theme.colors.border = (palette as any).border;
+  }
+
+  // ── 4. Font pairing (optionele override) ────────
   const fontPairingId = (siteTheme as any)?.fontPairing;
   if (fontPairingId) {
     const fonts = getFontPairing(fontPairingId);
     theme.fonts = fonts;
   }
-  
-  // Get sections configuration
-  // Priority: generated_content.sections > siteTheme.sections > template defaults
-  const sections: SectionConfig[] = 
+
+  // ── 5. Sections configuratie ────────────────────
+  // Priority: edge function > siteTheme > template defaults
+  const sections: SectionConfig[] =
     (generated_content?.sections as SectionConfig[]) ||
     (Array.isArray((siteTheme as any)?.sections) ? (siteTheme as any).sections : null) ||
     TEMPLATE_SECTIONS[templateStyle] ||
     TEMPLATE_SECTIONS.editorial;
-  
-  // DEBUG: Log section styles from edge function
+
+  // ── 6. Debug logging ────────────────────────────
   if (generated_content?.sections) {
-    console.log('🎨 Section styles from edge function:');
-    (generated_content.sections as SectionConfig[]).forEach(s => {
-      console.log(`   ${s.type}: ${s.style}`);
-    });
+    console.log(`🎨 Template: ${templateStyle} | Palette: ${paletteId}`);
+    console.log('📦 Sections:', (generated_content.sections as SectionConfig[]).map(s => `${s.type}:${s.style}`).join(', '));
   }
-  
-  // Get beroep label
+
+  // ── 7. Beroep label ─────────────────────────────
   const beroepLabel = getBeroepLabel(beroep);
-  
-  // Setup scroll reveal
+
+  // ── 8. Scroll reveal ────────────────────────────
   useEffect(() => {
     const revealElements = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver((entries) => {
@@ -235,12 +251,12 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
         }
       });
     }, { threshold: 0.1, rootMargin: '-50px' });
-    
+
     revealElements.forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
-  // Shared props for all sections
+  // ── Shared props ────────────────────────────────
   const sectionProps = {
     theme,
     palette,
@@ -249,28 +265,19 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
     beroepLabel,
   };
 
-  // ============================================
-  // FIXED: Get the style for a section
-  // Priority: section.style from edge function > templateStyle > 'editorial'
-  // ============================================
+  // ── Section style resolver ──────────────────────
+  // Priority: section.style (edge function) > templateStyle > 'editorial'
   const getSectionStyle = (section: SectionConfig) => {
-    // Als de sectie een expliciete style heeft (van edge function), gebruik die
-    if (section.style) {
-      return section.style;
-    }
-    // Anders fallback naar template style voor main templates
-    if (isMainTemplate) {
-      return templateStyle;
-    }
-    // Default
+    if (section.style) return section.style;
+    if (isMainTemplate) return templateStyle;
     return 'editorial';
   };
 
-// Render section based on type
+  // ── Section renderer ────────────────────────────
   const renderSection = (section: SectionConfig, index: number) => {
     const key = `${section.type}-${index}`;
     const style = getSectionStyle(section);
-    
+
     switch (section.type) {
       case 'hero':
         return <HeroSection key={key} {...sectionProps} style={style as any} />;
@@ -286,8 +293,8 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
         return <WerkervaringSection key={key} {...sectionProps} style={style as any} />;
       case 'voorwie':
         return <VoorWieSection key={key} {...sectionProps} style={style as any} />;
-case 'werkwijze':
-  return <WerkwijzeSection key={key} {...sectionProps} style={style as any} variant={section.variant as 1 | 2 | 3} />;
+      case 'werkwijze':
+        return <WerkwijzeSection key={key} {...sectionProps} style={style as any} variant={section.variant as 1 | 2 | 3} />;
       case 'quote':
         return <QuoteSection key={key} {...sectionProps} style={style as any} />;
       case 'testimonials':
@@ -306,47 +313,59 @@ case 'werkwijze':
     }
   };
 
-  // Get header style - use section style if provided, otherwise template style
+  // ── Header & Footer ─────────────────────────────
   const headerSection = sections.find(s => s.type === 'header');
   const headerStyle = headerSection?.style || (isMainTemplate ? templateStyle : 'solid');
-  
-  // Get footer style - use section style if provided, otherwise template style
+
   const footerSection = sections.find(s => s.type === 'footer');
   const footerStyle = footerSection?.style || (isMainTemplate ? templateStyle : 'simple');
 
+  // ── Render ──────────────────────────────────────
   return (
-    <div 
+    <div
       className={`min-h-screen theme-${templateStyle}`}
-      style={{ 
+      style={{
         backgroundColor: theme.colors.background,
         fontFamily: theme.fonts.body,
       }}
     >
       <style jsx global>{GLOBAL_STYLES}</style>
-      
-      {/* Header - altijd bovenaan */}
-      <HeaderSection 
-        {...sectionProps} 
-        style={headerStyle as any} 
+
+      {/* Font safety net: ensures ALL headings use template font,
+          even when components forget to set fontFamily inline.
+          Inline styles (specificity) still override this when present. */}
+      <style>{`
+        .theme-${templateStyle} h1,
+        .theme-${templateStyle} h2,
+        .theme-${templateStyle} h3,
+        .theme-${templateStyle} h4 {
+          font-family: ${theme.fonts.heading};
+        }
+      `}</style>
+
+      {/* Header */}
+      <HeaderSection
+        {...sectionProps}
+        style={headerStyle as any}
       />
-      
-      {/* Dynamic sections */}
+
+      {/* Sections */}
       <main>
         {sections
           .filter(s => s.type !== 'footer' && s.type !== 'header')
           .map((section, index) => renderSection(section, index))}
       </main>
-      
-      {/* Footer - altijd onderaan */}
-      <FooterSection 
-        {...sectionProps} 
-        style={footerStyle as any} 
+
+      {/* Footer */}
+      <FooterSection
+        {...sectionProps}
+        style={footerStyle as any}
       />
-      
-      {/* WhatsApp Button (optional) */}
+
+      {/* WhatsApp */}
       {(content as any).telefoon && (
-        <WhatsAppButton 
-          telefoon={(content as any).telefoon} 
+        <WhatsAppButton
+          telefoon={(content as any).telefoon}
           naam={content.naam}
           palette={palette}
         />
