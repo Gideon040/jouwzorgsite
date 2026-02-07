@@ -19,6 +19,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   const [subdomain, setSubdomain] = useState(site.subdomain);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const [localEmail, setLocalEmail] = useState(email);
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,6 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       setError(null);
       
       try {
-        // Check subdomain availability in database
         const supabase = createClient();
         const { data, error } = await supabase
           .rpc('is_subdomain_available', { check_subdomain: subdomain.toLowerCase() });
@@ -52,7 +52,6 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
         setIsAvailable(data === true);
       } catch (err) {
         console.error('Subdomain check error:', err);
-        // Fallback: assume available if check fails
         setIsAvailable(true);
       } finally {
         setIsChecking(false);
@@ -94,7 +93,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   };
 
   const handleSubmit = async () => {
-    if (!isAvailable || password.length < 8) return;
+    if (!isAvailable || !localEmail.includes('@') || password.length < 8) return;
     
     setIsLoading(true);
     setError(null);
@@ -104,7 +103,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
     try {
       // 1. Create Supabase account
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
+        email: localEmail,
         password,
         options: {
           data: {
@@ -114,7 +113,6 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       });
 
       if (authError) {
-        // Handle specific errors
         if (authError.message.includes('already registered')) {
           setError('Dit e-mailadres is al geregistreerd. Probeer in te loggen.');
         } else {
@@ -141,14 +139,13 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
           content: content,
           theme: site.theme || null,
           generated_content: site.generated_content || null,
-          published: false, // Unpublished until payment confirmed
+          published: false,
         })
         .select()
         .single();
 
       if (siteError) {
         console.error('Site creation error:', siteError);
-        // If subdomain taken, show friendly error
         if (siteError.message.includes('unique') || siteError.message.includes('subdomain')) {
           setError('Dit subdomein is helaas net bezet. Kies een ander.');
         } else {
@@ -159,12 +156,9 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       }
 
       // 3. Track conversion
-      trackSignupComplete(email);
+      trackSignupComplete(localEmail);
 
       // 4. TODO: Redirect to Mollie checkout
-      // For now, we'll go to onComplete which shows success
-      // Later: router.push(`/api/checkout?siteId=${siteData.id}`);
-      
       onComplete();
 
     } catch (err) {
@@ -312,16 +306,17 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             )}
           </div>
           
-          {/* Email (read-only) */}
+          {/* Email */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
               E-mailadres
             </label>
             <input
               type="email"
-              value={email}
-              readOnly
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600"
+              value={localEmail}
+              onChange={(e) => setLocalEmail(e.target.value)}
+              placeholder="je@email.nl"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
             />
           </div>
           
@@ -383,9 +378,9 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
           {/* Submit */}
           <button
             onClick={handleSubmit}
-            disabled={!isAvailable || password.length < 8 || isLoading}
+            disabled={!isAvailable || !localEmail.includes('@') || password.length < 8 || isLoading}
             className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg transition-all ${
-              isAvailable && password.length >= 8 && !isLoading
+              isAvailable && localEmail.includes('@') && password.length >= 8 && !isLoading
                 ? 'bg-orange-500 text-white hover:bg-orange-600 hover:shadow-lg'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}

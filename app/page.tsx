@@ -1,7 +1,7 @@
 'use client';
 
 // app/page.tsx - Single page funnel
-// UPDATED: Nu met werkervaring en certificaten uit edge function
+// v2: 3-step wizard (naam → beroep → stijl), fullscreen generating state
 
 import { useState } from 'react';
 import { Site, SiteContent, Theme, GeneratedContent } from '@/types';
@@ -12,6 +12,7 @@ import { createClient } from '@/lib/supabase/client';
 import {
   HeroSection,
   WizardSection,
+  GeneratingSection,
   PreviewSection,
   VerificationSection,
   CheckoutSection,
@@ -19,8 +20,8 @@ import {
 } from '@/components/landing';
 import type { StijlKeuze } from '@/components/landing/WizardSection';
 
-type FlowStep = 'hero' | 'wizard' | 'preview' | 'verification' | 'checkout' | 'done';
-type WizardStep = 1 | 2 | 3 | 4;
+type FlowStep = 'hero' | 'wizard' | 'generating' | 'preview' | 'verification' | 'checkout' | 'done';
+type WizardStep = 1 | 2 | 3;
 
 const MAX_REGENERATIONS = 3;
 
@@ -32,7 +33,6 @@ export default function Home() {
   // User input
   const [naam, setNaam] = useState('');
   const [beroep, setBeroep] = useState('');
-  const [email, setEmail] = useState('');
   const [omschrijving, setOmschrijving] = useState('');
   const [stijl, setStijl] = useState<StijlKeuze | ''>('');
   
@@ -45,13 +45,13 @@ export default function Home() {
   
   // UI state
   const [isCustomizing, setIsCustomizing] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   
   // Regeneration tracking
   const [regenerateCount, setRegenerateCount] = useState(0);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
-  // Handlers
+  // ── Handlers ────────────────────────────────
+
   const handleStartWizard = () => {
     trackWizardStart();
     setFlowStep('wizard');
@@ -64,11 +64,8 @@ export default function Home() {
     } else if (wizardStep === 2 && beroep) {
       trackWizardStep(2, 'beroep');
       setWizardStep(3);
-    } else if (wizardStep === 3 && email.trim()) {
-      trackWizardStep(3, 'email');
-      setWizardStep(4);
-    } else if (wizardStep === 4 && stijl) {
-      trackWizardStep(4, 'stijl');
+    } else if (wizardStep === 3 && stijl) {
+      trackWizardStep(3, 'stijl');
       await handleGenerateSite();
     }
   };
@@ -82,10 +79,11 @@ export default function Home() {
   const handleGenerateSite = async (isRegeneration = false) => {
     if (!stijl) return;
     
-    if (isRegeneration) {
-      setIsRegenerating(true);
+    // Show fullscreen generating state (not for regeneration — that uses inline loading)
+    if (!isRegeneration) {
+      setFlowStep('generating');
     } else {
-      setIsGenerating(true);
+      setIsRegenerating(true);
     }
     
     try {
@@ -98,10 +96,8 @@ export default function Home() {
           body: {
             naam,
             beroep,
-            email,
             omschrijving: omschrijving.trim() || undefined,
             stijlKeuze: stijl,
-            // Pass regeneration flag for potentially different results
             regeneration: isRegeneration,
             regenerationCount: regenerateCount + 1,
           },
@@ -119,18 +115,12 @@ export default function Home() {
       
       if (error || !generated) {
         console.warn('Edge Function failed, using fallback:', error);
-        content = generatePlaceholderContent({ naam, beroep, email });
+        content = generatePlaceholderContent({ naam, beroep, email: '' });
         templateId = 'flex';
         theme = undefined;
         generatedContent = undefined;
       } else {
-        // Gebruik gegenereerde content
         const gen = generated.generated_content as GeneratedContent;
-        
-        // ============================================
-        // NIEUW: Haal input_data uit response
-        // Bevat werkervaring, certificaten, zakelijk etc.
-        // ============================================
         const inputData = generated.input_data || {};
         
         content = {
@@ -139,24 +129,18 @@ export default function Home() {
           tagline: gen?.hero?.subtitel || `${getBeroepLabel(beroep)} | Beschikbaar voor opdrachten`,
           over_mij: gen?.overMij 
             ? `${gen.overMij.intro || ''}\n\n${gen.overMij.body || ''}${gen.overMij.persoonlijk ? '\n\n' + gen.overMij.persoonlijk : ''}`
-            : generatePlaceholderContent({ naam, beroep, email }).over_mij,
+            : generatePlaceholderContent({ naam, beroep, email: '' }).over_mij,
           contact: {
-            email,
+            email: '',
             werkgebied: inputData.werkgebied || [],
           },
-          diensten: gen?.diensten?.items || generatePlaceholderContent({ naam, beroep, email }).diensten,
-          
-          // ============================================
-          // NIEUW: Werkervaring en Certificaten uit edge function
-          // Deze worden altijd meegegeven (default data als user niets invulde)
-          // ============================================
+          diensten: gen?.diensten?.items || generatePlaceholderContent({ naam, beroep, email: '' }).diensten,
           werkervaring: inputData.werkervaring || [],
           certificaten: inputData.certificaten || [],
           zakelijk: inputData.zakelijk || { 
             kvk: '',
             handelsnaam: `${naam} Zorg`,
           },
-          
           beschikbaar: true,
         };
         
@@ -186,8 +170,6 @@ export default function Home() {
       };
 
       console.log('🎨 Final site object:', site);
-      console.log('🎨 Werkervaring:', content.werkervaring);
-      console.log('🎨 Certificaten:', content.certificaten);
       
       setPreviewSite(site);
       setCustomContent(content);
@@ -202,7 +184,7 @@ export default function Home() {
       
     } catch (err) {
       console.error('Fout bij genereren site:', err);
-      const content = generatePlaceholderContent({ naam, beroep, email });
+      const content = generatePlaceholderContent({ naam, beroep, email: '' });
       const generatedSubdomain = naam
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '-')
@@ -230,7 +212,6 @@ export default function Home() {
         setFlowStep('preview');
       }
     } finally {
-      setIsGenerating(false);
       setIsRegenerating(false);
     }
   };
@@ -244,7 +225,6 @@ export default function Home() {
     setFlowStep('done');
   };
 
-  // Update content handler that preserves site object
   const handleSetContent = (newContent: SiteContent) => {
     setCustomContent(newContent);
     if (previewSite) {
@@ -254,6 +234,8 @@ export default function Home() {
       });
     }
   };
+
+  // ── Render ──────────────────────────────────
 
   return (
     <div className="min-h-screen bg-white">
@@ -268,15 +250,19 @@ export default function Home() {
           setNaam={setNaam}
           beroep={beroep}
           setBeroep={setBeroep}
-          email={email}
-          setEmail={setEmail}
           omschrijving={omschrijving}
           setOmschrijving={setOmschrijving}
           stijl={stijl}
           setStijl={setStijl}
           onNext={handleWizardNext}
           onBack={handleWizardBack}
-          isGenerating={isGenerating}
+        />
+      )}
+
+      {flowStep === 'generating' && (
+        <GeneratingSection
+          naam={naam}
+          beroep={beroep}
         />
       )}
       
@@ -309,7 +295,7 @@ export default function Home() {
         <CheckoutSection
           site={previewSite}
           content={customContent}
-          email={email}
+          email=""
           onBack={() => setFlowStep('verification')}
           onComplete={handleCheckoutComplete}
         />

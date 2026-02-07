@@ -334,14 +334,14 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
       {/* Font safety net: ensures ALL headings use template font,
           even when components forget to set fontFamily inline.
           Inline styles (specificity) still override this when present. */}
-      <style>{`
-        .theme-${templateStyle} h1,
-        .theme-${templateStyle} h2,
-        .theme-${templateStyle} h3,
-        .theme-${templateStyle} h4 {
-          font-family: ${theme.fonts.heading};
-        }
-      `}</style>
+    <style dangerouslySetInnerHTML={{ __html: `
+  .theme-${templateStyle} h1,
+  .theme-${templateStyle} h2,
+  .theme-${templateStyle} h3,
+  .theme-${templateStyle} h4 {
+    font-family: ${theme.fonts.heading};
+  }
+`}} />
 
       {/* Header */}
       <HeaderSection

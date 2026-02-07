@@ -1,5 +1,7 @@
 // components/templates/sections/CredentialsSection.tsx
 // Credentials/Transparantie sectie - BIG, KvK, Wtza, Wkkgz
+// v2: Hardcoded kleuren vervangen door palette-aware waarden
+//     fontFamily toegevoegd aan alle headings
 'use client';
 
 import { BaseSectionProps, CredentialsStyle, getRevealClass } from './types';
@@ -111,7 +113,6 @@ export function CredentialsSection({
   );
   
   // Extra info for non-BIG
-  // Get diploma from certificaten (type 'diploma') - use label or sublabel for the niveau
   const diplomaCert = certificaten.find((c: any) => c.type === 'diploma');
   const diploma = diplomaCert?.label || diplomaCert?.sublabel || 'Verzorgende IG niveau 3';
   
@@ -177,6 +178,42 @@ interface CredentialComponentProps {
   complianceCreds: any[];
   diploma: string;
   ervaring: string;
+}
+
+// ============================================
+// HELPER: Checkmark icon (palette-aware)
+// Vervangt alle hardcoded #dcfce7 / #16a34a
+// ============================================
+function CheckIcon({ palette, size = 'sm' }: { palette: any; size?: 'sm' | 'md' }) {
+  const dims = size === 'md' 
+    ? { outer: 'w-8 h-8', inner: 'w-4 h-4' }
+    : { outer: 'w-6 h-6', inner: 'w-3 h-3' };
+  
+  return (
+    <span 
+      className={`${dims.outer} rounded-full flex items-center justify-center flex-shrink-0`}
+      style={{ backgroundColor: `${palette.primary}15` }}
+    >
+      <svg className={dims.inner} style={{ color: palette.primary }} fill="currentColor" viewBox="0 0 24 24">
+        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+      </svg>
+    </span>
+  );
+}
+
+// ============================================
+// HELPER: Verified badge (palette-aware)
+// Vervangt hardcoded #dcfce7/#166534 "Geverifieerd" badges
+// ============================================
+function VerifiedBadge({ palette, label = 'Geverifieerd' }: { palette: any; label?: string }) {
+  return (
+    <span 
+      className="text-[10px] px-2 py-0.5"
+      style={{ backgroundColor: `${palette.primary}15`, color: palette.primaryDark || palette.primary }}
+    >
+      {label}
+    </span>
+  );
 }
 
 
@@ -931,6 +968,7 @@ function CredentialsSerene({
 
 // ============================================
 // PROACTIEF - Modern, business-like
+// v2: Hardcoded #dcfce7/#166534/#16a34a → palette-aware
 // Met BIG: BIG card with border-l-4 accent
 // Zonder BIG: Diploma card with accent, equal grid
 // ============================================
@@ -995,12 +1033,7 @@ function CredentialsProactief({
                   >
                     BIG-registratie
                   </span>
-                  <span 
-                    className="text-[10px] px-2 py-0.5"
-                    style={{ backgroundColor: '#dcfce7', color: '#166534' }}
-                  >
-                    Geverifieerd
-                  </span>
+                  <VerifiedBadge palette={palette} />
                 </div>
                 <div 
                   className="w-10 h-10 flex items-center justify-center"
@@ -1064,14 +1097,7 @@ function CredentialsProactief({
                 className="p-4 border flex items-center gap-2"
                 style={{ borderColor: theme.colors.border }}
               >
-                <div 
-                  className="w-6 h-6 flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#dcfce7' }}
-                >
-                  <svg className="w-3 h-3" style={{ color: '#16a34a' }} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                </div>
+                <CheckIcon palette={palette} />
                 <span 
                   className="text-sm font-semibold"
                   style={{ color: theme.colors.text }}
@@ -1134,12 +1160,7 @@ function CredentialsProactief({
                 >
                   Diploma
                 </span>
-                <span 
-                  className="text-[10px] px-2 py-0.5"
-                  style={{ backgroundColor: '#dcfce7', color: '#166534' }}
-                >
-                  Behaald
-                </span>
+                <VerifiedBadge palette={palette} label="Behaald" />
               </div>
               <div 
                 className="w-10 h-10 flex items-center justify-center"
@@ -1215,14 +1236,7 @@ function CredentialsProactief({
             className="p-4 border flex items-center gap-2"
             style={{ borderColor: theme.colors.border }}
           >
-            <div 
-              className="w-6 h-6 flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: '#dcfce7' }}
-            >
-              <svg className="w-3 h-3" style={{ color: '#16a34a' }} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-              </svg>
-            </div>
+            <CheckIcon palette={palette} />
             <span className="text-sm font-semibold" style={{ color: theme.colors.text }}>VOG</span>
           </div>
           
@@ -1232,14 +1246,7 @@ function CredentialsProactief({
               className="p-4 border flex items-center gap-2"
               style={{ borderColor: theme.colors.border }}
             >
-              <div 
-                className="w-6 h-6 flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: '#dcfce7' }}
-              >
-                <svg className="w-3 h-3" style={{ color: '#16a34a' }} fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
-              </div>
+              <CheckIcon palette={palette} />
               <span 
                 className="text-sm font-semibold"
                 style={{ color: theme.colors.text }}
@@ -1257,6 +1264,10 @@ function CredentialsProactief({
 
 // ============================================
 // MINDOOR - Warm, organic, bento grid
+// v2: bg-white → theme.colors.background
+//     #dcfce7/#16a34a → palette-aware CheckIcon
+//     bg-green-400/20 → palette.primary opacity
+//     fontFamily toegevoegd aan alle headings/nummers
 // Met BIG: BIG in 2-col dark card
 // Zonder BIG: Diploma in 1-col dark card
 // ============================================
@@ -1286,13 +1297,13 @@ function CredentialsMindoor({
           <div className={`text-center mb-12 sm:mb-16 ${getRevealClass('up')}`}>
             <h2 
               className="text-3xl sm:text-4xl lg:text-5xl font-bold"
-              style={{ color: theme.colors.text }}
+              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
             >
               Mijn{' '}
               <span 
                 className="italic"
                 style={{ 
-                  background: `linear-gradient(135deg, ${palette.accent || '#d4644a'}, ${palette.accentLight || '#e07b5f'})`,
+                  background: `linear-gradient(135deg, ${palette.accent || palette.primary}, ${palette.accentLight || palette.primaryLight})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent'
                 }}
@@ -1308,14 +1319,17 @@ function CredentialsMindoor({
             {/* BIG Card - 2 cols, dark */}
             <div 
               className="md:col-span-2 p-6 sm:p-8 rounded-3xl"
-              style={{ backgroundColor: palette.primaryDark || '#1e3a5f' }}
+              style={{ backgroundColor: palette.primaryDark || palette.primary }}
             >
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <span className="text-sm font-medium uppercase tracking-wider text-white/60">
                     BIG-registratie
                   </span>
-                  <span className="ml-3 text-xs px-2 py-1 rounded-full bg-green-400/20 text-green-300">
+                  <span 
+                    className="ml-3 text-xs px-2 py-1 rounded-full"
+                    style={{ backgroundColor: `${palette.primaryLight || palette.primary}30`, color: palette.primaryLight || '#e0e0e0' }}
+                  >
                     Geverifieerd
                   </span>
                 </div>
@@ -1325,7 +1339,10 @@ function CredentialsMindoor({
                   </svg>
                 </div>
               </div>
-              <div className="text-4xl sm:text-5xl font-bold text-white mb-2">
+              <div 
+                className="text-4xl sm:text-5xl font-bold text-white mb-2"
+                style={{ fontFamily: theme.fonts.heading }}
+              >
                 {bigCred?.value}
               </div>
               <p className="text-white/70 mb-4">
@@ -1343,7 +1360,10 @@ function CredentialsMindoor({
             
             {/* KvK Card */}
             {kvkCred && (
-              <div className="p-6 rounded-3xl bg-white">
+              <div 
+                className="p-6 rounded-3xl"
+                style={{ backgroundColor: theme.colors.background }}
+              >
                 <span 
                   className="text-xs font-medium uppercase tracking-wider block mb-4"
                   style={{ color: theme.colors.textMuted }}
@@ -1352,7 +1372,7 @@ function CredentialsMindoor({
                 </span>
                 <div 
                   className="text-2xl font-bold"
-                  style={{ color: theme.colors.text }}
+                  style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
                 >
                   {kvkCred.value}
                 </div>
@@ -1364,7 +1384,11 @@ function CredentialsMindoor({
             
             {/* Compliance cards */}
             {complianceCreds.slice(0, 3).map((cred, idx) => (
-              <div key={idx} className="p-5 rounded-3xl bg-white">
+              <div 
+                key={idx} 
+                className="p-5 rounded-3xl"
+                style={{ backgroundColor: theme.colors.background }}
+              >
                 <span 
                   className="text-xs uppercase tracking-wider block mb-3"
                   style={{ color: theme.colors.textMuted }}
@@ -1372,14 +1396,7 @@ function CredentialsMindoor({
                   {cred.config.label}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span 
-                    className="w-8 h-8 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: '#dcfce7' }}
-                  >
-                    <svg className="w-4 h-4" style={{ color: '#16a34a' }} fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
-                  </span>
+                  <CheckIcon palette={palette} size="md" />
                   <span className="font-medium" style={{ color: theme.colors.text }}>
                     {cred.type === 'wtza' ? 'Gemeld' : cred.type === 'verzekering' ? 'Ja' : 'Geregeld'}
                   </span>
@@ -1405,13 +1422,13 @@ function CredentialsMindoor({
         <div className={`text-center mb-12 sm:mb-16 ${getRevealClass('up')}`}>
           <h2 
             className="text-3xl sm:text-4xl lg:text-5xl font-bold"
-            style={{ color: theme.colors.text }}
+            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
           >
             Mijn{' '}
             <span 
               className="italic"
               style={{ 
-                background: `linear-gradient(135deg, ${palette.accent || '#d4644a'}, ${palette.accentLight || '#e07b5f'})`,
+                background: `linear-gradient(135deg, ${palette.accent || palette.primary}, ${palette.accentLight || palette.primaryLight})`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}
@@ -1424,17 +1441,20 @@ function CredentialsMindoor({
         {/* Bento grid - more balanced without BIG */}
         <div className={`grid md:grid-cols-3 gap-4 sm:gap-5 ${getRevealClass('up', 1)}`}>
           
-          {/* Diploma Card - 1 col, dark (not 2 like BIG) */}
+          {/* Diploma Card - 1 col, dark */}
           <div 
             className="p-6 sm:p-8 rounded-3xl"
-            style={{ backgroundColor: palette.primaryDark || '#1e3a5f' }}
+            style={{ backgroundColor: palette.primaryDark || palette.primary }}
           >
             <div className="flex justify-between items-start mb-6">
               <div>
                 <span className="text-sm font-medium uppercase tracking-wider text-white/60">
                   Diploma
                 </span>
-                <span className="ml-3 text-xs px-2 py-1 rounded-full bg-green-400/20 text-green-300">
+                <span 
+                  className="ml-3 text-xs px-2 py-1 rounded-full"
+                  style={{ backgroundColor: `${palette.primaryLight || palette.primary}30`, color: palette.primaryLight || '#e0e0e0' }}
+                >
                   Behaald
                 </span>
               </div>
@@ -1444,7 +1464,10 @@ function CredentialsMindoor({
                 </svg>
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            <div 
+              className="text-2xl sm:text-3xl font-bold text-white mb-2"
+              style={{ fontFamily: theme.fonts.heading }}
+            >
               {diploma.split(' niveau')[0]}
             </div>
             <p className="text-white/70">
@@ -1454,7 +1477,10 @@ function CredentialsMindoor({
           
           {/* KvK Card */}
           {kvkCred && (
-            <div className="p-6 rounded-3xl bg-white">
+            <div 
+              className="p-6 rounded-3xl"
+              style={{ backgroundColor: theme.colors.background }}
+            >
               <span 
                 className="text-xs font-medium uppercase tracking-wider block mb-4"
                 style={{ color: theme.colors.textMuted }}
@@ -1463,7 +1489,7 @@ function CredentialsMindoor({
               </span>
               <div 
                 className="text-2xl font-bold"
-                style={{ color: theme.colors.text }}
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
               >
                 {kvkCred.value}
               </div>
@@ -1474,7 +1500,10 @@ function CredentialsMindoor({
           )}
           
           {/* Ervaring Card */}
-          <div className="p-6 rounded-3xl bg-white">
+          <div 
+            className="p-6 rounded-3xl"
+            style={{ backgroundColor: theme.colors.background }}
+          >
             <span 
               className="text-xs font-medium uppercase tracking-wider block mb-4"
               style={{ color: theme.colors.textMuted }}
@@ -1483,7 +1512,7 @@ function CredentialsMindoor({
             </span>
             <div 
               className="text-2xl font-bold"
-              style={{ color: theme.colors.text }}
+              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
             >
               {ervaring.split(' ')[0]}
             </div>
@@ -1493,7 +1522,10 @@ function CredentialsMindoor({
           </div>
           
           {/* VOG Card */}
-          <div className="p-5 rounded-3xl bg-white">
+          <div 
+            className="p-5 rounded-3xl"
+            style={{ backgroundColor: theme.colors.background }}
+          >
             <span 
               className="text-xs uppercase tracking-wider block mb-3"
               style={{ color: theme.colors.textMuted }}
@@ -1501,21 +1533,18 @@ function CredentialsMindoor({
               VOG
             </span>
             <div className="flex items-center gap-2">
-              <span 
-                className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: '#dcfce7' }}
-              >
-                <svg className="w-4 h-4" style={{ color: '#16a34a' }} fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
-              </span>
+              <CheckIcon palette={palette} size="md" />
               <span className="font-medium" style={{ color: theme.colors.text }}>Aanwezig</span>
             </div>
           </div>
           
           {/* Compliance cards */}
           {complianceCreds.slice(0, 2).map((cred, idx) => (
-            <div key={idx} className="p-5 rounded-3xl bg-white">
+            <div 
+              key={idx} 
+              className="p-5 rounded-3xl"
+              style={{ backgroundColor: theme.colors.background }}
+            >
               <span 
                 className="text-xs uppercase tracking-wider block mb-3"
                 style={{ color: theme.colors.textMuted }}
@@ -1523,14 +1552,7 @@ function CredentialsMindoor({
                 {cred.config.label}
               </span>
               <div className="flex items-center gap-2">
-                <span 
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: '#dcfce7' }}
-                >
-                  <svg className="w-4 h-4" style={{ color: '#16a34a' }} fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                  </svg>
-                </span>
+                <CheckIcon palette={palette} size="md" />
                 <span className="font-medium" style={{ color: theme.colors.text }}>
                   {cred.type === 'verzekering' ? 'Ja' : 'Geregeld'}
                 </span>
@@ -1592,7 +1614,7 @@ function CredentialsFull({ theme, palette, credentials, handelsnaam }: Credentia
               </span>
               <h3 
                 className="font-bold mb-1"
-                style={{ color: theme.colors.text }}
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
               >
                 {cred.config.label}
               </h3>
@@ -1704,7 +1726,7 @@ function CredentialsCards({ theme, palette, credentials }: CredentialComponentPr
               </div>
               <h3 
                 className="font-semibold text-sm"
-                style={{ color: theme.colors.text }}
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
               >
                 {cred.config.label}
               </h3>

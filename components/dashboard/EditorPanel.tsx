@@ -1,0 +1,735 @@
+'use client';
+
+import { useState, useRef } from 'react';
+import { Site, SiteContent, GeneratedContent } from '@/types';
+import { createClient } from '@/lib/supabase/client';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PROPS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+interface EditorPanelProps {
+  site: Site;
+  content: SiteContent;
+  generated: GeneratedContent;
+  onContentUpdate: (content: SiteContent) => void;
+  onGeneratedUpdate: (gen: GeneratedContent) => void;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DEEP SET HELPER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function deepSet(obj: any, path: string, value: any): any {
+  const result = Array.isArray(obj) ? [...obj] : { ...obj };
+  const parts = path.split('.');
+
+  if (parts.length === 1) {
+    result[parts[0]] = value;
+    return result;
+  }
+
+  const [first, ...rest] = parts;
+  const child = result[first];
+  result[first] = deepSet(
+    child != null ? child : (isNaN(Number(rest[0])) ? {} : []),
+    rest.join('.'),
+    value
+  );
+  return result;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SECTION CONFIG
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SECTIONS = [
+  { id: 'stijl',        label: 'Stijl & Kleuren', icon: 'palette' },
+  { id: 'hero',         label: 'Hero',          icon: 'campaign' },
+  { id: 'stats',        label: 'Statistieken',  icon: 'bar_chart' },
+  { id: 'diensten',     label: 'Diensten',      icon: 'medical_services' },
+  { id: 'over',         label: 'Over Mij',      icon: 'person' },
+  { id: 'credentials',  label: 'Credentials',   icon: 'verified' },
+  { id: 'werkervaring', label: 'Werkervaring',  icon: 'work' },
+  { id: 'voorwie',      label: 'Voor Wie',      icon: 'groups' },
+  { id: 'quote',        label: 'Quote',         icon: 'format_quote' },
+  { id: 'werkwijze',    label: 'Werkwijze',     icon: 'route' },
+  { id: 'testimonials', label: 'Testimonials',  icon: 'star' },
+  { id: 'faq',          label: 'FAQ',           icon: 'help' },
+  { id: 'cta',          label: 'Call to Action', icon: 'ads_click' },
+  { id: 'contact',      label: 'Contact',       icon: 'call' },
+] as const;
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MAIN COMPONENT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+export function EditorPanel({ site, content, generated, onContentUpdate, onGeneratedUpdate }: EditorPanelProps) {
+  const [openSection, setOpenSection] = useState<string | null>('stijl');
+
+  const toggle = (id: string) => {
+    setOpenSection(openSection === id ? null : id);
+  };
+
+  const setGen = (path: string, value: any) => {
+    onGeneratedUpdate(deepSet(generated, path, value));
+  };
+
+  const setCont = (updates: Partial<SiteContent>) => {
+    onContentUpdate({ ...content, ...updates });
+  };
+
+  const setGenItem = (arrayPath: string, index: number, field: string, value: any) => {
+    const parts = arrayPath.split('.');
+    let arr: any = generated;
+    for (const p of parts) arr = arr?.[p];
+    if (!Array.isArray(arr)) return;
+
+    const newArr = arr.map((item: any, i: number) =>
+      i === index ? { ...item, [field]: value } : item
+    );
+    setGen(arrayPath, newArr);
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
+        <span className="material-symbols-outlined text-orange-500 text-xl">edit_note</span>
+        <h3 className="font-bold text-slate-900 text-sm">Website bewerken</h3>
+      </div>
+
+      {/* Scrollable accordion */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        {SECTIONS.map(({ id, label, icon }) => {
+          const isOpen = openSection === id;
+          return (
+            <div key={id} className="border-b border-slate-100">
+              <button
+                onClick={() => toggle(id)}
+                className={`w-full flex items-center justify-between px-5 py-3 text-left transition-colors ${
+                  isOpen ? 'bg-orange-50/80' : 'hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className={`material-symbols-outlined text-lg ${isOpen ? 'text-orange-500' : 'text-slate-400'}`}>{icon}</span>
+                  <span className={`text-sm font-semibold ${isOpen ? 'text-orange-700' : 'text-slate-700'}`}>{label}</span>
+                </div>
+                <span className={`material-symbols-outlined text-lg text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
+              </button>
+
+              {isOpen && (
+                <div className="px-5 pb-5 pt-2 space-y-3">
+                  {id === 'stijl'        && <StijlFields gen={generated} setGen={setGen} />}
+                  {id === 'hero'         && <HeroFields gen={generated} content={content} setGen={setGen} setCont={setCont} />}
+                  {id === 'stats'        && <StatsFields gen={generated} setGenItem={setGenItem} />}
+                  {id === 'diensten'     && <DienstenFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
+                  {id === 'over'         && <OverFields gen={generated} content={content} setGen={setGen} setCont={setCont} />}
+                  {id === 'credentials'  && <CredentialsFields gen={generated} setGen={setGen} />}
+                  {id === 'werkervaring' && <WerkervaringFields content={content} setCont={setCont} />}
+                  {id === 'voorwie'      && <VoorWieFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
+                  {id === 'quote'        && <QuoteFields gen={generated} setGen={setGen} />}
+                  {id === 'werkwijze'    && <WerkwijzeFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
+                  {id === 'testimonials' && <TestimonialsFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
+                  {id === 'faq'          && <FaqFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
+                  {id === 'cta'          && <CtaFields gen={generated} setGen={setGen} />}
+                  {id === 'contact'      && <ContactFields gen={generated} content={content} setGen={setGen} setCont={setCont} />}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <div className="h-8" />
+      </div>
+    </div>
+  );
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SHARED UI
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function Field({ label, value, onChange, multiline, rows, placeholder }: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  multiline?: boolean;
+  rows?: number;
+  placeholder?: string;
+}) {
+  const base = "w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-orange-400 focus:ring-1 focus:ring-orange-200 outline-none transition-all bg-white placeholder:text-slate-300";
+  return (
+    <div>
+      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+      {multiline ? (
+        <textarea value={value || ''} onChange={(e) => onChange(e.target.value)} rows={rows || 3} placeholder={placeholder} className={base + " resize-none"} />
+      ) : (
+        <input type="text" value={value || ''} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={base} />
+      )}
+    </div>
+  );
+}
+
+// ── IMAGE UPLOAD FIELD ────────────────────
+function ImageField({ label, value, onChange, hint }: {
+  label: string;
+  value?: string;
+  onChange: (url: string | undefined) => void;
+  hint?: string;
+}) {
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file: File) => {
+    setError('');
+
+    if (!file.type.startsWith('image/')) {
+      setError('Alleen afbeeldingen');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Max 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setError('Niet ingelogd');
+        setIsUploading(false);
+        return;
+      }
+
+      const ext = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+      const { data, error: uploadErr } = await supabase.storage
+        .from('site-assets')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadErr) {
+        console.error('Upload error:', uploadErr);
+        setError('Upload mislukt');
+        setIsUploading(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('site-assets')
+        .getPublicUrl(data.path);
+
+      onChange(publicUrl);
+    } catch (err) {
+      console.error(err);
+      setError('Er ging iets mis');
+    }
+
+    setIsUploading(false);
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-slate-500 mb-1.5">{label}</label>
+
+      {value ? (
+        // Preview met vervang/verwijder
+        <div className="relative group">
+          <img
+            src={value}
+            alt="Upload"
+            className="w-full h-32 object-cover rounded-lg border border-slate-200"
+          />
+          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="px-3 py-1.5 bg-white text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm mr-1">swap_horiz</span>
+              Vervang
+            </button>
+            <button
+              onClick={() => onChange(undefined)}
+              className="px-3 py-1.5 bg-red-500 text-white text-xs font-medium rounded-lg hover:bg-red-600 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">delete</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        // Upload zone
+        <div
+          onClick={() => fileRef.current?.click()}
+          onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('border-orange-400', 'bg-orange-50'); }}
+          onDragLeave={(e) => { e.preventDefault(); e.currentTarget.classList.remove('border-orange-400', 'bg-orange-50'); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.currentTarget.classList.remove('border-orange-400', 'bg-orange-50');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+          }}
+          className={`border-2 border-dashed rounded-lg p-4 flex flex-col items-center gap-2 cursor-pointer transition-colors hover:border-orange-400 hover:bg-orange-50/50 ${
+            isUploading ? 'opacity-50 pointer-events-none' : 'border-slate-200'
+          }`}
+        >
+          <span className="material-symbols-outlined text-2xl text-slate-400">
+            {isUploading ? 'progress_activity' : 'add_a_photo'}
+          </span>
+          <span className="text-xs text-slate-500">
+            {isUploading ? 'Uploaden...' : 'Klik of sleep een foto'}
+          </span>
+          {hint && <span className="text-[10px] text-slate-400">{hint}</span>}
+        </div>
+      )}
+
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = '';
+        }}
+      />
+    </div>
+  );
+}
+
+function ItemCard({ children, label, index }: { children: React.ReactNode; label: string; index: number }) {
+  return (
+    <div className="p-3 bg-slate-50/80 rounded-lg space-y-2 border border-slate-100">
+      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label} {index + 1}</span>
+      {children}
+    </div>
+  );
+}
+
+function Sep() {
+  return <hr className="border-slate-100" />;
+}
+
+type SetGen     = (path: string, value: any) => void;
+type SetGenItem = (arrayPath: string, index: number, field: string, value: any) => void;
+type SetCont    = (updates: Partial<SiteContent>) => void;
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// FIELD GROUPS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// ── STIJL & KLEUREN ───────────────────────
+function StijlFields({ gen, setGen }: { gen: GeneratedContent; setGen: SetGen }) {
+  const styles = (gen as any).customStyles || {};
+
+  const setStyle = (key: string, value: any) => {
+    setGen('customStyles', { ...styles, [key]: value });
+  };
+
+  const RADIUS_OPTIONS = [
+    { label: 'Scherp', value: '0px', icon: 'square' },
+    { label: 'Licht', value: '6px', icon: 'rounded_corner' },
+    { label: 'Rond', value: '12px', icon: 'circle' },
+    { label: 'Pill', value: '9999px', icon: 'stadium' },
+  ];
+
+  const PRESET_COLORS = [
+    '#1e293b', '#334155', '#0f172a', // donker
+    '#f97316', '#ea580c', '#c2410c', // oranje
+    '#2563eb', '#1d4ed8', '#3b82f6', // blauw
+    '#059669', '#047857', '#10b981', // groen
+    '#7c3aed', '#6d28d9', '#8b5cf6', // paars
+    '#dc2626', '#b91c1c', '#ef4444', // rood
+    '#d97706', '#b45309', '#f59e0b', // amber
+    '#0d9488', '#0f766e', '#14b8a6', // teal
+  ];
+
+  return (
+    <>
+      {/* Primary / Accent Color */}
+      <div>
+        <label className="block text-xs font-medium text-slate-500 mb-2">Accent kleur</label>
+        <div className="flex items-center gap-2 mb-2">
+          <input
+            type="color"
+            value={styles.primaryColor || '#1e293b'}
+            onChange={(e) => setStyle('primaryColor', e.target.value)}
+            className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5"
+          />
+          <input
+            type="text"
+            value={styles.primaryColor || '#1e293b'}
+            onChange={(e) => setStyle('primaryColor', e.target.value)}
+            className="w-24 px-2 py-1.5 text-xs font-mono border border-slate-200 rounded-lg"
+            placeholder="#1e293b"
+          />
+        </div>
+        <div className="flex flex-wrap gap-1.5">
+          {PRESET_COLORS.map((c) => (
+            <button
+              key={c}
+              onClick={() => setStyle('primaryColor', c)}
+              className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 ${
+                styles.primaryColor === c ? 'border-orange-400 scale-110' : 'border-slate-200'
+              }`}
+              style={{ backgroundColor: c }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <Sep />
+
+      {/* Button Color (separate from accent) */}
+      <div>
+        <label className="block text-xs font-medium text-slate-500 mb-2">Button kleur</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={styles.buttonColor || styles.primaryColor || '#1e293b'}
+            onChange={(e) => setStyle('buttonColor', e.target.value)}
+            className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5"
+          />
+          <input
+            type="text"
+            value={styles.buttonColor || styles.primaryColor || '#1e293b'}
+            onChange={(e) => setStyle('buttonColor', e.target.value)}
+            className="w-24 px-2 py-1.5 text-xs font-mono border border-slate-200 rounded-lg"
+          />
+          <button
+            onClick={() => setStyle('buttonColor', undefined)}
+            className="text-[10px] text-slate-400 hover:text-slate-600 underline"
+          >
+            = accent
+          </button>
+        </div>
+      </div>
+
+      {/* Button Text Color */}
+      <div>
+        <label className="block text-xs font-medium text-slate-500 mb-2">Button tekst kleur</label>
+        <div className="flex gap-2">
+          {[
+            { label: 'Wit', value: '#ffffff' },
+            { label: 'Zwart', value: '#000000' },
+            { label: 'Donker', value: '#1e293b' },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setStyle('buttonTextColor', opt.value)}
+              className={`flex-1 py-2 text-xs font-medium rounded-lg border-2 transition-all ${
+                (styles.buttonTextColor || '#ffffff') === opt.value
+                  ? 'border-orange-400 bg-orange-50'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              <span className="inline-block w-3 h-3 rounded-full mr-1 align-middle border border-slate-200" style={{ backgroundColor: opt.value }} />
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Sep />
+
+      {/* Button Border Radius */}
+      <div>
+        <label className="block text-xs font-medium text-slate-500 mb-2">Button vorm</label>
+        <div className="grid grid-cols-4 gap-2">
+          {RADIUS_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setStyle('buttonRadius', opt.value)}
+              className={`flex flex-col items-center gap-1 py-2.5 rounded-lg border-2 transition-all ${
+                (styles.buttonRadius || '6px') === opt.value
+                  ? 'border-orange-400 bg-orange-50'
+                  : 'border-slate-200 hover:border-slate-300'
+              }`}
+            >
+              {/* Mini button preview */}
+              <div
+                className="w-12 h-5 bg-slate-700"
+                style={{ borderRadius: opt.value }}
+              />
+              <span className="text-[10px] font-medium text-slate-500">{opt.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Sep />
+
+      {/* Heading Color */}
+      <div>
+        <label className="block text-xs font-medium text-slate-500 mb-2">Heading kleur</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={styles.headingColor || '#0f172a'}
+            onChange={(e) => setStyle('headingColor', e.target.value)}
+            className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5"
+          />
+          <input
+            type="text"
+            value={styles.headingColor || '#0f172a'}
+            onChange={(e) => setStyle('headingColor', e.target.value)}
+            className="w-24 px-2 py-1.5 text-xs font-mono border border-slate-200 rounded-lg"
+          />
+          <button
+            onClick={() => setStyle('headingColor', undefined)}
+            className="text-[10px] text-slate-400 hover:text-slate-600 underline"
+          >
+            reset
+          </button>
+        </div>
+      </div>
+
+      {/* Body text color */}
+      <div>
+        <label className="block text-xs font-medium text-slate-500 mb-2">Tekst kleur</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={styles.bodyColor || '#334155'}
+            onChange={(e) => setStyle('bodyColor', e.target.value)}
+            className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer p-0.5"
+          />
+          <input
+            type="text"
+            value={styles.bodyColor || '#334155'}
+            onChange={(e) => setStyle('bodyColor', e.target.value)}
+            className="w-24 px-2 py-1.5 text-xs font-mono border border-slate-200 rounded-lg"
+          />
+          <button
+            onClick={() => setStyle('bodyColor', undefined)}
+            className="text-[10px] text-slate-400 hover:text-slate-600 underline"
+          >
+            reset
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── HERO ──────────────────────────────────
+function HeroFields({ gen, content, setGen, setCont }: { gen: GeneratedContent; content: SiteContent; setGen: SetGen; setCont: SetCont }) {
+  return (
+    <>
+      <ImageField
+        label="Profielfoto"
+        value={content.foto}
+        onChange={(url) => setCont({ foto: url })}
+        hint="Wordt getoond in hero & over mij · Max 5MB"
+      />
+      <Field label="Naam" value={content.naam} onChange={(v) => setCont({ naam: v })} />
+      <Field label="Titel" value={gen.hero?.titel || ''} onChange={(v) => setGen('hero.titel', v)} placeholder="Bijv. Zorg met aandacht" />
+      <Field label="Subtitel" value={gen.hero?.subtitel || ''} onChange={(v) => {
+        setGen('hero.subtitel', v);
+        setCont({ tagline: v });
+      }} placeholder="Korte ondertitel" />
+    </>
+  );
+}
+
+// ── STATS ─────────────────────────────────
+function StatsFields({ gen, setGenItem }: { gen: GeneratedContent; setGenItem: SetGenItem }) {
+  const stats = gen.stats || [];
+  if (!stats.length) return <p className="text-xs text-slate-400 italic">Geen statistieken</p>;
+  return (
+    <>
+      {stats.map((s, i) => (
+        <ItemCard key={i} label="Stat" index={i}>
+          <Field label="Waarde" value={s.value} onChange={(v) => setGenItem('stats', i, 'value', v)} placeholder="10+" />
+          <Field label="Label" value={s.label} onChange={(v) => setGenItem('stats', i, 'label', v)} placeholder="Jaar ervaring" />
+        </ItemCard>
+      ))}
+    </>
+  );
+}
+
+// ── DIENSTEN ──────────────────────────────
+function DienstenFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+  const d = gen.diensten;
+  return (
+    <>
+      <Field label="Sectie titel" value={d?.titel || ''} onChange={(v) => setGen('diensten.titel', v)} />
+      <Field label="Intro" value={d?.intro || ''} onChange={(v) => setGen('diensten.intro', v)} multiline rows={2} />
+      <Sep />
+      {d?.items?.map((item, i) => (
+        <ItemCard key={i} label="Dienst" index={i}>
+          <Field label="Naam" value={item.naam} onChange={(v) => setGenItem('diensten.items', i, 'naam', v)} />
+          <Field label="Beschrijving" value={item.beschrijving || ''} onChange={(v) => setGenItem('diensten.items', i, 'beschrijving', v)} multiline rows={2} />
+        </ItemCard>
+      ))}
+    </>
+  );
+}
+
+// ── OVER MIJ ──────────────────────────────
+function OverFields({ gen, content, setGen, setCont }: { gen: GeneratedContent; content: SiteContent; setGen: SetGen; setCont: SetCont }) {
+  const o = gen.overMij;
+  return (
+    <>
+      <ImageField
+        label="Foto (over mij)"
+        value={content.foto}
+        onChange={(url) => setCont({ foto: url })}
+        hint="Dezelfde foto als in de hero"
+      />
+      <Field label="Sectie titel" value={o?.titel || ''} onChange={(v) => setGen('overMij.titel', v)} placeholder="Over mij" />
+      <Field label="Intro" value={o?.intro || ''} onChange={(v) => setGen('overMij.intro', v)} multiline rows={3} />
+      <Field label="Body" value={o?.body || ''} onChange={(v) => setGen('overMij.body', v)} multiline rows={4} />
+      <Field label="Persoonlijke noot" value={o?.persoonlijk || ''} onChange={(v) => setGen('overMij.persoonlijk', v)} multiline rows={2} />
+    </>
+  );
+}
+
+// ── CREDENTIALS ───────────────────────────
+function CredentialsFields({ gen, setGen }: { gen: GeneratedContent; setGen: SetGen }) {
+  return (
+    <>
+      <Field label="Sectie titel" value={gen.credentials?.titel || ''} onChange={(v) => setGen('credentials.titel', v)} />
+      <Field label="Intro" value={gen.credentials?.intro || ''} onChange={(v) => setGen('credentials.intro', v)} multiline rows={2} />
+    </>
+  );
+}
+
+// ── WERKERVARING ──────────────────────────
+function WerkervaringFields({ content, setCont }: { content: SiteContent; setCont: SetCont }) {
+  const items = content.werkervaring || [];
+
+  const update = (index: number, field: string, value: any) => {
+    const newItems = items.map((item, i) => i === index ? { ...item, [field]: value } : item);
+    setCont({ werkervaring: newItems });
+  };
+
+  if (!items.length) return <p className="text-xs text-slate-400 italic">Geen werkervaring</p>;
+
+  return (
+    <>
+      {items.map((item, i) => (
+        <ItemCard key={i} label="Positie" index={i}>
+          <Field label="Functie" value={item.functie} onChange={(v) => update(i, 'functie', v)} />
+          <Field label="Werkgever" value={item.werkgever} onChange={(v) => update(i, 'werkgever', v)} />
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Van" value={String(item.startJaar || item.start_jaar || '')} onChange={(v) => update(i, 'startJaar', parseInt(v) || undefined)} />
+            <Field label="Tot" value={String(item.eindJaar || item.eind_jaar || '')} onChange={(v) => update(i, 'eindJaar', parseInt(v) || undefined)} placeholder="Heden" />
+          </div>
+        </ItemCard>
+      ))}
+    </>
+  );
+}
+
+// ── VOOR WIE ──────────────────────────────
+function VoorWieFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+  const vw = gen.voorWie;
+  return (
+    <>
+      <Field label="Sectie titel" value={vw?.titel || ''} onChange={(v) => setGen('voorWie.titel', v)} />
+      <Field label="Intro" value={vw?.intro || ''} onChange={(v) => setGen('voorWie.intro', v)} multiline rows={2} />
+      <Sep />
+      {vw?.doelgroepen?.map((dg, i) => (
+        <ItemCard key={i} label="Doelgroep" index={i}>
+          <Field label="Titel" value={dg.titel} onChange={(v) => setGenItem('voorWie.doelgroepen', i, 'titel', v)} />
+          <Field label="Tekst" value={dg.tekst} onChange={(v) => setGenItem('voorWie.doelgroepen', i, 'tekst', v)} multiline rows={2} />
+        </ItemCard>
+      ))}
+    </>
+  );
+}
+
+// ── QUOTE ─────────────────────────────────
+function QuoteFields({ gen, setGen }: { gen: GeneratedContent; setGen: SetGen }) {
+  return <Field label="Quote" value={gen.quote || ''} onChange={(v) => setGen('quote', v)} multiline rows={3} placeholder="Zorg begint bij aandacht" />;
+}
+
+// ── WERKWIJZE ─────────────────────────────
+function WerkwijzeFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+  const w = gen.werkwijze;
+  return (
+    <>
+      <Field label="Sectie titel" value={w?.titel || ''} onChange={(v) => setGen('werkwijze.titel', v)} />
+      <Field label="Intro" value={w?.intro || ''} onChange={(v) => setGen('werkwijze.intro', v)} multiline rows={2} />
+      <Sep />
+      {w?.stappen?.map((stap, i) => (
+        <ItemCard key={i} label="Stap" index={i}>
+          <Field label="Titel" value={stap.titel} onChange={(v) => setGenItem('werkwijze.stappen', i, 'titel', v)} />
+          <Field label="Beschrijving" value={stap.beschrijving} onChange={(v) => setGenItem('werkwijze.stappen', i, 'beschrijving', v)} multiline rows={2} />
+        </ItemCard>
+      ))}
+    </>
+  );
+}
+
+// ── TESTIMONIALS ──────────────────────────
+function TestimonialsFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+  const t = gen.testimonials;
+  return (
+    <>
+      <Field label="Sectie titel" value={t?.titel || ''} onChange={(v) => setGen('testimonials.titel', v)} />
+      <Sep />
+      {t?.items?.map((item, i) => (
+        <ItemCard key={i} label="Review" index={i}>
+          <Field label="Tekst" value={item.tekst} onChange={(v) => setGenItem('testimonials.items', i, 'tekst', v)} multiline rows={3} />
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="Naam" value={item.naam} onChange={(v) => setGenItem('testimonials.items', i, 'naam', v)} />
+            <Field label="Functie" value={item.functie || ''} onChange={(v) => setGenItem('testimonials.items', i, 'functie', v)} />
+          </div>
+        </ItemCard>
+      ))}
+    </>
+  );
+}
+
+// ── FAQ ───────────────────────────────────
+function FaqFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+  const f = gen.faq;
+  return (
+    <>
+      <Field label="Sectie titel" value={f?.titel || ''} onChange={(v) => setGen('faq.titel', v)} />
+      <Sep />
+      {f?.items?.map((item, i) => (
+        <ItemCard key={i} label="Vraag" index={i}>
+          <Field label="Vraag" value={item.vraag} onChange={(v) => setGenItem('faq.items', i, 'vraag', v)} />
+          <Field label="Antwoord" value={item.antwoord} onChange={(v) => setGenItem('faq.items', i, 'antwoord', v)} multiline rows={3} />
+        </ItemCard>
+      ))}
+    </>
+  );
+}
+
+// ── CTA ───────────────────────────────────
+function CtaFields({ gen, setGen }: { gen: GeneratedContent; setGen: SetGen }) {
+  return (
+    <>
+      <Field label="Titel" value={gen.cta?.titel || ''} onChange={(v) => setGen('cta.titel', v)} />
+      <Field label="Tekst" value={gen.cta?.tekst || ''} onChange={(v) => setGen('cta.tekst', v)} multiline rows={2} />
+      <Field label="Button tekst" value={gen.cta?.button || ''} onChange={(v) => setGen('cta.button', v)} />
+    </>
+  );
+}
+
+// ── CONTACT ───────────────────────────────
+function ContactFields({ gen, content, setGen, setCont }: { gen: GeneratedContent; content: SiteContent; setGen: SetGen; setCont: SetCont }) {
+  return (
+    <>
+      <Field label="Sectie titel" value={gen.contact?.titel || ''} onChange={(v) => setGen('contact.titel', v)} />
+      <Field label="Intro" value={gen.contact?.intro || ''} onChange={(v) => setGen('contact.intro', v)} multiline rows={2} />
+      <Sep />
+      <Field label="E-mailadres" value={content.contact?.email || ''} onChange={(v) => setCont({ contact: { ...content.contact, email: v } })} />
+      <Field label="Telefoon" value={content.contact?.telefoon || content.telefoon || ''} onChange={(v) => setCont({ contact: { ...content.contact, telefoon: v } })} placeholder="06-12345678" />
+      <Field
+        label="Werkgebied (komma-gescheiden)"
+        value={content.contact?.werkgebied?.join(', ') || ''}
+        onChange={(v) => setCont({ contact: { ...content.contact, werkgebied: v.split(',').map(s => s.trim()).filter(Boolean) } })}
+        placeholder="Amsterdam, Utrecht"
+      />
+    </>
+  );
+}

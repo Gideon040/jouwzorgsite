@@ -2,52 +2,31 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { updateSite } from '@/lib/actions/sites';
-import { Button, Card, CardContent } from '@/components/ui';
-import { 
-  StepGegevens,
-  StepContact,
-  StepDiensten,
-  StepCertificaten,
-  StepOverMij,
-  StepTemplate,
-} from '@/components/wizard/steps';
-import { Site, SiteContent, Contact, Certificaat } from '@/types';
-import { TemplateId } from '@/constants';
+import { Site, SiteContent, GeneratedContent } from '@/types';
+import { EditorPanel } from '@/components/dashboard/EditorPanel';
+import { EditablePreview } from '@/components/dashboard/EditablePreview';
 
 interface EditPageProps {
   params: { siteId: string };
 }
 
-type EditTab = 'gegevens' | 'contact' | 'diensten' | 'certificaten' | 'over_mij' | 'template';
-
-const TABS: { id: EditTab; label: string; icon: string }[] = [
-  { id: 'gegevens', label: 'Gegevens', icon: 'person' },
-  { id: 'contact', label: 'Contact', icon: 'call' },
-  { id: 'diensten', label: 'Diensten', icon: 'medical_services' },
-  { id: 'certificaten', label: 'Certificaten', icon: 'verified' },
-  { id: 'over_mij', label: 'Over mij', icon: 'description' },
-  { id: 'template', label: 'Template', icon: 'palette' },
-];
-
 export default function EditPage({ params }: EditPageProps) {
   const router = useRouter();
   const [site, setSite] = useState<Site | null>(null);
-  const [content, setContent] = useState<Partial<SiteContent>>({});
-  const [templateId, setTemplateId] = useState<TemplateId>('warm');
-  const [activeTab, setActiveTab] = useState<EditTab>('gegevens');
+  const [content, setContent] = useState<SiteContent | null>(null);
+  const [generated, setGenerated] = useState<GeneratedContent>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // Load site data
+  // ── Load site ────────────────────────────
   useEffect(() => {
-    const loadSite = async () => {
+    const load = async () => {
       const supabase = createClient();
-      
       const { data, error } = await supabase
         .from('sites')
         .select('*')
@@ -59,187 +38,228 @@ export default function EditPage({ params }: EditPageProps) {
         return;
       }
 
-      setSite(data as Site);
-      setContent(data.content as SiteContent);
-      setTemplateId(data.template_id as TemplateId);
+      const s = data as Site;
+      setSite(s);
+      setContent(s.content);
+      setGenerated((s.generated_content || {}) as GeneratedContent);
       setIsLoading(false);
     };
-
-    loadSite();
+    load();
   }, [params.siteId, router]);
 
-  const updateContent = (updates: Partial<SiteContent>) => {
-    setContent((prev) => ({ ...prev, ...updates }));
-  };
+  // ── Update handlers ──────────────────────
+  const handleContentUpdate = useCallback((newContent: SiteContent) => {
+    setContent(newContent);
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, []);
 
-  const handleSave = async () => {
-    if (!site) return;
-    
-    setIsSaving(true);
-    setSaveMessage('');
+  const handleGeneratedUpdate = useCallback((newGen: GeneratedContent) => {
+    setGenerated(newGen);
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, []);
 
-    const result = await updateSite(site.id, {
-      template_id: templateId,
-      content: content,
+  // ── Image replace ────────────────────────
+  const handleImageReplace = useCallback((imageKey: string, newUrl: string) => {
+    setGenerated(prev => ({
+      ...prev,
+      customImages: { ...((prev as any).customImages || {}), [imageKey]: newUrl },
+    }));
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, []);
+
+  // ── Text change ──────────────────────────
+  const handleTextChange = useCallback((originalText: string, newText: string) => {
+    setGenerated(prev => ({
+      ...prev,
+      customTexts: { ...((prev as any).customTexts || {}), [originalText]: newText },
+    }));
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, []);
+
+  // ── Button change ────────────────────────
+  const handleButtonChange = useCallback((btnId: string, style: { bgColor?: string; textColor?: string; radius?: string } | null) => {
+    setGenerated(prev => {
+      const existing = { ...((prev as any).customButtons || {}) };
+      if (!style) {
+        delete existing[btnId]; // reset to original
+      } else {
+        existing[btnId] = style;
+      }
+      return { ...prev, customButtons: existing };
     });
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, []);
 
-    if (result.error) {
-      setSaveMessage(`❌ ${result.error}`);
+  // ── Save ─────────────────────────────────
+  const handleSave = useCallback(async () => {
+    if (!site || !content) return;
+
+    setIsSaving(true);
+    setSaveStatus('idle');
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('sites')
+      .update({
+        content: content,
+        generated_content: generated,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', site.id);
+
+    if (error) {
+      console.error('Save error:', error);
+      setSaveStatus('error');
     } else {
-      setSaveMessage('✅ Opgeslagen!');
-      setTimeout(() => setSaveMessage(''), 3000);
+      setSaveStatus('saved');
+      setHasChanges(false);
+      setSite(prev => prev ? { ...prev, content, generated_content: generated } : prev);
+      setTimeout(() => setSaveStatus('idle'), 3000);
     }
-
     setIsSaving(false);
-  };
+  }, [site, content, generated]);
 
-  if (isLoading) {
+  // ── Cmd+S ────────────────────────────────
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        if (hasChanges && !isSaving) handleSave();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [hasChanges, isSaving, handleSave]);
+
+  // ── Loading ──────────────────────────────
+  if (isLoading || !site || !content) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-screen bg-slate-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-slate-500">Laden...</p>
+          <span className="material-symbols-outlined text-4xl text-orange-500 animate-spin">progress_activity</span>
+          <p className="text-slate-500 mt-4">Site laden...</p>
         </div>
       </div>
     );
   }
 
-  if (!site) return null;
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'gegevens':
-        return (
-          <StepGegevens
-            naam={content.naam || ''}
-            foto={content.foto}
-            tagline={content.tagline || ''}
-            onNaamChange={(naam) => updateContent({ naam })}
-            onFotoChange={(foto) => updateContent({ foto: foto || undefined })}
-            onTaglineChange={(tagline) => updateContent({ tagline })}
-          />
-        );
-      case 'contact':
-        return (
-          <StepContact
-            contact={content.contact || { email: '', werkgebied: [] }}
-            onContactChange={(contact) => updateContent({ contact: contact as Contact })}
-          />
-        );
-      case 'diensten':
-        return (
-          <StepDiensten
-            beroep={site.beroep}
-            diensten={content.diensten || []}
-            onDienstenChange={(diensten) => updateContent({ diensten })}
-          />
-        );
-      case 'certificaten':
-        return (
-          <StepCertificaten
-            certificaten={content.certificaten || []}
-            onAdd={(cert) =>
-              updateContent({ certificaten: [...(content.certificaten || []), cert] })
-            }
-            onRemove={(index) =>
-              updateContent({
-                certificaten: (content.certificaten || []).filter((_, i) => i !== index),
-              })
-            }
-            onUpdate={(index, updates) =>
-              updateContent({
-                certificaten: (content.certificaten || []).map((cert, i) =>
-                  i === index ? { ...cert, ...updates } : cert
-                ),
-              })
-            }
-          />
-        );
-      case 'over_mij':
-        return (
-          <StepOverMij
-            value={content.over_mij || ''}
-            onChange={(over_mij) => updateContent({ over_mij })}
-          />
-        );
-      case 'template':
-        return <StepTemplate value={templateId} onChange={setTemplateId} />;
-      default:
-        return null;
-    }
-  };
+  const previewSite: Site = { ...site, content, generated_content: generated };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
-            <a href="/dashboard" className="hover:text-primary">Dashboard</a>
-            <span>/</span>
-            <span>Bewerken</span>
+    <div className="h-screen flex flex-col bg-slate-100">
+      {/* ── Top bar ── */}
+      <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-3 z-50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition-colors"
+            >
+              <span className="material-symbols-outlined text-xl">arrow_back</span>
+              <span className="hidden sm:inline text-sm">Dashboard</span>
+            </button>
+            <div className="h-6 w-px bg-slate-200" />
+            <div>
+              <h1 className="text-sm font-bold text-slate-900">{content.naam}</h1>
+              <p className="text-xs text-slate-400">{site.subdomain}.jouwzorgsite.nl</p>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {content.naam || 'Site bewerken'}
-          </h1>
-          <p className="text-slate-500">
-            {site.subdomain}.jouwzorgsite.nl
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {saveMessage && (
-            <span className="text-sm font-medium">{saveMessage}</span>
-          )}
-          <a
-            href={`/site/${site.subdomain}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button variant="outline">
-              <span className="material-symbols-outlined">visibility</span>
-              Preview
-            </Button>
-          </a>
-          <Button onClick={handleSave} isLoading={isSaving}>
-            <span className="material-symbols-outlined">save</span>
-            Opslaan
-          </Button>
+
+          <div className="flex items-center gap-3">
+            {/* Hints */}
+            <div className="hidden xl:flex items-center gap-2 text-[11px] text-slate-400">
+              <span className="flex items-center gap-0.5">
+                <span className="material-symbols-outlined text-sm">photo_camera</span>
+                Foto's
+              </span>
+              <span className="text-slate-300">·</span>
+              <span className="flex items-center gap-0.5">
+                <span className="material-symbols-outlined text-sm">edit</span>
+                Teksten
+              </span>
+              <span className="text-slate-300">·</span>
+              <span className="flex items-center gap-0.5">
+                <span className="material-symbols-outlined text-sm text-purple-400">smart_button</span>
+                Buttons
+              </span>
+              <span className="text-slate-300 mx-1">– klik om te bewerken</span>
+            </div>
+
+            <div className="h-4 w-px bg-slate-200 hidden lg:block" />
+
+            {saveStatus === 'saved' && (
+              <span className="text-xs text-emerald-600 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">check_circle</span> Opgeslagen
+              </span>
+            )}
+            {saveStatus === 'error' && (
+              <span className="text-xs text-red-500 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">error</span> Fout
+              </span>
+            )}
+            {hasChanges && saveStatus === 'idle' && (
+              <span className="text-xs text-amber-600 flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm">edit</span> Niet opgeslagen
+              </span>
+            )}
+
+            <a
+              href={`/site/${site.subdomain}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <span className="material-symbols-outlined text-lg">open_in_new</span>
+              <span className="hidden sm:inline">Preview</span>
+            </a>
+
+            <button
+              onClick={handleSave}
+              disabled={!hasChanges || isSaving}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                hasChanges && !isSaving
+                  ? 'bg-orange-500 text-white hover:bg-orange-600 shadow-sm'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              }`}
+            >
+              {isSaving ? (
+                <><span className="material-symbols-outlined text-lg animate-spin">progress_activity</span> Opslaan...</>
+              ) : (
+                <><span className="material-symbols-outlined text-lg">save</span> Opslaan <kbd className="hidden sm:inline text-[10px] bg-white/20 px-1.5 py-0.5 rounded">⌘S</kbd></>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tabs + Content */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar Tabs */}
-        <div className="lg:w-64 flex-shrink-0">
-          <Card>
-            <nav className="p-2">
-              {TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors
-                    ${activeTab === tab.id 
-                      ? 'bg-primary text-white' 
-                      : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
-                    }
-                  `}
-                >
-                  <span className="material-symbols-outlined text-xl">{tab.icon}</span>
-                  <span className="font-medium">{tab.label}</span>
-                </button>
-              ))}
-            </nav>
-          </Card>
+      {/* ── Main ── */}
+      <div className="flex flex-1 min-h-0">
+        <div className="w-[380px] min-w-[380px] border-r border-slate-200 bg-white overflow-hidden">
+          <EditorPanel
+            site={site}
+            content={content}
+            generated={generated}
+            onContentUpdate={handleContentUpdate}
+            onGeneratedUpdate={handleGeneratedUpdate}
+          />
         </div>
 
-        {/* Content */}
-        <div className="flex-1">
-          <Card>
-            <CardContent className="p-0">
-              {renderTabContent()}
-            </CardContent>
-          </Card>
+        <div className="flex-1 overflow-y-auto bg-slate-50">
+          <div className="w-full">
+            <div className="overflow-hidden">
+              <EditablePreview
+                site={previewSite}
+                onImageReplace={handleImageReplace}
+                onTextChange={handleTextChange}
+                onButtonChange={handleButtonChange}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

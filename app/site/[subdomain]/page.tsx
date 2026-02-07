@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { SiteRenderer } from '@/components/templates';
 import { Site } from '@/types';
+import { SiteStyleInjector } from '@/components/site/SiteStyleInjector';
+import { SiteTracker } from '@/components/site/SiteTracker';
 
 interface SitePageProps {
   params: {
@@ -11,7 +13,6 @@ interface SitePageProps {
   };
 }
 
-// Generate metadata for SEO
 export async function generateMetadata({ params }: SitePageProps) {
   const supabase = await createClient();
   
@@ -22,9 +23,7 @@ export async function generateMetadata({ params }: SitePageProps) {
     .single();
 
   if (!site) {
-    return {
-      title: 'Niet gevonden',
-    };
+    return { title: 'Niet gevonden' };
   }
 
   const content = site.content as any;
@@ -32,7 +31,6 @@ export async function generateMetadata({ params }: SitePageProps) {
   return {
     title: `${content.naam} - ${content.tagline}`,
     description: content.over_mij?.slice(0, 160) || content.tagline,
-    // Don't index unpublished sites
     robots: site.published ? 'index, follow' : 'noindex, nofollow',
     openGraph: {
       title: content.naam,
@@ -46,24 +44,18 @@ export async function generateMetadata({ params }: SitePageProps) {
 export default async function SitePage({ params }: SitePageProps) {
   const supabase = await createClient();
   
-  // Get current user (if logged in)
   const { data: { user } } = await supabase.auth.getUser();
   
-  // Fetch the site data
   const { data: site, error } = await supabase
     .from('sites')
     .select('*')
     .eq('subdomain', params.subdomain.toLowerCase())
     .single();
 
-  // Show 404 if site not found
   if (error || !site) {
     notFound();
   }
 
-  // Check if user can view the site:
-  // - Published sites: anyone can view
-  // - Unpublished sites: only the owner can view
   const isOwner = user?.id === site.user_id;
   const canView = site.published || isOwner;
 
@@ -71,40 +63,56 @@ export default async function SitePage({ params }: SitePageProps) {
     notFound();
   }
 
-  // Show preview banner for owners viewing unpublished sites
   const showPreviewBanner = !site.published && isOwner;
+
+  // Extract custom editor data
+  const gen = (site.generated_content || {}) as any;
+  const customImages: Record<string, string> | undefined = gen.customImages;
+  const customTexts: Record<string, string> | undefined = gen.customTexts;
+  const customButtons: Record<string, any> | undefined = gen.customButtons;
+  const customStyles: Record<string, string> | undefined = gen.customStyles;
+  const hasCustomizations = customImages || customTexts || customButtons || customStyles;
 
   return (
     <>
-      {/* Preview Banner */}
       {showPreviewBanner && (
         <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-amber-900 px-4 py-2 text-center text-sm font-medium shadow-lg">
           <span className="inline-flex items-center gap-2">
             <span className="material-symbols-outlined text-lg">visibility</span>
             Dit is een preview - je site is nog niet gepubliceerd
-            <a 
-              href="/dashboard" 
-              className="underline hover:no-underline ml-2"
-            >
+            <a href="/dashboard" className="underline hover:no-underline ml-2">
               Terug naar dashboard
             </a>
           </span>
         </div>
       )}
       
-      {/* Add padding when preview banner is shown */}
       <div className={showPreviewBanner ? 'pt-10' : ''}>
-        <SiteRenderer site={site as Site} />
+        <div className="site-content">
+          <SiteRenderer site={site as Site} />
+        </div>
       </div>
+
+      {/* All customizations applied client-side AFTER hydration = no mismatch */}
+      {hasCustomizations && (
+        <SiteStyleInjector
+          customImages={customImages}
+          customTexts={customTexts}
+          customButtons={customButtons}
+          customStyles={customStyles}
+        />
+      )}
+
+      {/* Track page view — only on published sites, not for owner */}
+      {site.published && !isOwner && (
+        <SiteTracker siteId={site.id} />
+      )}
     </>
   );
 }
 
-// Optionally generate static paths for published sites (for ISR)
 export async function generateStaticParams() {
-  // For now, don't pre-generate - render on demand
   return [];
 }
 
-// Revalidate every 60 seconds for ISR
 export const revalidate = 60;

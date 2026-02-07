@@ -1932,8 +1932,8 @@ function HeroPortfolio3({
 function MindoorSocialProof({ theme, palette }: any) {
   return (
     <div 
-      className="bg-white rounded-2xl p-5 border"
-      style={{ borderColor: theme.colors.border }}
+className="rounded-2xl p-5 border"
+style={{ backgroundColor: theme.colors.background, borderColor: theme.colors.border }}
     >
       <div className="flex items-center gap-4">
         <div className="flex -space-x-3">
