@@ -1,11 +1,18 @@
 // components/templates/sections/WerkwijzeSection.tsx
-// Werkwijze sectie - Stappen/proces hoe samenwerking werkt
+// Werkwijze sectie — v2 rewrite
 // 5 thema's × 3 varianten = 15 unieke layouts
+// Fixes: typed props, palette fallbacks, extracted helpers, no stap.label
 
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { ThemeConfig } from '../themes';
+import { WerkwijzeStap } from '@/types';
 import { BaseSectionProps, WerkwijzeStyle, getRevealClass, DEFAULT_WERKWIJZE_STAPPEN } from './types';
+
+// ============================================
+// SECTION PROPS
+// ============================================
 
 interface WerkwijzeSectionProps extends BaseSectionProps {
   style?: WerkwijzeStyle;
@@ -13,9 +20,37 @@ interface WerkwijzeSectionProps extends BaseSectionProps {
 }
 
 // ============================================
+// SHARED VARIANT PROPS (no more `any`)
+// ============================================
+
+interface PaletteWithOptionals {
+  primary: string;
+  primaryHover: string;
+  primaryLight: string;
+  primaryDark: string;
+  accent?: string;
+  accentLight?: string;
+  bg?: string;
+  bgAlt?: string;
+  text?: string;
+  textMuted?: string;
+  border?: string;
+}
+
+interface WerkwijzeVariantProps {
+  theme: ThemeConfig;
+  palette: PaletteWithOptionals;
+  titel: string;
+  intro?: string;
+  stappen: WerkwijzeStap[];
+  footer?: string;
+}
+
+// ============================================
 // SHARED HOOK: Auto-cycling stepper
 // ============================================
-function useStepCycle(totalSteps: number, duration: number = 4500, autoStart: boolean = true) {
+
+function useStepCycle(totalSteps: number, duration = 4500, autoStart = true) {
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(!autoStart);
@@ -58,27 +93,270 @@ function useStepCycle(totalSteps: number, duration: number = 4500, autoStart: bo
 // ============================================
 // SHARED: Default stappen icons
 // ============================================
+
 const STAP_ICONS = ['mail', 'groups', 'handshake', 'rocket_launch'];
+
+function getStapIcon(stap: WerkwijzeStap, idx: number): string {
+  return stap.icon || STAP_ICONS[idx % STAP_ICONS.length];
+}
+
+function padNum(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+// ============================================
+// HELPER: Section Header
+// ============================================
+
+interface SectionHeaderProps {
+  theme: ThemeConfig;
+  palette: PaletteWithOptionals;
+  titel: string;
+  intro?: string;
+  variant: 'editorial' | 'proactief' | 'serene' | 'mindoor' | 'portfolio';
+}
+
+function SectionHeader({ theme, palette, titel, intro, variant }: SectionHeaderProps) {
+  const accent = palette.accent ?? palette.primary;
+
+  switch (variant) {
+    case 'editorial':
+      return (
+        <div className={`text-center mb-16 ${getRevealClass('up')}`}>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] block mb-3" style={{ color: accent }}>
+            Samenwerken
+          </span>
+          <h2 className="text-3xl md:text-4xl" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>
+            {titel}
+          </h2>
+          <div className="w-12 h-px mx-auto mt-4" style={{ backgroundColor: accent }} />
+          {intro && (
+            <p className="mt-5 max-w-lg mx-auto text-base leading-relaxed" style={{ color: theme.colors.textMuted }}>
+              {intro}
+            </p>
+          )}
+        </div>
+      );
+
+    case 'proactief':
+      return (
+        <div className={`text-center max-w-xl mx-auto mb-16 ${getRevealClass('up')}`}>
+          <span className="text-sm italic mb-3 block" style={{ color: palette.primary }}>Werkwijze</span>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ fontFamily: theme.fonts.heading, color: palette.primaryDark }}>
+            {titel}
+          </h2>
+          {intro && <p className="text-[15px] leading-relaxed" style={{ color: theme.colors.textMuted }}>{intro}</p>}
+        </div>
+      );
+
+    case 'serene':
+      return (
+        <div className={`mb-20 ${getRevealClass('up')}`}>
+          <span className="text-[9px] font-semibold uppercase tracking-[3px] block mb-4" style={{ color: theme.colors.textMuted }}>
+            Werkwijze
+          </span>
+          <h2 className="text-4xl sm:text-[54px] font-light leading-[1.08]" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
+            {titel}
+          </h2>
+        </div>
+      );
+
+    case 'mindoor':
+      return (
+        <div className={`text-center mb-20 ${getRevealClass('up')}`}>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] mb-4 block" style={{ color: accent }}>
+            Werkwijze
+          </span>
+          <h2 className="text-4xl sm:text-[52px] font-medium leading-[1.1]" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
+            {titel}
+          </h2>
+          {intro && <p className="text-[15px] leading-relaxed max-w-md mx-auto mt-6" style={{ color: theme.colors.textMuted }}>{intro}</p>}
+        </div>
+      );
+
+    case 'portfolio':
+      return (
+        <div className={`text-center mb-20 ${getRevealClass('up')}`}>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3 block" style={{ color: accent }}>
+            ✦ &nbsp; Werkwijze &nbsp; ✦
+          </span>
+          <h2 className="text-4xl sm:text-5xl font-semibold mb-4" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>
+            {titel}
+          </h2>
+          <div className="w-16 h-px mx-auto mt-5 mb-5" style={{ backgroundColor: accent, opacity: 0.4 }} />
+          {intro && <p className="text-[15px] leading-relaxed max-w-md mx-auto" style={{ color: theme.colors.textMuted }}>{intro}</p>}
+        </div>
+      );
+  }
+}
+
+// ============================================
+// HELPER: Footer Trust Badges
+// ============================================
+
+function FooterBadges({ theme, palette }: { theme: ThemeConfig; palette: PaletteWithOptionals }) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-5 mt-12 pt-8" style={{ borderTop: `1px solid ${theme.colors.border}` }}>
+      <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Beschikbaar
+      </span>
+      <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
+        <span className="material-symbols-outlined text-xs" style={{ color: palette.primary }}>schedule</span> 24h reactietijd
+      </span>
+      <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
+        <span className="material-symbols-outlined text-xs" style={{ color: palette.primary }}>verified</span> DBA-compliant
+      </span>
+    </div>
+  );
+}
+
+// ============================================
+// HELPER: Stepper Track (horizontal)
+// Used by Editorial V2, Proactief V1, Serene V2, Mindoor V2, Portfolio V2
+// ============================================
+
+interface StepperTrackProps {
+  items: WerkwijzeStap[];
+  current: number;
+  progress: number;
+  goTo: (idx: number) => void;
+  theme: ThemeConfig;
+  palette: PaletteWithOptionals;
+  nodeStyle: 'circle' | 'square' | 'pill' | 'corner';
+}
+
+function StepperTrack({ items, current, goTo, theme, palette, nodeStyle }: StepperTrackProps) {
+  const accent = palette.accent ?? palette.primary;
+  const filledWidth = current === 0 ? 0 : (current / (items.length - 1)) * 100;
+
+  const getNodeRadius = () => {
+    switch (nodeStyle) {
+      case 'circle': return '9999px';
+      case 'square': return '2px';
+      case 'corner': return '0 20px 0 0';
+      default: return '9999px';
+    }
+  };
+
+  return (
+    <div className={`relative px-8 mb-10 ${getRevealClass('up', 1)}`}>
+      {/* Track line */}
+      <div className="h-[2px] rounded" style={{ backgroundColor: theme.colors.border }}>
+        <div
+          className="h-full rounded transition-[width] duration-500"
+          style={{
+            width: `${filledWidth}%`,
+            background: `linear-gradient(90deg, ${palette.primary}, ${accent})`,
+          }}
+        />
+      </div>
+      {/* Nodes */}
+      <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-0">
+        {items.map((_, idx) => (
+          <div
+            key={idx}
+            className="w-12 h-12 border-[3px] flex items-center justify-center cursor-pointer transition-all duration-300 relative z-[2]"
+            style={{
+              borderRadius: getNodeRadius(),
+              backgroundColor: idx <= current ? palette.primary : 'white',
+              borderColor: idx <= current ? palette.primary : theme.colors.border,
+              transform: idx === current ? 'scale(1.15)' : 'scale(1)',
+              boxShadow: idx === current ? `0 0 0 6px ${palette.primary}15` : 'none',
+            }}
+            onClick={() => goTo(idx)}
+          >
+            <span
+              className="material-symbols-outlined text-xl"
+              style={{ color: idx <= current ? 'white' : theme.colors.textMuted }}
+            >
+              {getStapIcon(items[idx], idx)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ============================================
+// HELPER: Stepper Labels row
+// ============================================
+
+function StepperLabels({ items, current, theme, palette }: {
+  items: WerkwijzeStap[];
+  current: number;
+  theme: ThemeConfig;
+  palette: PaletteWithOptionals;
+}) {
+  return (
+    <div className="flex justify-between px-0 mb-10">
+      {items.map((stap, idx) => (
+        <span
+          key={idx}
+          className="text-sm text-center w-1/4 transition-all duration-300"
+          style={{
+            color: idx === current ? palette.primary : theme.colors.textMuted,
+            fontWeight: idx === current ? 600 : 400,
+          }}
+        >
+          {stap.titel}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ============================================
+// HELPER: Progress Bar
+// ============================================
+
+function ProgressBar({ progress, theme, palette }: {
+  progress: number;
+  theme: ThemeConfig;
+  palette: PaletteWithOptionals;
+}) {
+  const accent = palette.accent ?? palette.primary;
+  return (
+    <div className="h-[2px] mt-5 overflow-hidden rounded" style={{ backgroundColor: theme.colors.border }}>
+      <div
+        className="h-full rounded transition-[width] duration-50"
+        style={{
+          width: `${progress}%`,
+          background: `linear-gradient(90deg, ${palette.primary}, ${accent})`,
+        }}
+      />
+    </div>
+  );
+}
+
+// ============================================
+// HELPER: isAccentStep — last step gets accent treatment
+// ============================================
+
+function isAccentStep(idx: number, total: number): boolean {
+  return idx === total - 1;
+}
 
 // ============================================
 // MAIN COMPONENT
 // ============================================
-export function WerkwijzeSection({ 
-  style = 'editorial', 
+
+export function WerkwijzeSection({
+  style = 'editorial',
   variant = 1,
-  theme, 
-  palette, 
-  content, 
-  generated 
+  theme,
+  palette,
+  content,
+  generated,
 }: WerkwijzeSectionProps) {
   const werkwijzeContent = generated?.werkwijze;
   const titel = werkwijzeContent?.titel || 'Hoe werkt het?';
   const intro = werkwijzeContent?.intro;
   const stappen = werkwijzeContent?.stappen || DEFAULT_WERKWIJZE_STAPPEN;
   const footer = werkwijzeContent?.footer || 'Flexibel inzetbaar op korte en lange termijn. Zowel voor zorginstellingen als particulieren (PGB).';
-  
-  const props = { theme, palette, titel, intro, stappen, footer };
-  
+
+  const props: WerkwijzeVariantProps = { theme, palette, titel, intro, stappen, footer };
+
   switch (style) {
     case 'editorial':
       if (variant === 2) return <EditorialV2Stepper {...props} />;
@@ -113,35 +391,22 @@ export function WerkwijzeSection({
 
 // ============================================
 // EDITORIAL V1 — Cards
-// Border cards, gold top-line hover, Playfair nummers, icon boxes
+// Border cards, gold top-line hover, serif numbers, icon boxes
 // ============================================
-function EditorialV1Cards({ theme, palette, titel, intro, stappen, footer }: any) {
+function EditorialV1Cards({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const [hovered, setHovered] = useState<number | null>(null);
-  const accent = palette.accent || palette.primary;
-  
+  const accent = palette.accent ?? palette.primary;
+  const items = stappen.slice(0, 4);
+
   return (
     <section id="werkwijze" className="px-6 md:px-16 lg:px-32 py-20" style={{ backgroundColor: theme.colors.background }}>
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
-        <div className={`text-center mb-16 ${getRevealClass('up')}`}>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] block mb-3" style={{ color: accent }}>
-            Samenwerken
-          </span>
-          <h2 className="text-3xl md:text-4xl" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>
-            {titel}
-          </h2>
-          <div className="w-12 h-px mx-auto mt-4" style={{ backgroundColor: accent }} />
-          {intro && (
-            <p className="mt-5 max-w-lg mx-auto text-base leading-relaxed" style={{ color: theme.colors.textMuted }}>
-              {intro}
-            </p>
-          )}
-        </div>
+        <SectionHeader theme={theme} palette={palette} titel={titel} intro={intro} variant="editorial" />
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {stappen.slice(0, 4).map((stap: any, idx: number) => {
-            const isAccent = idx === 3;
+          {items.map((stap, idx) => {
+            const isAccent = isAccentStep(idx, items.length);
             const isHover = hovered === idx;
             return (
               <div
@@ -160,12 +425,9 @@ function EditorialV1Cards({ theme, palette, titel, intro, stappen, footer }: any
                 {/* Top line accent on hover */}
                 <div
                   className="absolute top-0 left-0 h-0.5 transition-all duration-400"
-                  style={{
-                    width: isHover ? '100%' : '0%',
-                    backgroundColor: accent,
-                  }}
+                  style={{ width: isHover ? '100%' : '0%', backgroundColor: accent }}
                 />
-                
+
                 {/* Number + Icon row */}
                 <div className="flex items-start justify-between mb-5">
                   <span
@@ -176,7 +438,7 @@ function EditorialV1Cards({ theme, palette, titel, intro, stappen, footer }: any
                       transition: 'color 0.35s ease',
                     }}
                   >
-                    {String(idx + 1).padStart(2, '0')}
+                    {padNum(idx + 1)}
                   </span>
                   <div
                     className="w-11 h-11 flex items-center justify-center border transition-all duration-300"
@@ -190,7 +452,7 @@ function EditorialV1Cards({ theme, palette, titel, intro, stappen, footer }: any
                       className="material-symbols-outlined text-xl"
                       style={{ color: isHover || isAccent ? 'white' : palette.primary }}
                     >
-                      {stap.icon || STAP_ICONS[idx]}
+                      {getStapIcon(stap, idx)}
                     </span>
                   </div>
                 </div>
@@ -228,15 +490,15 @@ function EditorialV1Cards({ theme, palette, titel, intro, stappen, footer }: any
 // EDITORIAL V2 — Sidebar Stepper
 // Horizontal stepper labels + track, auto-cycling panels
 // ============================================
-function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: any) {
-  const accent = palette.accent || palette.primary;
-  const { current, progress, goTo, pause, resume } = useStepCycle(Math.min(stappen.length, 4), 4500);
+function EditorialV2Stepper({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
+  const accent = palette.accent ?? palette.primary;
   const items = stappen.slice(0, 4);
+  const { current, progress, goTo, pause, resume } = useStepCycle(items.length, 4500);
 
   return (
     <section id="werkwijze" className="px-6 md:px-16 lg:px-32 py-20" style={{ backgroundColor: theme.colors.background }}>
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
+        {/* Header — left-aligned editorial variant */}
         <div className={`mb-14 ${getRevealClass('up')}`}>
           <div className="flex items-center gap-4 mb-4">
             <div className="w-8 h-px" style={{ backgroundColor: accent }} />
@@ -253,14 +515,14 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
         <div className="hidden md:block" onMouseEnter={pause} onMouseLeave={resume}>
           {/* Step labels */}
           <div className={`flex gap-0 mb-6 ${getRevealClass('up', 1)}`}>
-            {items.map((stap: any, idx: number) => (
+            {items.map((stap, idx) => (
               <div
                 key={idx}
                 className="flex-1 text-[11px] font-semibold uppercase tracking-[0.12em] cursor-pointer transition-colors duration-300 py-3"
                 style={{ color: idx === current ? palette.primary : theme.colors.textMuted }}
                 onClick={() => goTo(idx)}
               >
-                <span style={{ color: accent, marginRight: 6 }}>{String(idx + 1).padStart(2, '0')}</span>
+                <span style={{ color: accent, marginRight: 6 }}>{padNum(idx + 1)}</span>
                 {stap.titel}
               </div>
             ))}
@@ -268,11 +530,10 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
 
           {/* Track */}
           <div className="relative h-0.5 mb-8" style={{ backgroundColor: theme.colors.border }}>
-            {/* Nodes */}
-            {items.map((_: any, idx: number) => (
+            {items.map((_, idx) => (
               <div
                 key={idx}
-                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 border-2 bg-white transition-all duration-300"
+                className="absolute top-1/2 -translate-y-1/2 w-3 h-3 border-2 bg-white transition-all duration-300 cursor-pointer"
                 style={{
                   left: `${12.5 + (idx * 25)}%`,
                   borderColor: idx <= current ? palette.primary : theme.colors.border,
@@ -282,7 +543,6 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
                 onClick={() => goTo(idx)}
               />
             ))}
-            {/* Progress bar */}
             <div
               className="absolute top-0 left-0 h-full transition-[width] duration-100"
               style={{
@@ -294,8 +554,8 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
 
           {/* Panels */}
           <div className="relative" style={{ minHeight: 200 }}>
-            {items.map((stap: any, idx: number) => {
-              const isAccent = idx === items.length - 1;
+            {items.map((stap, idx) => {
+              const isAccent = isAccentStep(idx, items.length);
               return (
                 <div
                   key={idx}
@@ -326,7 +586,7 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
                         className="material-symbols-outlined text-xl"
                         style={{ color: isAccent ? 'rgba(255,255,255,0.9)' : palette.primary }}
                       >
-                        {stap.icon || STAP_ICONS[idx]}
+                        {getStapIcon(stap, idx)}
                       </span>
                     </div>
                     <div>
@@ -352,8 +612,8 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
 
         {/* Mobile: Stacked cards */}
         <div className="md:hidden flex flex-col gap-4">
-          {items.map((stap: any, idx: number) => {
-            const isAccent = idx === items.length - 1;
+          {items.map((stap, idx) => {
+            const isAccent = isAccentStep(idx, items.length);
             return (
               <div
                 key={idx}
@@ -366,7 +626,7 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
               >
                 <div className="flex items-center gap-3 mb-3">
                   <span className="text-lg" style={{ fontFamily: theme.fonts.heading, color: accent }}>
-                    {String(idx + 1).padStart(2, '0')}
+                    {padNum(idx + 1)}
                   </span>
                   <span className="text-[10px] font-semibold uppercase tracking-[0.12em]"
                     style={{ color: isAccent ? 'rgba(255,255,255,0.5)' : theme.colors.textMuted }}>
@@ -389,15 +649,15 @@ function EditorialV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
 // EDITORIAL V3 — Ghost Numbers
 // Large outlined numbers, content offset, expanding underlines
 // ============================================
-function EditorialV3Ghost({ theme, palette, titel, intro, stappen, footer }: any) {
-  const accent = palette.accent || palette.primary;
+function EditorialV3Ghost({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
+  const accent = palette.accent ?? palette.primary;
   const [hovered, setHovered] = useState<number | null>(null);
   const items = stappen.slice(0, 4);
 
   return (
     <section id="werkwijze" className="px-6 md:px-16 lg:px-32 py-20" style={{ backgroundColor: theme.colors.background }}>
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
+        {/* Header — left-aligned with line */}
         <div className={`mb-4 ${getRevealClass('up')}`}>
           <div className="flex items-center gap-4 mb-4">
             <span className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: accent }}>
@@ -414,9 +674,9 @@ function EditorialV3Ghost({ theme, palette, titel, intro, stappen, footer }: any
         </div>
 
         {/* Rows */}
-        {items.map((stap: any, idx: number) => {
+        {items.map((stap, idx) => {
           const isHover = hovered === idx;
-          const isAccent = idx === items.length - 1;
+          const isAccent = isAccentStep(idx, items.length);
           return (
             <div
               key={idx}
@@ -440,7 +700,7 @@ function EditorialV3Ghost({ theme, palette, titel, intro, stappen, footer }: any
                   WebkitTextStroke: `1px ${isHover || isAccent ? accent : theme.colors.border}`,
                 }}
               >
-                {String(idx + 1).padStart(2, '0')}
+                {padNum(idx + 1)}
               </span>
 
               {/* Content */}
@@ -453,10 +713,7 @@ function EditorialV3Ghost({ theme, palette, titel, intro, stappen, footer }: any
                     {stap.titel}
                     <span
                       className="absolute bottom-[-2px] left-0 h-[1.5px] transition-all duration-400"
-                      style={{
-                        width: isHover ? '100%' : '0%',
-                        backgroundColor: accent,
-                      }}
+                      style={{ width: isHover ? '100%' : '0%', backgroundColor: accent }}
                     />
                   </span>
                   {isHover && (
@@ -470,10 +727,7 @@ function EditorialV3Ghost({ theme, palette, titel, intro, stappen, footer }: any
                 </p>
                 <div className="flex items-center gap-3 mt-4">
                   <span className="material-symbols-outlined" style={{ fontSize: 16, color: accent }}>
-                    {stap.icon || STAP_ICONS[idx]}
-                  </span>
-                  <span className="text-xs font-medium" style={{ color: theme.colors.textMuted }}>
-                    {stap.label || ''}
+                    {getStapIcon(stap, idx)}
                   </span>
                 </div>
               </div>
@@ -494,80 +748,33 @@ function EditorialV3Ghost({ theme, palette, titel, intro, stappen, footer }: any
 // PROACTIEF V1 — Horizontal Stepper
 // Circular nodes, track fill, auto-cycling panels
 // ============================================
-function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: any) {
+function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
+  const accent = palette.accent ?? palette.primary;
   const { current, progress, goTo, pause, resume } = useStepCycle(items.length, 4000);
 
   return (
     <section id="werkwijze" className="py-24 px-6 md:px-12 relative overflow-hidden" style={{ backgroundColor: theme.colors.backgroundAlt }}>
       {/* Decorative circles */}
       <div className="absolute -top-16 -right-24 w-72 h-72 rounded-full" style={{ backgroundColor: palette.primary, opacity: 0.03 }} />
-      <div className="absolute -bottom-12 -left-16 w-52 h-52 rounded-full" style={{ backgroundColor: palette.accent || palette.primary, opacity: 0.04 }} />
+      <div className="absolute -bottom-12 -left-16 w-52 h-52 rounded-full" style={{ backgroundColor: accent, opacity: 0.04 }} />
 
       <div className="max-w-5xl mx-auto relative">
-        <div className={`text-center max-w-xl mx-auto mb-16 ${getRevealClass('up')}`}>
-          <span className="text-sm italic mb-3 block" style={{ color: palette.primary }}>{intro ? 'Werkwijze' : 'Werkwijze'}</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ fontFamily: theme.fonts.heading, color: palette.primaryDark || palette.primary }}>
-            {titel}
-          </h2>
-          {intro && <p className="text-[15px] leading-relaxed" style={{ color: theme.colors.textMuted }}>{intro}</p>}
-        </div>
+        <SectionHeader theme={theme} palette={palette} titel={titel} intro={intro} variant="proactief" />
 
         {/* Desktop: Stepper track */}
         <div className="hidden md:block mb-12" onMouseEnter={pause} onMouseLeave={resume}>
-          <div className="relative px-12">
-            {/* Track */}
-            <div className="h-1 rounded" style={{ backgroundColor: theme.colors.border }}>
-              <div
-                className="h-full rounded transition-[width] duration-500"
-                style={{
-                  width: `${current === 0 ? 0 : (current / (items.length - 1)) * 100}%`,
-                  background: `linear-gradient(90deg, ${palette.primary}, ${palette.accent || palette.primary})`,
-                }}
-              />
-            </div>
-            {/* Nodes */}
-            <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between px-0">
-              {items.map((_: any, idx: number) => (
-                <div
-                  key={idx}
-                  className="w-12 h-12 rounded-full border-[3px] flex items-center justify-center cursor-pointer transition-all duration-300 relative z-[2]"
-                  style={{
-                    backgroundColor: idx <= current ? palette.primary : 'white',
-                    borderColor: idx <= current ? palette.primary : theme.colors.border,
-                    transform: idx === current ? 'scale(1.15)' : 'scale(1)',
-                    boxShadow: idx === current ? `0 0 0 6px ${palette.primary}15` : 'none',
-                  }}
-                  onClick={() => goTo(idx)}
-                >
-                  <span className="material-symbols-outlined text-xl" style={{ color: idx <= current ? 'white' : theme.colors.textMuted }}>
-                    {STAP_ICONS[idx]}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Labels */}
-          <div className="flex justify-between px-0 mt-10">
-            {items.map((stap: any, idx: number) => (
-              <span
-                key={idx}
-                className="text-sm text-center w-1/4 transition-all duration-300"
-                style={{
-                  color: idx === current ? palette.primary : theme.colors.textMuted,
-                  fontWeight: idx === current ? 600 : 400,
-                }}
-              >
-                {stap.titel}
-              </span>
-            ))}
-          </div>
+          <StepperTrack
+            items={items} current={current} progress={progress}
+            goTo={goTo} theme={theme} palette={palette} nodeStyle="circle"
+          />
+          <StepperLabels items={items} current={current} theme={theme} palette={palette} />
         </div>
 
         {/* Panel content */}
         <div className="hidden md:block relative">
-          {items.map((stap: any, idx: number) => {
-            const isLast = idx === items.length - 1;
+          {items.map((stap, idx) => {
+            const isLast = isAccentStep(idx, items.length);
             return (
               <div
                 key={idx}
@@ -584,17 +791,17 @@ function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: a
                   <div className="flex flex-col md:flex-row md:items-center gap-6">
                     <div
                       className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: isLast ? `${palette.accent || palette.primary}15` : `${palette.primary}10` }}
+                      style={{ backgroundColor: isLast ? `${accent}15` : `${palette.primary}10` }}
                     >
-                      <span className="material-symbols-outlined text-3xl" style={{ color: isLast ? (palette.accent || palette.primary) : palette.primary }}>
-                        {stap.icon || STAP_ICONS[idx]}
+                      <span className="material-symbols-outlined text-3xl" style={{ color: isLast ? accent : palette.primary }}>
+                        {getStapIcon(stap, idx)}
                       </span>
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <span
                           className="text-xs font-bold px-2.5 py-1 rounded-full text-white"
-                          style={{ backgroundColor: isLast ? (palette.accent || palette.primary) : palette.primary }}
+                          style={{ backgroundColor: isLast ? accent : palette.primary }}
                         >
                           Stap {idx + 1}
                         </span>
@@ -604,7 +811,7 @@ function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: a
                         {stap.beschrijving}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-sm font-semibold flex-shrink-0" style={{ color: isLast ? (palette.accent || palette.primary) : palette.primary }}>
+                    <div className="flex items-center gap-2 text-sm font-semibold flex-shrink-0" style={{ color: isLast ? accent : palette.primary }}>
                       Contact <span className="material-symbols-outlined text-lg">arrow_forward</span>
                     </div>
                   </div>
@@ -616,11 +823,11 @@ function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: a
 
         {/* Mobile: Stacked */}
         <div className="md:hidden space-y-4">
-          {items.map((stap: any, idx: number) => (
+          {items.map((stap, idx) => (
             <a key={idx} href="#contact" className={`block bg-white rounded-2xl p-6 ${getRevealClass('up', idx + 1)}`}>
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                  style={{ backgroundColor: idx === items.length - 1 ? (palette.accent || palette.primary) : palette.primary }}>
+                  style={{ backgroundColor: isAccentStep(idx, items.length) ? accent : palette.primary }}>
                   {idx + 1}
                 </div>
                 <h3 className="font-bold">{stap.titel}</h3>
@@ -630,20 +837,7 @@ function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: a
           ))}
         </div>
 
-        {/* Footer badges */}
-        {footer && (
-          <div className="flex flex-wrap items-center justify-center gap-5 mt-12 pt-8" style={{ borderTop: `1px solid ${theme.colors.border}` }}>
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Beschikbaar
-            </span>
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
-              <span className="material-symbols-outlined text-xs" style={{ color: palette.primary }}>schedule</span> 24h reactietijd
-            </span>
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
-              <span className="material-symbols-outlined text-xs" style={{ color: palette.primary }}>verified</span> DBA-compliant
-            </span>
-          </div>
-        )}
+        {footer && <FooterBadges theme={theme} palette={palette} />}
       </div>
     </section>
   );
@@ -653,8 +847,9 @@ function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: a
 // PROACTIEF V2 — Vertical Progress
 // Left progress track, auto-highlight rows
 // ============================================
-function ProactiefV2Vertical({ theme, palette, titel, intro, stappen, footer }: any) {
+function ProactiefV2Vertical({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
+  const accent = palette.accent ?? palette.primary;
   const { current, goTo, pause, resume } = useStepCycle(items.length, 3500);
 
   return (
@@ -678,16 +873,16 @@ function ProactiefV2Vertical({ theme, palette, titel, intro, stappen, footer }: 
               className="absolute top-0 left-0 right-0 rounded transition-[height] duration-600"
               style={{
                 height: `${current === 0 ? 12 : 12 + (current / 3) * 88}%`,
-                background: `linear-gradient(180deg, ${palette.primary}, ${palette.accent || palette.primary})`,
+                background: `linear-gradient(180deg, ${palette.primary}, ${accent})`,
               }}
             />
           </div>
 
           <div className="space-y-8">
-            {items.map((stap: any, idx: number) => {
+            {items.map((stap, idx) => {
               const isActive = idx === current;
               const isPassed = idx < current;
-              const isLast = idx === items.length - 1;
+              const isLast = isAccentStep(idx, items.length);
               return (
                 <div
                   key={idx}
@@ -720,20 +915,18 @@ function ProactiefV2Vertical({ theme, palette, titel, intro, stappen, footer }: 
                       <div
                         className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-400"
                         style={{
-                          backgroundColor: isLast ? `${palette.accent || palette.primary}15` : `${palette.primary}10`,
+                          backgroundColor: isLast ? `${accent}15` : `${palette.primary}10`,
                           transform: isActive ? 'scale(1.08)' : 'scale(1)',
                         }}
                       >
-                        <span className="material-symbols-outlined text-xl" style={{ color: isLast ? (palette.accent || palette.primary) : palette.primary }}>
-                          {stap.icon || STAP_ICONS[idx]}
+                        <span className="material-symbols-outlined text-xl" style={{ color: isLast ? accent : palette.primary }}>
+                          {getStapIcon(stap, idx)}
                         </span>
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isActive ? palette.primary : theme.colors.textMuted }}>
-                            Stap {idx + 1}
-                          </span>
-                        </div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: isActive ? palette.primary : theme.colors.textMuted }}>
+                          Stap {idx + 1}
+                        </span>
                         <h3 className="text-lg font-bold mb-1.5" style={{ color: theme.colors.text }}>{stap.titel}</h3>
                         <p className="text-sm" style={{ color: theme.colors.textMuted }}>{stap.beschrijving}</p>
                       </div>
@@ -764,8 +957,9 @@ function ProactiefV2Vertical({ theme, palette, titel, intro, stappen, footer }: 
 // PROACTIEF V3 — Expanding Steps
 // Accordion with auto-cycle, progress bars
 // ============================================
-function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }: any) {
+function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
+  const accent = palette.accent ?? palette.primary;
   const [expanded, setExpanded] = useState(0);
   const { current, progress, goTo, pause, resume } = useStepCycle(items.length, 4500);
 
@@ -781,17 +975,12 @@ function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }:
   return (
     <section id="werkwijze" className="py-24 px-6 md:px-12" style={{ backgroundColor: theme.colors.backgroundAlt }}>
       <div className="max-w-3xl mx-auto">
-        <div className={`text-center mb-14 ${getRevealClass('up')}`}>
-          <span className="text-sm italic mb-3 block" style={{ color: palette.primary }}>Werkwijze</span>
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ fontFamily: theme.fonts.heading, color: palette.primaryDark || palette.primary }}>
-            {titel}
-          </h2>
-        </div>
+        <SectionHeader theme={theme} palette={palette} titel={titel} intro={intro} variant="proactief" />
 
         <div className={getRevealClass('up', 1)}>
-          {items.map((stap: any, idx: number) => {
+          {items.map((stap, idx) => {
             const isExpanded = expanded === idx;
-            const isLast = idx === items.length - 1;
+            const isLast = isAccentStep(idx, items.length);
             return (
               <div key={idx}>
                 <div
@@ -809,7 +998,7 @@ function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }:
                     <div className="absolute bottom-0 left-0 h-[3px]"
                       style={{
                         width: `${progress}%`,
-                        background: `linear-gradient(90deg, ${palette.primary}, ${palette.accent || palette.primary})`,
+                        background: `linear-gradient(90deg, ${palette.primary}, ${accent})`,
                       }}
                     />
                   )}
@@ -821,7 +1010,7 @@ function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }:
                         className="text-[48px] font-bold leading-none transition-colors duration-400"
                         style={{ color: isExpanded ? palette.primary : theme.colors.border }}
                       >
-                        {String(idx + 1).padStart(2, '0')}
+                        {padNum(idx + 1)}
                       </span>
                       <div>
                         <span className="text-[10px] font-bold uppercase tracking-wider block mb-0.5"
@@ -848,18 +1037,15 @@ function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }:
                   {/* Expand content */}
                   <div
                     className="transition-all duration-450 overflow-hidden"
-                    style={{
-                      maxHeight: isExpanded ? 250 : 0,
-                      opacity: isExpanded ? 1 : 0,
-                    }}
+                    style={{ maxHeight: isExpanded ? 250 : 0, opacity: isExpanded ? 1 : 0 }}
                   >
                     <div className="mt-5 ml-0 md:ml-[84px] flex flex-col md:flex-row gap-5">
                       <div
                         className="w-14 h-14 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: isLast ? `${palette.accent || palette.primary}15` : `${palette.primary}10` }}
+                        style={{ backgroundColor: isLast ? `${accent}15` : `${palette.primary}10` }}
                       >
-                        <span className="material-symbols-outlined text-2xl" style={{ color: isLast ? (palette.accent || palette.primary) : palette.primary }}>
-                          {stap.icon || STAP_ICONS[idx]}
+                        <span className="material-symbols-outlined text-2xl" style={{ color: isLast ? accent : palette.primary }}>
+                          {getStapIcon(stap, idx)}
                         </span>
                       </div>
                       <div className="flex-1">
@@ -867,7 +1053,7 @@ function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }:
                           {stap.beschrijving}
                         </p>
                         <a href="#contact" className="inline-flex items-center gap-2 text-sm font-semibold"
-                          style={{ color: isLast ? (palette.accent || palette.primary) : palette.primary }}>
+                          style={{ color: isLast ? accent : palette.primary }}>
                           Neem contact op <span className="material-symbols-outlined text-base">arrow_forward</span>
                         </a>
                       </div>
@@ -884,16 +1070,7 @@ function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }:
           })}
         </div>
 
-        {footer && (
-          <div className="flex flex-wrap items-center justify-center gap-5 mt-14 pt-8" style={{ borderTop: `1px solid ${theme.colors.border}` }}>
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Beschikbaar
-            </span>
-            <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
-              <span className="material-symbols-outlined text-xs" style={{ color: palette.primary }}>verified</span> DBA-compliant
-            </span>
-          </div>
-        )}
+        {footer && <FooterBadges theme={theme} palette={palette} />}
       </div>
     </section>
   );
@@ -908,23 +1085,17 @@ function ProactiefV3Expanding({ theme, palette, titel, intro, stappen, footer }:
 // SERENE V1 — Typographic List
 // No cards, border-bottom, large serif numbers, max breathing room
 // ============================================
-function SereneV1Typographic({ theme, palette, titel, intro, stappen, footer }: any) {
+function SereneV1Typographic({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const [hovered, setHovered] = useState<number | null>(null);
   const items = stappen.slice(0, 4);
 
   return (
     <section id="werkwijze" className="py-28 px-6 md:px-12" style={{ backgroundColor: theme.colors.background }}>
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className={`mb-20 ${getRevealClass('up')}`}>
-          <span className="text-[9px] font-semibold uppercase tracking-[3px] block mb-4" style={{ color: theme.colors.textMuted }}>Werkwijze</span>
-          <h2 className="text-4xl sm:text-[54px] font-light leading-[1.08]" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
-            {titel}
-          </h2>
-        </div>
+        <SectionHeader theme={theme} palette={palette} titel={titel} intro={intro} variant="serene" />
 
         {/* Items */}
-        {items.map((stap: any, idx: number) => {
+        {items.map((stap, idx) => {
           const isHover = hovered === idx;
           return (
             <a
@@ -940,7 +1111,7 @@ function SereneV1Typographic({ theme, palette, titel, intro, stappen, footer }: 
               onMouseLeave={() => setHovered(null)}
             >
               {/* Expanding underline */}
-              <div className="absolute bottom-[-1px] left-0 h-px transition-all duration-600" 
+              <div className="absolute bottom-[-1px] left-0 h-px transition-all duration-600"
                 style={{ width: isHover ? '100%' : '0%', backgroundColor: palette.primary }} />
 
               {/* Number */}
@@ -952,16 +1123,16 @@ function SereneV1Typographic({ theme, palette, titel, intro, stappen, footer }: 
                   fontWeight: 300,
                   lineHeight: 1,
                   letterSpacing: -2,
-                  color: isHover ? (palette.primaryLight || palette.primary) : theme.colors.border,
+                  color: isHover ? palette.primaryLight : theme.colors.border,
                 }}
               >
-                {String(idx + 1).padStart(2, '0')}
+                {padNum(idx + 1)}
               </span>
 
               {/* Content */}
               <div className="flex-1 pt-2">
                 <span className="text-[9px] font-semibold uppercase tracking-[2px] block mb-2" style={{ color: theme.colors.textMuted }}>
-                  {stap.label || `Stap ${idx + 1}`}
+                  Stap {idx + 1}
                 </span>
                 <h3
                   className="text-[26px] font-medium mb-3 transition-all duration-500"
@@ -985,7 +1156,6 @@ function SereneV1Typographic({ theme, palette, titel, intro, stappen, footer }: 
           );
         })}
 
-        {/* Trust */}
         <div className={`mt-16 ${getRevealClass('up', 3)}`}>
           <p className="text-[9px] uppercase tracking-[3px]" style={{ color: theme.colors.textMuted }}>
             Vertrouwd door zorginstellingen en bemiddelaars
@@ -1000,7 +1170,7 @@ function SereneV1Typographic({ theme, palette, titel, intro, stappen, footer }: 
 // SERENE V2 — Zen Stepper
 // Minimal circles, thin line, soft panels, auto-cycle
 // ============================================
-function SereneV2ZenStepper({ theme, palette, titel, intro, stappen, footer }: any) {
+function SereneV2ZenStepper({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
   const { current, progress, goTo, pause, resume } = useStepCycle(items.length, 5000);
 
@@ -1022,38 +1192,30 @@ function SereneV2ZenStepper({ theme, palette, titel, intro, stappen, footer }: a
               <div className="h-full transition-[width] duration-500" style={{ width: `${current === 0 ? 0 : (current / 3) * 100}%`, backgroundColor: palette.primary }} />
             </div>
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between">
-              {items.map((_: any, idx: number) => (
+              {items.map((_, idx) => (
                 <div
                   key={idx}
                   className="w-11 h-11 rounded-full border flex items-center justify-center cursor-pointer transition-all duration-500 relative z-[2]"
                   style={{
-                    backgroundColor: idx === current ? palette.primary : (idx < current ? (palette.primaryLight || palette.primary) : theme.colors.background),
+                    backgroundColor: idx === current ? palette.primary : (idx < current ? palette.primaryLight : theme.colors.background),
                     borderColor: idx <= current ? palette.primary : theme.colors.border,
                     boxShadow: idx === current ? `0 0 0 6px ${palette.primary}08` : 'none',
                   }}
                   onClick={() => goTo(idx)}
                 >
                   <span className="text-lg" style={{ fontFamily: theme.fonts.heading, fontWeight: 500, color: idx <= current ? 'white' : theme.colors.textMuted }}>
-                    {String(idx + 1).padStart(2, '0')}
+                    {padNum(idx + 1)}
                   </span>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Labels */}
-          <div className="flex justify-between px-0 mb-10">
-            {items.map((stap: any, idx: number) => (
-              <span key={idx} className="text-xs text-center w-1/4 transition-all duration-300"
-                style={{ color: idx === current ? palette.primary : theme.colors.textMuted, fontWeight: idx === current ? 600 : 400 }}>
-                {stap.titel}
-              </span>
-            ))}
-          </div>
+          <StepperLabels items={items} current={current} theme={theme} palette={palette} />
 
           {/* Panels */}
           <div className="relative">
-            {items.map((stap: any, idx: number) => (
+            {items.map((stap, idx) => (
               <div key={idx} style={{
                 opacity: idx === current ? 1 : 0,
                 transform: idx === current ? 'translateY(0)' : 'translateY(8px)',
@@ -1084,20 +1246,17 @@ function SereneV2ZenStepper({ theme, palette, titel, intro, stappen, footer }: a
             ))}
           </div>
 
-          {/* Progress bar */}
-          <div className="h-px mt-5 overflow-hidden" style={{ backgroundColor: theme.colors.border }}>
-            <div className="h-full transition-[width] duration-50" style={{ width: `${progress}%`, backgroundColor: palette.primary }} />
-          </div>
+          <ProgressBar progress={progress} theme={theme} palette={palette} />
         </div>
 
         {/* Mobile stacked */}
         <div className="md:hidden space-y-0">
-          {items.map((stap: any, idx: number) => (
+          {items.map((stap, idx) => (
             <a key={idx} href="#contact" className={`block py-6 ${getRevealClass('up', idx + 1)}`}
               style={{ borderBottom: idx < items.length - 1 ? `1px solid ${theme.colors.border}` : 'none' }}>
               <div className="flex items-center gap-4">
                 <span className="text-2xl font-light" style={{ fontFamily: theme.fonts.heading, color: theme.colors.border }}>
-                  {String(idx + 1).padStart(2, '0')}
+                  {padNum(idx + 1)}
                 </span>
                 <div>
                   <h3 className="font-medium text-lg" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>{stap.titel}</h3>
@@ -1116,7 +1275,7 @@ function SereneV2ZenStepper({ theme, palette, titel, intro, stappen, footer }: a
 // SERENE V3 — Editorial Timeline
 // Left-aligned numbers, vertical connector with dots
 // ============================================
-function SereneV3Timeline({ theme, palette, titel, intro, stappen, footer }: any) {
+function SereneV3Timeline({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
   const [hovered, setHovered] = useState<number | null>(null);
 
@@ -1135,9 +1294,9 @@ function SereneV3Timeline({ theme, palette, titel, intro, stappen, footer }: any
 
         {/* Timeline */}
         <div className="relative">
-          {items.map((stap: any, idx: number) => {
+          {items.map((stap, idx) => {
             const isHover = hovered === idx;
-            const isLast = idx === items.length - 1;
+            const isLast = isAccentStep(idx, items.length);
             return (
               <div
                 key={idx}
@@ -1171,10 +1330,10 @@ function SereneV3Timeline({ theme, palette, titel, intro, stappen, footer }: any
                     fontWeight: 300,
                     lineHeight: 1,
                     letterSpacing: -1,
-                    color: isHover ? (palette.primaryLight || palette.primary) : theme.colors.border,
+                    color: isHover ? palette.primaryLight : theme.colors.border,
                   }}
                 >
-                  {String(idx + 1).padStart(2, '0')}
+                  {padNum(idx + 1)}
                 </span>
 
                 {/* Content */}
@@ -1184,7 +1343,7 @@ function SereneV3Timeline({ theme, palette, titel, intro, stappen, footer }: any
                       style={{ width: isHover ? 24 : 0, backgroundColor: palette.primary }} />
                     <span className="text-[9px] font-semibold uppercase tracking-[2px]"
                       style={{ color: isLast ? palette.primary : theme.colors.textMuted }}>
-                      {stap.label || `Stap ${idx + 1}`}
+                      Stap {idx + 1}
                     </span>
                   </div>
                   <h3 className="text-[24px] font-medium mb-3" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
@@ -1222,30 +1381,23 @@ function SereneV3Timeline({ theme, palette, titel, intro, stappen, footer }: any
 
 // ============================================
 // MINDOOR V1 — Warm Bento Cards
-// Stacked cards, large Cormorant numbers, icon boxes, decorative circles
+// Stacked cards, large numbers, icon boxes, decorative circles
 // ============================================
-function MindoorV1Bento({ theme, palette, titel, intro, stappen, footer }: any) {
+function MindoorV1Bento({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
-  const accent = palette.accent || '#d4644a';
+  const accent = palette.accent ?? '#d4644a';
 
   return (
     <section id="werkwijze" className="py-24 px-6 md:px-12 relative overflow-hidden" style={{ backgroundColor: theme.colors.backgroundAlt }}>
-      {/* Decorative circles */}
       <div className="absolute -top-20 -right-16 w-[300px] h-[300px] rounded-full" style={{ backgroundColor: accent, opacity: 0.04 }} />
       <div className="absolute bottom-16 -left-12 w-[200px] h-[200px] rounded-full" style={{ backgroundColor: palette.primary, opacity: 0.05 }} />
 
       <div className="max-w-3xl mx-auto relative">
-        <div className={`text-center mb-20 ${getRevealClass('up')}`}>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] mb-4 block" style={{ color: accent }}>Werkwijze</span>
-          <h2 className="text-4xl sm:text-[52px] font-medium leading-[1.1]" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
-            {titel}
-          </h2>
-          {intro && <p className="text-[15px] leading-relaxed max-w-md mx-auto mt-6" style={{ color: theme.colors.textMuted }}>{intro}</p>}
-        </div>
+        <SectionHeader theme={theme} palette={palette} titel={titel} intro={intro} variant="mindoor" />
 
         <div className="space-y-5">
-          {items.map((stap: any, idx: number) => {
-            const isLast = idx === items.length - 1;
+          {items.map((stap, idx) => {
+            const isLast = isAccentStep(idx, items.length);
             return (
               <div key={idx}>
                 <div className={getRevealClass('up', idx + 1)}>
@@ -1253,7 +1405,7 @@ function MindoorV1Bento({ theme, palette, titel, intro, stappen, footer }: any) 
                     href="#contact"
                     className="block group rounded-3xl p-9 relative overflow-hidden border transition-all duration-500 hover:-translate-y-1.5"
                     style={{
-                      backgroundColor: isLast ? palette.primary : theme.colors.surface || 'white',
+                      backgroundColor: isLast ? palette.primary : (theme.colors.surface ?? 'white'),
                       borderColor: isLast ? palette.primary : theme.colors.border,
                     }}
                   >
@@ -1267,19 +1419,19 @@ function MindoorV1Bento({ theme, palette, titel, intro, stappen, footer }: any) 
                             color: isLast ? 'rgba(255,255,255,0.12)' : theme.colors.backgroundAlt,
                           }}
                         >
-                          {String(idx + 1).padStart(2, '0')}
+                          {padNum(idx + 1)}
                         </span>
                         <div
                           className="mt-3 w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-400"
                           style={{ backgroundColor: isLast ? 'rgba(255,255,255,0.12)' : `${palette.primary}10` }}
                         >
                           <span className="material-symbols-outlined text-xl" style={{ color: isLast ? 'white' : palette.primary }}>
-                            {stap.icon || STAP_ICONS[idx]}
+                            {getStapIcon(stap, idx)}
                           </span>
                         </div>
                       </div>
                       <div className="flex-1 pt-1">
-                        <span className="text-[10px] font-bold uppercase tracking-[0.15em] block mb-2" style={{ color: isLast ? (palette.accentLight || accent) : accent }}>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.15em] block mb-2" style={{ color: isLast ? (palette.accentLight ?? accent) : accent }}>
                           Stap {idx + 1}
                         </span>
                         <h3 className="text-[22px] font-semibold mb-2" style={{ fontFamily: theme.fonts.heading, color: isLast ? 'white' : theme.colors.text }}>
@@ -1290,7 +1442,7 @@ function MindoorV1Bento({ theme, palette, titel, intro, stappen, footer }: any) 
                         </p>
                       </div>
                       <div className="flex items-center pt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span className="material-symbols-outlined text-base" style={{ color: isLast ? (palette.accentLight || accent) : accent }}>
+                        <span className="material-symbols-outlined text-base" style={{ color: isLast ? (palette.accentLight ?? accent) : accent }}>
                           arrow_forward
                         </span>
                       </div>
@@ -1298,9 +1450,8 @@ function MindoorV1Bento({ theme, palette, titel, intro, stappen, footer }: any) 
                   </a>
                 </div>
 
-                {/* Connector dot */}
                 {!isLast && (
-                  <div className="w-1.5 h-1.5 rounded-full mx-auto my-3" style={{ backgroundColor: palette.primaryLight || palette.primary, opacity: 0.3 }} />
+                  <div className="w-1.5 h-1.5 rounded-full mx-auto my-3" style={{ backgroundColor: palette.primaryLight, opacity: 0.3 }} />
                 )}
               </div>
             );
@@ -1321,9 +1472,9 @@ function MindoorV1Bento({ theme, palette, titel, intro, stappen, footer }: any) 
 // MINDOOR V2 — Organic Stepper
 // Pill nodes, warm palette, auto-cycle, terracotta progress
 // ============================================
-function MindoorV2Stepper({ theme, palette, titel, intro, stappen, footer }: any) {
+function MindoorV2Stepper({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
-  const accent = palette.accent || '#d4644a';
+  const accent = palette.accent ?? '#d4644a';
   const { current, progress, goTo, pause, resume } = useStepCycle(items.length, 4500);
 
   return (
@@ -1343,12 +1494,12 @@ function MindoorV2Stepper({ theme, palette, titel, intro, stappen, footer }: any
               <div className="h-full rounded transition-[width] duration-500" style={{ width: `${current === 0 ? 0 : (current / 3) * 100}%`, backgroundColor: accent }} />
             </div>
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between">
-              {items.map((_: any, idx: number) => (
+              {items.map((_, idx) => (
                 <div
                   key={idx}
                   className="w-[52px] h-[52px] rounded-full border-2 flex items-center justify-center cursor-pointer transition-all duration-450 relative z-[2]"
                   style={{
-                    backgroundColor: idx === current ? palette.primary : (idx < current ? accent : theme.colors.surface || 'white'),
+                    backgroundColor: idx === current ? palette.primary : (idx < current ? accent : (theme.colors.surface ?? 'white')),
                     borderColor: idx === current ? palette.primary : (idx < current ? accent : theme.colors.border),
                     transform: idx === current ? 'scale(1.12)' : 'scale(1)',
                     boxShadow: idx === current ? `0 0 0 8px ${palette.primary}10` : 'none',
@@ -1356,26 +1507,19 @@ function MindoorV2Stepper({ theme, palette, titel, intro, stappen, footer }: any
                   onClick={() => goTo(idx)}
                 >
                   <span className="text-xl" style={{ fontFamily: theme.fonts.heading, fontWeight: 600, color: idx <= current ? 'white' : theme.colors.textMuted }}>
-                    {String(idx + 1).padStart(2, '0')}
+                    {padNum(idx + 1)}
                   </span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex justify-between px-0 mb-10">
-            {items.map((stap: any, idx: number) => (
-              <span key={idx} className="text-[13px] text-center w-1/4 transition-all duration-300"
-                style={{ color: idx === current ? palette.primary : theme.colors.textMuted, fontWeight: idx === current ? 700 : 400 }}>
-                {stap.titel}
-              </span>
-            ))}
-          </div>
+          <StepperLabels items={items} current={current} theme={theme} palette={palette} />
 
           {/* Panels */}
           <div className="relative">
-            {items.map((stap: any, idx: number) => {
-              const isLast = idx === items.length - 1;
+            {items.map((stap, idx) => {
+              const isLast = isAccentStep(idx, items.length);
               return (
                 <div key={idx} style={{
                   opacity: idx === current ? 1 : 0,
@@ -1387,14 +1531,14 @@ function MindoorV2Stepper({ theme, palette, titel, intro, stappen, footer }: any
                 }}>
                   <a href="#contact" className="block rounded-3xl border p-8 transition-shadow hover:shadow-lg"
                     style={{
-                      backgroundColor: isLast ? palette.primary : (theme.colors.surface || 'white'),
+                      backgroundColor: isLast ? palette.primary : (theme.colors.surface ?? 'white'),
                       borderColor: isLast ? palette.primary : theme.colors.border,
                     }}>
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
                       <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: isLast ? 'rgba(255,255,255,0.12)' : `${palette.primary}10` }}>
                         <span className="material-symbols-outlined text-2xl" style={{ color: isLast ? 'white' : palette.primary }}>
-                          {stap.icon || STAP_ICONS[idx]}
+                          {getStapIcon(stap, idx)}
                         </span>
                       </div>
                       <div className="flex-1">
@@ -1411,7 +1555,7 @@ function MindoorV2Stepper({ theme, palette, titel, intro, stappen, footer }: any
                           {stap.beschrijving}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 text-sm font-semibold flex-shrink-0" style={{ color: isLast ? (palette.accentLight || accent) : accent }}>
+                      <div className="flex items-center gap-2 text-sm font-semibold flex-shrink-0" style={{ color: isLast ? (palette.accentLight ?? accent) : accent }}>
                         Contact <span className="material-symbols-outlined text-base">arrow_forward</span>
                       </div>
                     </div>
@@ -1421,26 +1565,22 @@ function MindoorV2Stepper({ theme, palette, titel, intro, stappen, footer }: any
             })}
           </div>
 
-          {/* Progress */}
-          <div className="h-[3px] rounded mt-5 overflow-hidden" style={{ backgroundColor: theme.colors.backgroundAlt }}>
-            <div className="h-full rounded transition-[width] duration-50"
-              style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${palette.primary}, ${accent})` }} />
-          </div>
+          <ProgressBar progress={progress} theme={theme} palette={palette} />
         </div>
 
         {/* Mobile */}
         <div className="md:hidden space-y-4">
-          {items.map((stap: any, idx: number) => {
-            const isLast = idx === items.length - 1;
+          {items.map((stap, idx) => {
+            const isLast = isAccentStep(idx, items.length);
             return (
               <a key={idx} href="#contact" className={`block p-6 rounded-[20px] border ${getRevealClass('up', idx + 1)}`}
                 style={{
-                  backgroundColor: isLast ? palette.primary : (theme.colors.surface || 'white'),
+                  backgroundColor: isLast ? palette.primary : (theme.colors.surface ?? 'white'),
                   borderColor: isLast ? palette.primary : theme.colors.border,
                 }}>
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl font-semibold" style={{ fontFamily: theme.fonts.heading, color: isLast ? (palette.accentLight || accent) : accent }}>
-                    {String(idx + 1).padStart(2, '0')}
+                  <span className="text-2xl font-semibold" style={{ fontFamily: theme.fonts.heading, color: isLast ? (palette.accentLight ?? accent) : accent }}>
+                    {padNum(idx + 1)}
                   </span>
                   <h3 className="font-semibold" style={{ fontFamily: theme.fonts.heading, color: isLast ? 'white' : theme.colors.text }}>{stap.titel}</h3>
                 </div>
@@ -1458,34 +1598,28 @@ function MindoorV2Stepper({ theme, palette, titel, intro, stappen, footer }: any
 // MINDOOR V3 — Floating Timeline
 // Offset background shapes, alternating zigzag, circle nodes
 // ============================================
-function MindoorV3Floating({ theme, palette, titel, intro, stappen, footer }: any) {
+function MindoorV3Floating({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
-  const accent = palette.accent || '#d4644a';
+  const accent = palette.accent ?? '#d4644a';
 
   return (
     <section id="werkwijze" className="py-24 px-6 md:px-12 relative overflow-hidden" style={{ backgroundColor: theme.colors.backgroundAlt }}>
       <div className="max-w-3xl mx-auto relative">
-        <div className={`text-center mb-20 ${getRevealClass('up')}`}>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] mb-4 block" style={{ color: accent }}>Werkwijze</span>
-          <h2 className="text-3xl sm:text-[52px] font-medium leading-[1.1]" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
-            {titel}
-          </h2>
-        </div>
+        <SectionHeader theme={theme} palette={palette} titel={titel} intro={intro} variant="mindoor" />
 
-        {/* Timeline */}
         <div className="relative">
           {/* Vertical dotted line */}
           <div
             className="absolute left-7 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-[2px]"
             style={{
-              background: `repeating-linear-gradient(to bottom, ${palette.primaryLight || palette.primary} 0, ${palette.primaryLight || palette.primary} 6px, transparent 6px, transparent 14px)`,
+              background: `repeating-linear-gradient(to bottom, ${palette.primaryLight} 0, ${palette.primaryLight} 6px, transparent 6px, transparent 14px)`,
               opacity: 0.3,
             }}
           />
 
-          {items.map((stap: any, idx: number) => {
+          {items.map((stap, idx) => {
             const isRight = idx % 2 !== 0;
-            const isLast = idx === items.length - 1;
+            const isLast = isAccentStep(idx, items.length);
             return (
               <div key={idx} className={`relative mb-14 ${getRevealClass('up', idx + 1)}`}>
                 {/* Node */}
@@ -1495,7 +1629,7 @@ function MindoorV3Floating({ theme, palette, titel, intro, stappen, footer }: an
                     style={{ backgroundColor: isLast ? accent : palette.primary }}
                   >
                     <span className="text-[22px] font-semibold text-white" style={{ fontFamily: theme.fonts.heading }}>
-                      {String(idx + 1).padStart(2, '0')}
+                      {padNum(idx + 1)}
                     </span>
                   </div>
                 </div>
@@ -1516,7 +1650,7 @@ function MindoorV3Floating({ theme, palette, titel, intro, stappen, footer }: an
                       href="#contact"
                       className="block relative z-[2] rounded-[2rem] border p-10 group transition-all duration-500 hover:-translate-y-1 hover:shadow-xl"
                       style={{
-                        backgroundColor: isLast ? palette.primary : (theme.colors.surface || 'white'),
+                        backgroundColor: isLast ? palette.primary : (theme.colors.surface ?? 'white'),
                         borderColor: isLast ? palette.primary : theme.colors.border,
                       }}
                     >
@@ -1524,10 +1658,10 @@ function MindoorV3Floating({ theme, palette, titel, intro, stappen, footer }: an
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center"
                           style={{ backgroundColor: isLast ? 'rgba(255,255,255,0.12)' : `${palette.primary}10` }}>
                           <span className="material-symbols-outlined text-lg" style={{ color: isLast ? 'white' : palette.primary }}>
-                            {stap.icon || STAP_ICONS[idx]}
+                            {getStapIcon(stap, idx)}
                           </span>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: isLast ? (palette.accentLight || accent) : accent }}>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.15em]" style={{ color: isLast ? (palette.accentLight ?? accent) : accent }}>
                           Stap {idx + 1}
                         </span>
                       </div>
@@ -1538,7 +1672,7 @@ function MindoorV3Floating({ theme, palette, titel, intro, stappen, footer }: an
                         {stap.beschrijving}
                       </p>
                       <span className="inline-flex items-center gap-2 text-sm font-semibold transition-all duration-300"
-                        style={{ color: isLast ? (palette.accentLight || accent) : accent }}>
+                        style={{ color: isLast ? (palette.accentLight ?? accent) : accent }}>
                         Contact <span className="material-symbols-outlined text-base transition-transform duration-300 group-hover:translate-x-1">arrow_forward</span>
                       </span>
                     </a>
@@ -1568,27 +1702,18 @@ function MindoorV3Floating({ theme, palette, titel, intro, stappen, footer }: an
 // PORTFOLIO V1 — Signature Corner Cards
 // Luxe cards with signature rounded corner, hover color invert
 // ============================================
-function PortfolioV1Cards({ theme, palette, titel, intro, stappen, footer }: any) {
+function PortfolioV1Cards({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
-  const accent = palette.accent || palette.primary;
+  const accent = palette.accent ?? palette.primary;
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
     <section id="werkwijze" className="py-24 px-6 md:px-12" style={{ backgroundColor: theme.colors.backgroundAlt }}>
       <div className="max-w-4xl mx-auto">
-        <div className={`text-center mb-20 ${getRevealClass('up')}`}>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.15em] mb-3 block" style={{ color: accent }}>
-            ✦ &nbsp; Werkwijze &nbsp; ✦
-          </span>
-          <h2 className="text-4xl sm:text-5xl font-semibold mb-4" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>
-            {titel}
-          </h2>
-          <div className="w-16 h-px mx-auto mt-5 mb-5" style={{ backgroundColor: accent, opacity: 0.4 }} />
-          {intro && <p className="text-[15px] leading-relaxed max-w-md mx-auto" style={{ color: theme.colors.textMuted }}>{intro}</p>}
-        </div>
+        <SectionHeader theme={theme} palette={palette} titel={titel} intro={intro} variant="portfolio" />
 
         <div className="space-y-0">
-          {items.map((stap: any, idx: number) => {
+          {items.map((stap, idx) => {
             const isHover = hovered === idx;
             return (
               <div key={idx}>
@@ -1598,7 +1723,7 @@ function PortfolioV1Cards({ theme, palette, titel, intro, stappen, footer }: any
                     className="block relative overflow-hidden border p-10 cursor-pointer transition-all duration-450"
                     style={{
                       borderRadius: '0 48px 0 0',
-                      backgroundColor: isHover ? palette.primary : (theme.colors.surface || 'white'),
+                      backgroundColor: isHover ? palette.primary : (theme.colors.surface ?? 'white'),
                       borderColor: isHover ? palette.primary : theme.colors.border,
                       transform: isHover ? 'translateY(-4px)' : 'none',
                       boxShadow: isHover ? `0 16px 48px ${palette.primary}15` : 'none',
@@ -1615,17 +1740,17 @@ function PortfolioV1Cards({ theme, palette, titel, intro, stappen, footer }: any
                         className="text-[64px] font-bold leading-none flex-shrink-0 transition-colors duration-450"
                         style={{ fontFamily: theme.fonts.heading, color: isHover ? accent : theme.colors.backgroundAlt }}
                       >
-                        {String(idx + 1).padStart(2, '0')}
+                        {padNum(idx + 1)}
                       </span>
                       <div className="flex-1 pt-2">
                         <div className="flex items-center gap-3 mb-1">
                           <span className="material-symbols-outlined text-lg transition-colors duration-450" style={{ color: accent }}>
-                            {stap.icon || STAP_ICONS[idx]}
+                            {getStapIcon(stap, idx)}
                           </span>
                           <span className="text-[10px] font-semibold uppercase tracking-[0.12em]" style={{ color: accent }}>Stap {idx + 1}</span>
                         </div>
                         <h3 className="text-xl font-semibold mb-2 transition-colors duration-450"
-                          style={{ fontFamily: theme.fonts.heading, color: isHover ? (palette.accentLight || accent) : palette.primary }}>
+                          style={{ fontFamily: theme.fonts.heading, color: isHover ? (palette.accentLight ?? accent) : palette.primary }}>
                           {stap.titel}
                         </h3>
                         <div className="w-10 h-px mb-3 transition-colors duration-450"
@@ -1643,7 +1768,6 @@ function PortfolioV1Cards({ theme, palette, titel, intro, stappen, footer }: any
                   </a>
                 </div>
 
-                {/* Connector */}
                 {idx < items.length - 1 && (
                   <div className="w-px h-8 mx-auto relative" style={{ backgroundColor: theme.colors.border }}>
                     <span className="absolute bottom-[-8px] left-1/2 -translate-x-1/2 text-[10px] px-1.5"
@@ -1663,9 +1787,9 @@ function PortfolioV1Cards({ theme, palette, titel, intro, stappen, footer }: any
 // PORTFOLIO V2 — Elegant Stepper
 // Signature corner nodes, auto-cycle, progress bar
 // ============================================
-function PortfolioV2Stepper({ theme, palette, titel, intro, stappen, footer }: any) {
+function PortfolioV2Stepper({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
-  const accent = palette.accent || palette.primary;
+  const accent = palette.accent ?? palette.primary;
   const { current, progress, goTo, pause, resume } = useStepCycle(items.length, 4500);
 
   return (
@@ -1690,13 +1814,13 @@ function PortfolioV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
                 style={{ width: `${current === 0 ? 0 : (current / 3) * 100}%`, backgroundColor: palette.primary }} />
             </div>
             <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 flex justify-between">
-              {items.map((_: any, idx: number) => (
+              {items.map((_, idx) => (
                 <div
                   key={idx}
                   className="w-14 h-14 border-2 flex items-center justify-center cursor-pointer transition-all duration-400 relative z-[2]"
                   style={{
                     borderRadius: '0 20px 0 0',
-                    backgroundColor: idx <= current ? palette.primary : (theme.colors.surface || 'white'),
+                    backgroundColor: idx <= current ? palette.primary : (theme.colors.surface ?? 'white'),
                     borderColor: idx <= current ? palette.primary : theme.colors.border,
                     transform: idx === current ? 'scale(1.1)' : 'scale(1)',
                     boxShadow: idx === current ? `0 0 0 6px ${palette.primary}12` : 'none',
@@ -1704,26 +1828,19 @@ function PortfolioV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
                   onClick={() => goTo(idx)}
                 >
                   <span className="text-xl" style={{ fontFamily: theme.fonts.heading, fontWeight: 600, color: idx <= current ? accent : theme.colors.textMuted }}>
-                    {String(idx + 1).padStart(2, '0')}
+                    {padNum(idx + 1)}
                   </span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="flex justify-between px-0 mb-10">
-            {items.map((stap: any, idx: number) => (
-              <span key={idx} className="text-[13px] text-center w-1/4 transition-all duration-300"
-                style={{ color: idx === current ? palette.primary : theme.colors.textMuted, fontWeight: idx === current ? 600 : 400 }}>
-                {stap.titel}
-              </span>
-            ))}
-          </div>
+          <StepperLabels items={items} current={current} theme={theme} palette={palette} />
 
           {/* Panels */}
           <div className="relative">
-            {items.map((stap: any, idx: number) => {
-              const isLast = idx === items.length - 1;
+            {items.map((stap, idx) => {
+              const isLast = isAccentStep(idx, items.length);
               return (
                 <div key={idx} style={{
                   opacity: idx === current ? 1 : 0,
@@ -1736,14 +1853,14 @@ function PortfolioV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
                   <a href="#contact" className="block border p-9 transition-shadow hover:shadow-lg"
                     style={{
                       borderRadius: '0 48px 0 0',
-                      backgroundColor: theme.colors.surface || 'white',
+                      backgroundColor: theme.colors.surface ?? 'white',
                       borderColor: theme.colors.border,
                     }}>
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
                       <div className="w-14 h-14 rounded flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: `${accent}10` }}>
                         <span className="material-symbols-outlined text-2xl" style={{ color: accent }}>
-                          {stap.icon || STAP_ICONS[idx]}
+                          {getStapIcon(stap, idx)}
                         </span>
                       </div>
                       <div className="flex-1">
@@ -1767,21 +1884,17 @@ function PortfolioV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
             })}
           </div>
 
-          {/* Progress */}
-          <div className="h-0.5 rounded mt-4 overflow-hidden" style={{ backgroundColor: theme.colors.backgroundAlt }}>
-            <div className="h-full transition-[width] duration-50"
-              style={{ width: `${progress}%`, background: `linear-gradient(90deg, ${palette.primary}, ${accent})` }} />
-          </div>
+          <ProgressBar progress={progress} theme={theme} palette={palette} />
         </div>
 
         {/* Mobile */}
         <div className="md:hidden space-y-4">
-          {items.map((stap: any, idx: number) => (
+          {items.map((stap, idx) => (
             <a key={idx} href="#contact" className={`block bg-white p-5 border ${getRevealClass('up', idx + 1)}`}
               style={{ borderColor: theme.colors.border, borderRadius: '0 24px 0 0' }}>
               <div className="flex items-center gap-3 mb-2">
                 <span className="text-2xl font-semibold" style={{ fontFamily: theme.fonts.heading, color: accent }}>
-                  {String(idx + 1).padStart(2, '0')}
+                  {padNum(idx + 1)}
                 </span>
                 <h3 className="font-semibold" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>{stap.titel}</h3>
               </div>
@@ -1798,9 +1911,9 @@ function PortfolioV2Stepper({ theme, palette, titel, intro, stappen, footer }: a
 // PORTFOLIO V3 — Split Timeline
 // Zigzag timeline with signature corner nodes
 // ============================================
-function PortfolioV3Timeline({ theme, palette, titel, intro, stappen, footer }: any) {
+function PortfolioV3Timeline({ theme, palette, titel, intro, stappen }: WerkwijzeVariantProps) {
   const items = stappen.slice(0, 4);
-  const accent = palette.accent || palette.primary;
+  const accent = palette.accent ?? palette.primary;
 
   return (
     <section id="werkwijze" className="py-24 px-6 md:px-12" style={{ backgroundColor: theme.colors.backgroundAlt }}>
@@ -1819,9 +1932,9 @@ function PortfolioV3Timeline({ theme, palette, titel, intro, stappen, footer }: 
           {/* Vertical line */}
           <div className="absolute left-6 md:left-1/2 md:-translate-x-px top-0 bottom-0 w-[2px]" style={{ backgroundColor: theme.colors.border }} />
 
-          {items.map((stap: any, idx: number) => {
+          {items.map((stap, idx) => {
             const isRight = idx % 2 !== 0;
-            const isLast = idx === items.length - 1;
+            const isLast = isAccentStep(idx, items.length);
             return (
               <div key={idx} className={`relative mb-16 ${getRevealClass('up', idx + 1)}`}>
                 {/* Node */}
@@ -1834,7 +1947,7 @@ function PortfolioV3Timeline({ theme, palette, titel, intro, stappen, footer }: 
                     }}
                   >
                     <span className="text-lg font-semibold" style={{ fontFamily: theme.fonts.heading, color: isLast ? 'white' : accent }}>
-                      {String(idx + 1).padStart(2, '0')}
+                      {padNum(idx + 1)}
                     </span>
                   </div>
                 </div>
@@ -1845,12 +1958,11 @@ function PortfolioV3Timeline({ theme, palette, titel, intro, stappen, footer }: 
                     href="#contact"
                     className="block p-7 relative group transition-all duration-350 hover:-translate-y-1 hover:shadow-lg"
                     style={{
-                      backgroundColor: isLast ? palette.primary : (theme.colors.surface || 'white'),
+                      backgroundColor: isLast ? palette.primary : (theme.colors.surface ?? 'white'),
                       border: `1px solid ${isLast ? palette.primary : theme.colors.border}`,
                       borderRadius: '0 32px 0 0',
                     }}
                   >
-                    {/* Decorative corner */}
                     <div className="absolute top-3 left-3 w-4 h-4"
                       style={{ borderTop: `2px solid ${accent}`, borderLeft: `2px solid ${accent}`, opacity: 0.3 }} />
 

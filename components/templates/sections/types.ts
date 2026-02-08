@@ -5,6 +5,24 @@ import { ThemeConfig } from '../themes';
 import { SiteContent, GeneratedContent } from '@/types';
 
 // ============================================
+// PALETTE TYPE (matched themes/index.ts)
+// ============================================
+
+export interface PaletteColors {
+  primary: string;
+  primaryHover: string;
+  primaryLight: string;
+  primaryDark: string;
+  accent: string;
+  accentLight: string;
+  bg: string;
+  bgAlt: string;
+  text: string;
+  textMuted: string;
+  border: string;
+}
+
+// ============================================
 // SECTION STYLE VARIANTS
 // ============================================
 
@@ -72,8 +90,7 @@ export type VoorWieStyle =
   | 'mindoor' | 'mindoor-2' | 'mindoor-3'
   | 'serene' | 'serene-2' | 'serene-3'
   | 'cards' | 'grid' | 'list';
-  export type QuoteStyle = 'banner' | 'minimal' | 'dark';
-export type WerkwijzeStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'steps' | 'timeline' | 'cards' | 'bento';
+export type QuoteStyle = 'banner' | 'minimal' | 'dark' | 'serene';export type WerkwijzeStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'steps' | 'timeline' | 'cards' | 'bento';
 export type TestimonialsStyle = 
   | 'editorial' | 'editorial-2' | 'editorial-3'
   | 'proactief' | 'proactief-2' | 'proactief-3'
@@ -100,7 +117,7 @@ export type FaqStyle =
   | 'accordion' 
   | 'grid' 
   | 'simple';
-export type CtaStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'banner' | 'card' | 'minimal';
+export type CtaStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene';
 export type ContactStyle = 
   | 'editorial' 
   | 'editorial-2' 
@@ -157,13 +174,7 @@ export interface SectionConfig {
 
 export interface BaseSectionProps {
   theme: ThemeConfig;
-  palette: {
-    primary: string;
-    primaryHover: string;
-    primaryLight: string;
-    primaryDark: string;
-    accent?: string;
-  };
+  palette: PaletteColors;
   content: SiteContent;
   generated?: GeneratedContent;
   beroepLabel: string;

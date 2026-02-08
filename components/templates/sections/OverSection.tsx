@@ -1,245 +1,478 @@
 // components/templates/sections/OverSection.tsx
 // Over mij section met meerdere style varianten
+// REWRITE: Proper types, dynamic data, extracted helpers, palette fallbacks
 
 'use client';
 
-import { BaseSectionProps, OverStyle, getBeroepImages, getRevealClass, getJarenErvaring } from './types';
+import { ThemeConfig } from '../themes';
+import {
+  BaseSectionProps,
+  OverStyle,
+  getBeroepImages,
+  getRevealClass,
+  getJarenErvaring,
+} from './types';
+import { OverMijContent, SiteContent, GeneratedContent } from '@/types';
+
+// ============================================
+// TYPES
+// ============================================
 
 interface OverSectionProps extends BaseSectionProps {
   style?: OverStyle;
 }
 
-export function OverSection({ 
-  style = 'editorial', 
-  theme, 
-  palette, 
-  content, 
-  generated, 
-  beroepLabel 
+interface PaletteColors {
+  primary: string;
+  primaryHover: string;
+  primaryLight: string;
+  primaryDark: string;
+  accent?: string;
+  accentLight?: string;
+  bg?: string;
+  bgAlt?: string;
+  text?: string;
+  textMuted?: string;
+  border?: string;
+}
+
+/** Shared props passed to every variant function */
+interface VariantProps {
+  theme: ThemeConfig;
+  palette: PaletteColors;
+  content: SiteContent;
+  overMij: OverMijContent | undefined;
+  jarenErvaring: number | null;
+  expertises: string[];
+  images: { hero: string; sfeer: string };
+}
+
+// ============================================
+// MAIN ENTRY
+// ============================================
+
+export function OverSection({
+  style = 'editorial',
+  theme,
+  palette,
+  content,
+  generated,
+  beroepLabel,
 }: OverSectionProps) {
   const images = getBeroepImages(beroepLabel);
   const overMij = generated?.overMij;
   const jarenErvaring = getJarenErvaring(content.werkervaring);
-  const expertises = content.expertises || [];
-  
-  // Gemeenschappelijke props voor alle varianten
-  const props = { theme, palette, content, overMij, jarenErvaring, expertises, images };
-  
+  const expertises = content.expertises ?? [];
+
+  const props: VariantProps = {
+    theme,
+    palette,
+    content,
+    overMij,
+    jarenErvaring,
+    expertises,
+    images,
+  };
+
   switch (style) {
-    // Editorial varianten
     case 'editorial':
       return <OverEditorial {...props} />;
     case 'editorial-2':
       return <OverEditorial2 {...props} />;
     case 'editorial-3':
       return <OverEditorial3 {...props} />;
-    
-    // Proactief varianten
     case 'proactief':
       return <OverProactief {...props} />;
     case 'proactief-2':
       return <OverProactief2 {...props} />;
     case 'proactief-3':
       return <OverProactief3 {...props} />;
-    
-    // Portfolio varianten
     case 'portfolio':
       return <OverPortfolio {...props} />;
     case 'portfolio-2':
       return <OverPortfolio2 {...props} />;
     case 'portfolio-3':
       return <OverPortfolio3 {...props} />;
-    
-    // Mindoor varianten
     case 'mindoor':
       return <OverMindoor {...props} />;
     case 'mindoor-2':
       return <OverMindoor2 {...props} />;
     case 'mindoor-3':
       return <OverMindoor3 {...props} />;
-    
-    // Serene varianten
     case 'serene':
       return <OverSerene {...props} />;
     case 'serene-2':
       return <OverSerene2 {...props} />;
     case 'serene-3':
       return <OverSerene3 {...props} />;
-
     default:
       return <OverEditorial {...props} />;
   }
 }
 
+// ============================================
+// DATA HELPERS
+// ============================================
 
-
-function getParagraphs(overMij: any, content: any): string[] {
-  const overMijText = overMij?.body || overMij?.intro || content.over_mij || '';
-  return overMijText.split('\n\n').filter((p: string) => p.trim());
+/**
+ * Build paragraphs from generated overMij content.
+ * Priority: body → intro → fallback over_mij from content.
+ * Splits on double newlines to produce multiple paragraphs.
+ */
+function getParagraphs(overMij: OverMijContent | undefined, content: SiteContent): string[] {
+  const text = overMij?.body ?? overMij?.intro ?? content.over_mij ?? '';
+  return text.split('\n\n').filter((p) => p.trim());
 }
 
-function getQuote(overMij: any): string {
-  return overMij?.persoonlijk || "Goede zorg begint bij echt luisteren naar wat iemand nodig heeft.";
+/** Get the personal quote from generated content */
+function getQuote(overMij: OverMijContent | undefined): string {
+  return overMij?.persoonlijk ?? 'Goede zorg begint bij echt luisteren naar wat iemand nodig heeft.';
 }
 
-function getNaamParts(naam: string): { voornaam: string; achternaam: string } {
-  const parts = naam.split(' ');
-  if (parts.length <= 2) {
-    return { voornaam: parts[0], achternaam: parts.slice(1).join(' ') };
-  }
-  // "Anna de Vries" → voornaam: "Anna", achternaam: "de Vries"
-  return { voornaam: parts[0], achternaam: parts.slice(1).join(' ') };
+/** Get generated section title with fallback */
+function getTitel(overMij: OverMijContent | undefined, fallback: string): string {
+  return overMij?.titel ?? fallback;
 }
 
-function getTitleWithAccent(titel: string, accentWordCount: number = 1): { rest: string; accent: string } {
+/** Split a title so the last N words become the italic accent */
+function splitTitleAccent(titel: string, accentWordCount = 1): { rest: string; accent: string } {
   const words = titel.split(' ');
   const accent = words.slice(-accentWordCount).join(' ');
   const rest = words.slice(0, -accentWordCount).join(' ');
   return { rest, accent };
 }
 
+/** Split full name into voornaam + achternaam */
+function getNaamParts(naam: string): { voornaam: string; achternaam: string } {
+  const parts = naam.split(' ');
+  return { voornaam: parts[0], achternaam: parts.slice(1).join(' ') };
+}
 
-// Duotone image style - grayscale + sepia warmte
-const duotoneStyle = {
+/** Palette-safe accent color */
+function accent(palette: PaletteColors): string {
+  return palette.accent ?? palette.primary;
+}
+
+/** Palette-safe accentLight color */
+function accentLight(palette: PaletteColors): string {
+  return palette.accentLight ?? palette.primaryLight;
+}
+
+// ============================================
+// SHARED SUB-COMPONENTS
+// ============================================
+
+/** Duotone image filter style */
+const DUOTONE_STYLE: React.CSSProperties = {
   filter: 'grayscale(100%) sepia(25%) brightness(0.7) contrast(1.05)',
 };
 
+/** Section label with optional divider line */
+function SectionLabel({
+  label = 'Over mij',
+  color,
+  lineColor,
+  align = 'left',
+  size = 'editorial',
+}: {
+  label?: string;
+  color: string;
+  lineColor?: string;
+  align?: 'left' | 'center';
+  size?: 'editorial' | 'serene' | 'proactief' | 'mindoor';
+}) {
+  const sizeClasses = {
+    editorial: 'text-xs font-semibold uppercase tracking-[0.2em]',
+    serene: 'text-[9px] font-medium uppercase tracking-[2px]',
+    proactief: 'text-xs font-semibold uppercase tracking-[0.15em]',
+    mindoor: 'text-sm font-medium',
+  };
+
+  if (align === 'center') {
+    return (
+      <div className="flex items-center justify-center gap-3 mb-4">
+        {lineColor && <div className="w-8 h-px" style={{ backgroundColor: lineColor }} />}
+        <span className={sizeClasses[size]} style={{ color }}>{label}</span>
+        {lineColor && <div className="w-8 h-px" style={{ backgroundColor: lineColor }} />}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      {size === 'proactief' || size === 'serene' ? (
+        <div className="w-8 h-px" style={{ backgroundColor: color }} />
+      ) : null}
+      <span
+        className={sizeClasses[size]}
+        style={{ color, ...(size === 'editorial' ? { fontVariant: 'small-caps' } : {}) }}
+      >
+        {label}
+      </span>
+      <div className="flex-1 h-px" style={{ backgroundColor: lineColor ?? 'transparent' }} />
+    </div>
+  );
+}
+
+/** Quote block with large opening quote mark */
+function QuoteBlock({
+  quote,
+  naam,
+  headingFont,
+  primaryColor,
+  textColor,
+  size = 'lg',
+}: {
+  quote: string;
+  naam: string;
+  headingFont: string;
+  primaryColor: string;
+  textColor: string;
+  size?: 'lg' | 'md';
+}) {
+  const quoteSize = size === 'lg' ? 'text-6xl lg:text-7xl' : 'text-5xl';
+  const textSize = size === 'lg' ? 'text-2xl lg:text-3xl' : 'text-xl lg:text-2xl';
+  const mtOffset = size === 'lg' ? '-mt-6' : '-mt-4';
+
+  return (
+    <div>
+      <span
+        className={`${quoteSize} leading-none block mb-2`}
+        style={{ fontFamily: headingFont, color: `${primaryColor}30` }}
+      >
+        &ldquo;
+      </span>
+      <p
+        className={`${textSize} italic leading-snug mb-6 ${mtOffset}`}
+        style={{ fontFamily: headingFont, color: textColor }}
+      >
+        {quote}
+      </p>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-px" style={{ backgroundColor: primaryColor }} />
+        <span className="text-sm font-semibold uppercase tracking-wider" style={{ color: primaryColor }}>
+          {naam}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Circular photo with optional accent ring */
+function RoundPhoto({
+  src,
+  alt,
+  ringColor,
+  duotone = false,
+  size = 'lg',
+}: {
+  src: string;
+  alt: string;
+  ringColor?: string;
+  duotone?: boolean;
+  size?: 'lg' | 'md';
+}) {
+  const sizeClass = size === 'lg' ? 'w-48 h-48 lg:w-56 lg:h-56' : 'w-40 h-40 lg:w-48 lg:h-48';
+  const ringInset = size === 'lg' ? '-inset-2' : '-inset-3';
+
+  return (
+    <div className="relative">
+      <div className={`${sizeClass} rounded-full overflow-hidden`}>
+        <img
+          src={src}
+          alt={alt}
+          className="w-full h-full object-cover"
+          style={duotone ? DUOTONE_STYLE : undefined}
+        />
+      </div>
+      {ringColor && (
+        <div
+          className={`absolute ${ringInset} rounded-full border-2 opacity-30`}
+          style={{ borderColor: ringColor }}
+        />
+      )}
+    </div>
+  );
+}
+
+/** Two-column paragraph layout */
+function TwoColumnText({
+  paragraphs,
+  textColor,
+}: {
+  paragraphs: string[];
+  textColor: string;
+}) {
+  const midPoint = Math.ceil(paragraphs.length / 2);
+  const left = paragraphs.slice(0, midPoint);
+  const right = paragraphs.slice(midPoint);
+
+  return (
+    <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+      <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: textColor }}>
+        {left.map((p, i) => (
+          <p key={i}>{p}</p>
+        ))}
+      </div>
+      <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: textColor }}>
+        {right.map((p, i) => (
+          <p key={i}>{p}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Expertise / tag pills */
+function ExpertiseTags({
+  expertises,
+  borderColor,
+  textColor,
+  variant = 'bordered',
+  bgColor,
+  pillTextColor,
+}: {
+  expertises: string[];
+  borderColor: string;
+  textColor: string;
+  variant?: 'bordered' | 'filled';
+  bgColor?: string;
+  pillTextColor?: string;
+}) {
+  if (!expertises.length) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {expertises.map((expertise, idx) => (
+        <span
+          key={idx}
+          className="px-3 py-1.5 text-sm"
+          style={
+            variant === 'filled'
+              ? { backgroundColor: bgColor, color: pillTextColor }
+              : { border: `1px solid ${borderColor}`, color: textColor }
+          }
+        >
+          {expertise}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** Italic signature name */
+function Signature({
+  naam,
+  headingFont,
+  primaryColor,
+  accentColor,
+  borderColor,
+  showBorder = true,
+  size = 'lg',
+}: {
+  naam: string;
+  headingFont: string;
+  primaryColor: string;
+  accentColor?: string;
+  borderColor?: string;
+  showBorder?: boolean;
+  size?: 'lg' | 'md';
+}) {
+  const { voornaam, achternaam } = getNaamParts(naam);
+  const textSize = size === 'lg' ? 'text-2xl lg:text-3xl' : 'text-2xl';
+
+  return (
+    <div
+      className={showBorder ? 'pt-6' : ''}
+      style={showBorder && borderColor ? { borderTop: `1px solid ${borderColor}` } : undefined}
+    >
+      <p className={`${textSize} italic`} style={{ fontFamily: headingFont, color: primaryColor }}>
+        {accentColor && achternaam ? (
+          <>
+            {voornaam} <em style={{ color: accentColor }}>{achternaam}</em>
+          </>
+        ) : (
+          naam
+        )}
+      </p>
+    </div>
+  );
+}
+
 // ============================================
 // EDITORIAL 1: Quote Lead
-// Grote quote als opening statement, ronde duotone foto rechts
 // ============================================
-export function OverEditorial({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverEditorial({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
-  
-  // Split paragraphs for two-column layout
-  const midPoint = Math.ceil(paragraphs.length / 2);
-  const leftParagraphs = paragraphs.slice(0, midPoint);
-  const rightParagraphs = paragraphs.slice(midPoint);
-  
+  const titel = getTitel(overMij, 'Over mij');
+
   return (
-    <section 
+    <section
       id="over"
       className="px-6 md:px-12 lg:px-20 py-20 lg:py-28"
       style={{ backgroundColor: theme.colors.backgroundAlt }}
     >
       <div className="max-w-6xl mx-auto">
-        
         {/* Top: Quote + Photo */}
         <div className={`flex flex-col lg:flex-row items-center gap-10 lg:gap-16 mb-16 ${getRevealClass('up')}`}>
-          
-          {/* Quote (dominant) */}
           <div className="flex-1">
-            <span 
-              className="text-6xl lg:text-7xl leading-none block mb-2"
-              style={{ fontFamily: theme.fonts.heading, color: `${palette.primary}30` }}
-            >
-              "
-            </span>
-            <p 
-              className="text-2xl lg:text-3xl italic leading-snug mb-6 -mt-6"
-              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-            >
-              {quote}
-            </p>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-px"
-                style={{ backgroundColor: palette.primary }}
-              />
-              <span 
-                className="text-sm font-semibold uppercase tracking-wider"
-                style={{ color: palette.primary }}
-              >
-                {content.naam}
-              </span>
-            </div>
+            <QuoteBlock
+              quote={quote}
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              textColor={theme.colors.text}
+            />
           </div>
-          
-          {/* Photo (rond, duotone) */}
           <div className="shrink-0">
-            <div className="relative">
-              <div className="w-48 h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden">
-                <img 
-                  src={content.foto || images.sfeer}
-                  alt={`Over ${content.naam}`}
-                  className="w-full h-full object-cover"
-                  style={duotoneStyle}
-                />
-              </div>
-              {/* Accent ring */}
-              <div 
-                className="absolute -inset-2 rounded-full border-2 opacity-30"
-                style={{ borderColor: palette.primary }}
-              />
-            </div>
+            <RoundPhoto
+              src={content.foto ?? images.sfeer}
+              alt={`Over ${content.naam}`}
+              ringColor={palette.primary}
+              duotone
+            />
           </div>
         </div>
-        
+
         {/* Divider + Label */}
-        <div className={`flex items-center gap-4 mb-10 ${getRevealClass('left')}`}>
-          <span 
-            className="text-xs font-semibold uppercase tracking-[0.2em]"
-            style={{ fontVariant: 'small-caps', color: palette.primary }}
-          >
-            Over mij
-          </span>
-          <div 
-            className="flex-1 h-px"
-            style={{ backgroundColor: theme.colors.border }}
+        <div className={`mb-10 ${getRevealClass('left')}`}>
+          <SectionLabel
+            color={palette.primary}
+            lineColor={theme.colors.border}
+            size="editorial"
           />
         </div>
-        
+
         {/* Title */}
-        <h2 
+        <h2
           className={`text-3xl md:text-4xl mb-10 ${getRevealClass('up', 100)}`}
           style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
         >
           {jarenErvaring ? (
-            <>Mijn <em className="italic" style={{ color: palette.primary }}>verhaal</em></>
+            <>
+              {titel} — <em className="italic" style={{ color: palette.primary }}>{jarenErvaring} jaar</em> ervaring
+            </>
           ) : (
-            <>Mijn <em className="italic" style={{ color: palette.primary }}>verhaal</em></>
+            <>
+              Mijn <em className="italic" style={{ color: palette.primary }}>verhaal</em>
+            </>
           )}
         </h2>
-        
+
         {/* Two-column text */}
-        <div className={`grid md:grid-cols-2 gap-8 lg:gap-12 mb-10 ${getRevealClass('up', 150)}`}>
-          <div 
-            className="flex flex-col gap-4 leading-[1.8]"
-            style={{ color: theme.colors.textMuted }}
-          >
-            {leftParagraphs.map((p: string, i: number) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-          <div 
-            className="flex flex-col gap-4 leading-[1.8]"
-            style={{ color: theme.colors.textMuted }}
-          >
-            {rightParagraphs.map((p: string, i: number) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
+        <div className={`mb-10 ${getRevealClass('up', 150)}`}>
+          <TwoColumnText paragraphs={paragraphs} textColor={theme.colors.textMuted} />
         </div>
-        
+
         {/* Tags */}
-        {expertises && expertises.length > 0 && (
-          <div className={`flex flex-wrap gap-2 ${getRevealClass('up', 200)}`}>
-            {expertises.map((expertise: string, index: number) => (
-              <span 
-                key={index}
-                className="px-3 py-1.5 border text-sm"
-                style={{ 
-                  borderColor: theme.colors.border,
-                  color: theme.colors.textMuted
-                }}
-              >
-                {expertise}
-              </span>
-            ))}
-          </div>
-        )}
-        
+        <div className={getRevealClass('up', 200)}>
+          <ExpertiseTags
+            expertises={expertises}
+            borderColor={theme.colors.border}
+            textColor={theme.colors.textMuted}
+          />
+        </div>
       </div>
     </section>
   );
@@ -247,105 +480,84 @@ export function OverEditorial({ theme, palette, content, overMij, jarenErvaring,
 
 // ============================================
 // EDITORIAL 2: Visual Margin
-// Foto + quote als sidebar links, content rechts
 // ============================================
-function OverEditorial2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
-  const overMijText = overMij?.body || overMij?.intro || content.over_mij || '';
-  const paragraphs = overMijText.split('\n\n').filter((p: string) => p.trim());
-  const quote = overMij?.persoonlijk || "Goede zorg begint bij echt luisteren.";
-  
-  const midPoint = Math.ceil(paragraphs.length / 2);
-  const leftParagraphs = paragraphs.slice(0, midPoint);
-  const rightParagraphs = paragraphs.slice(midPoint);
-  
-  // Duotone style
-  const duotoneStyle = { filter: 'grayscale(100%) sepia(25%) brightness(0.7) contrast(1.05)' };
-  
+function OverEditorial2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
+  const paragraphs = getParagraphs(overMij, content);
+  const quote = getQuote(overMij);
+  const titel = getTitel(overMij, 'Persoonlijke zorg op maat');
+
   return (
-    <section 
+    <section
       id="over"
       className="px-6 md:px-12 lg:px-20 py-20 lg:py-28"
       style={{ backgroundColor: theme.colors.background }}
     >
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-          
           {/* Left: Visual Margin (foto + quote) */}
           <div className={`lg:col-span-4 ${getRevealClass('left')}`}>
             <div className="relative mb-8">
-              <img 
-                src={content.foto || images.sfeer}
+              <img
+                src={content.foto ?? images.sfeer}
                 alt={`Over ${content.naam}`}
                 className="w-full aspect-[3/4] object-cover"
-                style={duotoneStyle}
+                style={DUOTONE_STYLE}
               />
-              <div 
+              <div
                 className="absolute bottom-0 left-0 w-full h-1"
                 style={{ backgroundColor: palette.primary }}
               />
             </div>
-            
-            <div 
-              className="border-l-2 pl-5"
-              style={{ borderColor: palette.primary }}
-            >
-              <p 
+            <div className="border-l-2 pl-5" style={{ borderColor: palette.primary }}>
+              <p
                 className="text-lg italic leading-relaxed mb-4"
                 style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
               >
-                "{quote}"
+                &ldquo;{quote}&rdquo;
               </p>
-              <p 
-                className="text-sm font-medium"
-                style={{ color: palette.primary }}
-              >
-                — {content.naam?.split(' ')[0]}
+              <p className="text-sm font-medium" style={{ color: palette.primary }}>
+                — {content.naam.split(' ')[0]}
               </p>
             </div>
           </div>
-          
+
           {/* Right: Content */}
           <div className={`lg:col-span-8 ${getRevealClass('right')}`}>
-            <div className="flex items-center gap-4 mb-6">
-              <span 
-                className="text-xs font-semibold uppercase tracking-[0.2em]"
-                style={{ fontVariant: 'small-caps', color: palette.primary }}
-              >
-                Over mij
-              </span>
-              <div className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
+            <div className="mb-6">
+              <SectionLabel color={palette.primary} lineColor={theme.colors.border} size="editorial" />
             </div>
-            
-            <h2 
+
+            <h2
               className="text-3xl md:text-4xl mb-8"
               style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
             >
-              Persoonlijke <em className="italic" style={{ color: palette.primary }}>zorg</em> op maat
+              {(() => {
+                const { rest, accent: acc } = splitTitleAccent(titel);
+                return (
+                  <>
+                    {rest} <em className="italic" style={{ color: palette.primary }}>{acc}</em>
+                  </>
+                );
+              })()}
             </h2>
-            
-            <div className="grid md:grid-cols-2 gap-8 mb-10">
-              <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                {leftParagraphs.map((p: string, i: number) => <p key={i}>{p}</p>)}
-              </div>
-              <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                {rightParagraphs.map((p: string, i: number) => <p key={i}>{p}</p>)}
-              </div>
+
+            <div className="mb-10">
+              <TwoColumnText paragraphs={paragraphs} textColor={theme.colors.textMuted} />
             </div>
-            
-            <div 
+
+            <div
               className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 pt-8 border-t"
               style={{ borderColor: theme.colors.border }}
             >
-              {expertises?.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {expertises.map((expertise: string, index: number) => (
-                    <span key={index} className="px-3 py-1.5 border text-sm" style={{ borderColor: theme.colors.border, color: theme.colors.textMuted }}>
-                      {expertise}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <p className="text-2xl italic shrink-0" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>
+              <ExpertiseTags
+                expertises={expertises}
+                borderColor={theme.colors.border}
+                textColor={theme.colors.textMuted}
+              />
+              <p
+                className="text-2xl italic shrink-0"
+                style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
+              >
                 {content.naam}
               </p>
             </div>
@@ -358,88 +570,92 @@ function OverEditorial2({ theme, palette, content, overMij, jarenErvaring, exper
 
 // ============================================
 // EDITORIAL 3: Compact Header
-// Vierkante foto + quote als header block
 // ============================================
-function OverEditorial3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
-  const overMijText = overMij?.body || overMij?.intro || content.over_mij || '';
-  const paragraphs = overMijText.split('\n\n').filter((p: string) => p.trim());
-  const quote = overMij?.persoonlijk || "Goede zorg begint bij echt luisteren.";
-  
-  const midPoint = Math.ceil(paragraphs.length / 2);
-  const leftParagraphs = paragraphs.slice(0, midPoint);
-  const rightParagraphs = paragraphs.slice(midPoint);
-  
-  const duotoneStyle = { filter: 'grayscale(100%) sepia(25%) brightness(0.7) contrast(1.05)' };
-  
+function OverEditorial3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
+  const paragraphs = getParagraphs(overMij, content);
+  const quote = getQuote(overMij);
+  const titel = getTitel(overMij, 'Met passie voor persoonlijke zorg');
+
   return (
-    <section 
+    <section
       id="over"
       className="px-6 md:px-12 lg:px-20 py-20 lg:py-28"
       style={{ backgroundColor: theme.colors.backgroundAlt }}
     >
       <div className="max-w-5xl mx-auto">
-        
-        <div className={`flex items-center gap-4 mb-10 ${getRevealClass('up')}`}>
-          <span className="text-xs font-semibold uppercase tracking-[0.2em]" style={{ fontVariant: 'small-caps', color: palette.primary }}>
-            Over mij
-          </span>
-          <div className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
+        <div className={`mb-10 ${getRevealClass('up')}`}>
+          <SectionLabel color={palette.primary} lineColor={theme.colors.border} size="editorial" />
         </div>
-        
+
         {/* Header block: Photo + Quote */}
         <div className={`flex flex-col md:flex-row gap-8 lg:gap-12 mb-12 ${getRevealClass('up', 100)}`}>
           <div className="shrink-0">
             <div className="relative w-40 h-40 lg:w-48 lg:h-48 overflow-hidden">
-              <img 
-                src={content.foto || images.sfeer}
+              <img
+                src={content.foto ?? images.sfeer}
                 alt={`Over ${content.naam}`}
                 className="w-full h-full object-cover"
-                style={duotoneStyle}
+                style={DUOTONE_STYLE}
               />
-              <div className="absolute bottom-0 right-0 w-8 h-8 opacity-80" style={{ backgroundColor: palette.primary }} />
+              <div
+                className="absolute bottom-0 right-0 w-8 h-8 opacity-80"
+                style={{ backgroundColor: palette.primary }}
+              />
             </div>
           </div>
-          
           <div className="flex-1 flex flex-col justify-center">
-            <span className="text-5xl leading-none block mb-1" style={{ fontFamily: theme.fonts.heading, color: `${palette.primary}30` }}>"</span>
-            <p className="text-xl lg:text-2xl italic leading-snug mb-4 -mt-4" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
-              {quote}
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-              <span className="text-sm font-medium" style={{ color: palette.primary }}>{content.naam?.split(' ')[0]}</span>
-            </div>
+            <QuoteBlock
+              quote={quote}
+              naam={content.naam.split(' ')[0]}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              textColor={theme.colors.text}
+              size="md"
+            />
           </div>
         </div>
-        
-        <h2 className={`text-3xl md:text-4xl lg:text-5xl mb-10 ${getRevealClass('up', 150)}`} style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
+
+        {/* Dynamic title using jaren ervaring */}
+        <h2
+          className={`text-3xl md:text-4xl lg:text-5xl mb-10 ${getRevealClass('up', 150)}`}
+          style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+        >
           {jarenErvaring ? (
-            <>Al {jarenErvaring} jaar met <em className="italic" style={{ color: palette.primary }}>toewijding</em> in de zorg</>
+            <>
+              Al {jarenErvaring} jaar met{' '}
+              <em className="italic" style={{ color: palette.primary }}>toewijding</em> in de zorg
+            </>
           ) : (
-            <>Met <em className="italic" style={{ color: palette.primary }}>passie</em> voor persoonlijke zorg</>
+            <>
+              {(() => {
+                const { rest, accent: acc } = splitTitleAccent(titel);
+                return (
+                  <>
+                    {rest} <em className="italic" style={{ color: palette.primary }}>{acc}</em>
+                  </>
+                );
+              })()}
+            </>
           )}
         </h2>
-        
-        <div className={`grid md:grid-cols-2 gap-8 lg:gap-12 mb-12 ${getRevealClass('up', 200)}`}>
-          <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-            {leftParagraphs.map((p: string, i: number) => <p key={i}>{p}</p>)}
-          </div>
-          <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-            {rightParagraphs.map((p: string, i: number) => <p key={i}>{p}</p>)}
-          </div>
+
+        <div className={`mb-12 ${getRevealClass('up', 200)}`}>
+          <TwoColumnText paragraphs={paragraphs} textColor={theme.colors.textMuted} />
         </div>
-        
-        <div className={`flex flex-col md:flex-row md:items-end md:justify-between gap-6 pt-8 border-t ${getRevealClass('up', 250)}`} style={{ borderColor: theme.colors.border }}>
-          {expertises?.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {expertises.map((expertise: string, index: number) => (
-                <span key={index} className="px-3 py-1.5 border text-sm" style={{ borderColor: theme.colors.border, color: theme.colors.textMuted }}>
-                  {expertise}
-                </span>
-              ))}
-            </div>
-          )}
-          <p className="text-2xl italic shrink-0" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>
+
+        <div
+          className={`flex flex-col md:flex-row md:items-end md:justify-between gap-6 pt-8 border-t ${getRevealClass('up', 250)}`}
+          style={{ borderColor: theme.colors.border }}
+        >
+          <ExpertiseTags
+            expertises={expertises}
+            borderColor={theme.colors.border}
+            textColor={theme.colors.textMuted}
+          />
+          <p
+            className="text-2xl italic shrink-0"
+            style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
+          >
             {content.naam}
           </p>
         </div>
@@ -447,124 +663,79 @@ function OverEditorial3({ theme, palette, content, overMij, jarenErvaring, exper
     </section>
   );
 }
-// ============================================
-// PROACTIEF OVER SECTION VARIANTEN
-// ============================================
-// 
-// Styling DNA:
-// - Primary: #0099cc (cyaan)
-// - Accent: #ff6b35 (oranje)
-// - Font: Poppins
-// - Modern, clean, geen shadows
-// - Hover effects (hele block wordt primary)
-// - Border-l-4 accents
-// - Numbered sections (01, 02, 03)
-// - Pills voor tags
-//
-// Varianten:
-// - proactief:   Split Numbered - Foto links, genummerde blokken rechts
-// - proactief-2: Split Sticky - Foto + quote sticky, max tekst ruimte
-// - proactief-3: Grid Numbered - Strak grid met hover
-//
-// ============================================
-
 
 // ============================================
 // PROACTIEF 1: Split Numbered
-// Foto links, genummerde tekst blokken rechts met hover
 // ============================================
-export function OverProactief({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverProactief({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
-  
-  // Split paragraphs into numbered blocks (max 3)
+  const titel = getTitel(overMij, 'Over mij');
+
   const blocks = [
-    { num: '01', title: 'Mijn achtergrond', text: paragraphs[0] || 'Met jarenlange ervaring in de zorg heb ik gewerkt in uiteenlopende settings: van ziekenhuizen en verpleeghuizen tot thuiszorg en hospices.' },
-    { num: '02', title: 'Wat mij drijft', text: paragraphs[1] || 'Het maken van een verschil in het leven van mensen. Of het nu gaat om wondzorg, palliatieve begeleiding, of een luisterend oor.' },
-    { num: '03', title: 'Mijn aanpak', text: paragraphs[2] || 'Als ZZP\'er combineer ik zelfstandigheid met professionele kwaliteit. Flexibel en betrouwbaar.' },
-  ].filter(block => block.text);
+    { num: '01', title: 'Mijn achtergrond', text: paragraphs[0] },
+    { num: '02', title: 'Wat mij drijft', text: paragraphs[1] },
+    { num: '03', title: 'Mijn aanpak', text: paragraphs[2] },
+  ].filter((b) => b.text);
 
   return (
-    <section 
-      id="over"
-      className="py-24 px-6 md:px-12"
-      style={{ backgroundColor: theme.colors.backgroundAlt }}
-    >
+    <section id="over" className="py-24 px-6 md:px-12" style={{ backgroundColor: theme.colors.backgroundAlt }}>
       <div className="max-w-6xl mx-auto">
-        
-        {/* Header */}
-        <div className={`flex items-center gap-3 mb-10 ${getRevealClass('up')}`}>
-          <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-          <span 
-            className="text-xs font-semibold uppercase tracking-[0.15em]"
-            style={{ color: palette.primary }}
-          >
-            Over mij
-          </span>
+        <div className={`mb-10 ${getRevealClass('up')}`}>
+          <SectionLabel color={palette.primary} size="proactief" />
         </div>
-        
+
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          
           {/* Left: Photo */}
           <div className={getRevealClass('left')}>
-            <img 
-              src={content.foto || images.sfeer}
+            <img
+              src={content.foto ?? images.sfeer}
               alt={`Over ${content.naam}`}
               className="w-full aspect-[4/5] object-cover"
             />
           </div>
-          
+
           {/* Right: Numbered sections */}
           <div className={getRevealClass('right')}>
-            <h2 
+            <h2
               className="text-3xl lg:text-4xl font-bold mb-8"
               style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
             >
               {content.naam}
             </h2>
-            
-            {/* Numbered blocks */}
+
             <div className="space-y-0 mb-8">
               {blocks.map((block, idx) => (
-                <div 
+                <div
                   key={idx}
                   className="p-6 border-l-4 transition-all cursor-pointer group"
-                  style={{ 
+                  style={{
                     borderColor: idx === 0 ? palette.primary : 'transparent',
-                    backgroundColor: idx === 0 ? (palette.primaryLight || `${palette.primary}15`) : theme.colors.background
+                    backgroundColor: idx === 0 ? palette.primaryLight : theme.colors.background,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = palette.primary;
                     e.currentTarget.style.backgroundColor = palette.primary;
-                    e.currentTarget.querySelectorAll('.block-num').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.3)');
-                    e.currentTarget.querySelectorAll('.block-title').forEach(el => (el as HTMLElement).style.color = 'white');
-                    e.currentTarget.querySelectorAll('.block-text').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.9)');
+                    e.currentTarget.querySelectorAll('.block-num').forEach((el) => ((el as HTMLElement).style.color = 'rgba(255,255,255,0.3)'));
+                    e.currentTarget.querySelectorAll('.block-title').forEach((el) => ((el as HTMLElement).style.color = 'white'));
+                    e.currentTarget.querySelectorAll('.block-text').forEach((el) => ((el as HTMLElement).style.color = 'rgba(255,255,255,0.9)'));
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.borderColor = idx === 0 ? palette.primary : 'transparent';
-                    e.currentTarget.style.backgroundColor = idx === 0 ? (palette.primaryLight || `${palette.primary}15`) : theme.colors.background;
-                    e.currentTarget.querySelectorAll('.block-num').forEach(el => (el as HTMLElement).style.color = palette.primary);
-                    e.currentTarget.querySelectorAll('.block-title').forEach(el => (el as HTMLElement).style.color = theme.colors.text);
-                    e.currentTarget.querySelectorAll('.block-text').forEach(el => (el as HTMLElement).style.color = theme.colors.textMuted);
+                    e.currentTarget.style.backgroundColor = idx === 0 ? palette.primaryLight : theme.colors.background;
+                    e.currentTarget.querySelectorAll('.block-num').forEach((el) => ((el as HTMLElement).style.color = palette.primary));
+                    e.currentTarget.querySelectorAll('.block-title').forEach((el) => ((el as HTMLElement).style.color = theme.colors.text));
+                    e.currentTarget.querySelectorAll('.block-text').forEach((el) => ((el as HTMLElement).style.color = theme.colors.textMuted));
                   }}
                 >
                   <div className="flex gap-4">
-                    <span 
-                      className="block-num text-3xl font-bold transition-colors"
-                      style={{ color: palette.primary }}
-                    >
+                    <span className="block-num text-3xl font-bold transition-colors" style={{ color: palette.primary }}>
                       {block.num}
                     </span>
                     <div>
-                      <h3 
-                        className="block-title font-bold mb-2 transition-colors"
-                        style={{ color: theme.colors.text }}
-                      >
+                      <h3 className="block-title font-bold mb-2 transition-colors" style={{ color: theme.colors.text }}>
                         {block.title}
                       </h3>
-                      <p 
-                        className="block-text text-[15px] leading-[1.8] transition-colors"
-                        style={{ color: theme.colors.textMuted }}
-                      >
+                      <p className="block-text text-[15px] leading-[1.8] transition-colors" style={{ color: theme.colors.textMuted }}>
                         {block.text}
                       </p>
                     </div>
@@ -572,26 +743,20 @@ export function OverProactief({ theme, palette, content, overMij, jarenErvaring,
                 </div>
               ))}
             </div>
-            
-            {/* Tags + CTA */}
-            <div 
+
+            <div
               className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-6 border-t"
               style={{ borderColor: theme.colors.border }}
             >
-              {expertises && expertises.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {expertises.slice(0, 3).map((expertise: string, index: number) => (
-                    <span 
-                      key={index}
-                      className="px-3 py-1.5 text-sm"
-                      style={{ backgroundColor: palette.primaryLight || `${palette.primary}15`, color: palette.primary }}
-                    >
-                      {expertise}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <a 
+              <ExpertiseTags
+                expertises={expertises.slice(0, 3)}
+                borderColor={theme.colors.border}
+                textColor={palette.primary}
+                variant="filled"
+                bgColor={palette.primaryLight}
+                pillTextColor={palette.primary}
+              />
+              <a
                 href="#contact"
                 className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-colors"
                 style={{ backgroundColor: palette.primary }}
@@ -600,9 +765,7 @@ export function OverProactief({ theme, palette, content, overMij, jarenErvaring,
                 <span className="material-symbols-outlined text-lg">arrow_forward</span>
               </a>
             </div>
-            
           </div>
-          
         </div>
       </div>
     </section>
@@ -611,120 +774,70 @@ export function OverProactief({ theme, palette, content, overMij, jarenErvaring,
 
 // ============================================
 // PROACTIEF 2: Split Sticky
-// Foto + quote sticky links, max tekst ruimte rechts
 // ============================================
-export function OverProactief2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverProactief2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
+  const titel = getTitel(overMij, 'Mijn benadering van zorg');
 
   return (
-    <section 
-      id="over"
-      className="py-24 px-6 md:px-12"
-      style={{ backgroundColor: theme.colors.background }}
-    >
+    <section id="over" className="py-24 px-6 md:px-12" style={{ backgroundColor: theme.colors.background }}>
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-12 gap-12 lg:gap-16">
-          
           {/* Left: Sticky photo + quote */}
           <div className={`lg:col-span-5 ${getRevealClass('left')}`}>
             <div className="lg:sticky lg:top-24">
-              
-              {/* Photo */}
               <div className="mb-6">
-                <img 
-                  src={content.foto || images.sfeer}
+                <img
+                  src={content.foto ?? images.sfeer}
                   alt={`Over ${content.naam}`}
                   className="w-full aspect-[4/5] object-cover"
                 />
               </div>
-              
-              {/* Quote met border-left */}
-              <div 
-                className="border-l-4 pl-5"
-                style={{ borderColor: palette.accent || palette.primary }}
-              >
-                <p 
-                  className="italic mb-2"
-                  style={{ color: theme.colors.text }}
-                >
-                  "{quote}"
+              <div className="border-l-4 pl-5" style={{ borderColor: accent(palette) }}>
+                <p className="italic mb-2" style={{ color: theme.colors.text }}>
+                  &ldquo;{quote}&rdquo;
                 </p>
-                <p 
-                  className="text-sm font-medium"
-                  style={{ color: palette.primary }}
-                >
-                  — {content.naam?.split(' ')[0]}
+                <p className="text-sm font-medium" style={{ color: palette.primary }}>
+                  — {content.naam.split(' ')[0]}
                 </p>
               </div>
-              
             </div>
           </div>
-          
+
           {/* Right: Content */}
           <div className={`lg:col-span-7 ${getRevealClass('right')}`}>
-            
-            {/* Label */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-              <span 
-                className="text-xs font-semibold uppercase tracking-[0.15em]"
-                style={{ color: palette.primary }}
-              >
-                Over mij
-              </span>
+            <div className="mb-4">
+              <SectionLabel color={palette.primary} size="proactief" />
             </div>
-            
-            {/* Title */}
-            <h2 
+
+            <h2
               className="text-3xl lg:text-4xl font-bold mb-6"
               style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
             >
-              Mijn benadering van zorg
+              {titel}
             </h2>
-            
-            {/* Text */}
+
             <div className="space-y-4 mb-8">
-              {paragraphs.length > 0 ? (
-                paragraphs.map((p: string, i: number) => (
-                  <p 
-                    key={i}
-                    className="text-[15px] leading-[1.8]"
-                    style={{ color: theme.colors.textMuted }}
-                  >
-                    {p}
-                  </p>
-                ))
-              ) : (
-                <>
-                  <p className="text-[15px] leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                    Met jarenlange ervaring in de zorg heb ik gewerkt in uiteenlopende settings: 
-                    van ziekenhuizen en verpleeghuizen tot thuiszorg en hospices.
-                  </p>
-                  <p className="text-[15px] leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                    Wat mij drijft is het maken van een verschil in het leven van mensen.
-                  </p>
-                </>
-              )}
+              {paragraphs.map((p, i) => (
+                <p key={i} className="text-[15px] leading-[1.8]" style={{ color: theme.colors.textMuted }}>
+                  {p}
+                </p>
+              ))}
             </div>
-            
-            {/* Tags */}
-            {expertises && expertises.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-8">
-                {expertises.map((expertise: string, index: number) => (
-                  <span 
-                    key={index}
-                    className="px-3 py-1.5 text-sm"
-                    style={{ backgroundColor: palette.primaryLight || `${palette.primary}15`, color: palette.primary }}
-                  >
-                    {expertise}
-                  </span>
-                ))}
-              </div>
-            )}
-            
-            {/* CTA */}
-            <a 
+
+            <div className="mb-8">
+              <ExpertiseTags
+                expertises={expertises}
+                borderColor={theme.colors.border}
+                textColor={palette.primary}
+                variant="filled"
+                bgColor={palette.primaryLight}
+                pillTextColor={palette.primary}
+              />
+            </div>
+
+            <a
               href="#contact"
               className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white transition-colors"
               style={{ backgroundColor: palette.primary }}
@@ -732,9 +845,7 @@ export function OverProactief2({ theme, palette, content, overMij, jarenErvaring
               Neem contact op
               <span className="material-symbols-outlined text-lg">arrow_forward</span>
             </a>
-            
           </div>
-          
         </div>
       </div>
     </section>
@@ -743,141 +854,104 @@ export function OverProactief2({ theme, palette, content, overMij, jarenErvaring
 
 // ============================================
 // PROACTIEF 3: Grid Numbered
-// Strak grid met nummers, hover effect, quote cell
 // ============================================
-export function OverProactief3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverProactief3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
 
+  // Hover helpers for grid cells
+  const cellEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    el.style.backgroundColor = palette.primary;
+    el.querySelectorAll('.cell-num').forEach((n) => ((n as HTMLElement).style.color = 'rgba(255,255,255,0.3)'));
+    el.querySelectorAll('.cell-title').forEach((n) => ((n as HTMLElement).style.color = 'white'));
+    el.querySelectorAll('.cell-text').forEach((n) => ((n as HTMLElement).style.color = 'rgba(255,255,255,0.9)'));
+  };
+  const cellLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    el.style.backgroundColor = theme.colors.background;
+    el.querySelectorAll('.cell-num').forEach((n) => ((n as HTMLElement).style.color = palette.primary));
+    el.querySelectorAll('.cell-title').forEach((n) => ((n as HTMLElement).style.color = theme.colors.text));
+    el.querySelectorAll('.cell-text').forEach((n) => ((n as HTMLElement).style.color = theme.colors.textMuted));
+  };
+
   return (
-    <section 
-      id="over"
-      className="py-24 px-6 md:px-12"
-      style={{ backgroundColor: theme.colors.backgroundAlt }}
-    >
+    <section id="over" className="py-24 px-6 md:px-12" style={{ backgroundColor: theme.colors.backgroundAlt }}>
       <div className="max-w-6xl mx-auto">
-        
-        {/* Header */}
         <div className={`text-center mb-12 ${getRevealClass('up')}`}>
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-            <span 
-              className="text-xs font-semibold uppercase tracking-[0.15em]"
-              style={{ color: palette.primary }}
-            >
-              Over mij
-            </span>
-            <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-          </div>
-          <h2 
+          <SectionLabel color={palette.primary} lineColor={palette.primary} align="center" size="proactief" />
+          <h2
             className="text-3xl lg:text-4xl font-bold"
             style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
           >
             {content.naam}
           </h2>
         </div>
-        
-        {/* Grid */}
-        <div 
-          className="grid md:grid-cols-2 gap-px"
-          style={{ backgroundColor: theme.colors.border }}
-        >
-          
+
+        <div className="grid md:grid-cols-2 gap-px" style={{ backgroundColor: theme.colors.border }}>
           {/* Cell 1: Photo */}
           <div className={`row-span-2 ${getRevealClass('left')}`} style={{ backgroundColor: theme.colors.background }}>
-            <img 
-              src={content.foto || images.sfeer}
+            <img
+              src={content.foto ?? images.sfeer}
               alt={`Over ${content.naam}`}
               className="w-full h-full object-cover"
             />
           </div>
-          
+
           {/* Cell 2: Intro */}
-          <div 
-            className={`p-8 lg:p-10 group cursor-pointer transition-colors ${getRevealClass('right')}`}
+          <div
+            className={`p-8 lg:p-10 cursor-pointer transition-colors ${getRevealClass('right')}`}
             style={{ backgroundColor: theme.colors.background }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = palette.primary;
-              e.currentTarget.querySelectorAll('.cell-num').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.3)');
-              e.currentTarget.querySelectorAll('.cell-title').forEach(el => (el as HTMLElement).style.color = 'white');
-              e.currentTarget.querySelectorAll('.cell-text').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.9)');
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme.colors.background;
-              e.currentTarget.querySelectorAll('.cell-num').forEach(el => (el as HTMLElement).style.color = palette.primary);
-              e.currentTarget.querySelectorAll('.cell-title').forEach(el => (el as HTMLElement).style.color = theme.colors.text);
-              e.currentTarget.querySelectorAll('.cell-text').forEach(el => (el as HTMLElement).style.color = theme.colors.textMuted);
-            }}
+            onMouseEnter={cellEnter}
+            onMouseLeave={cellLeave}
           >
             <span className="cell-num text-5xl font-bold block mb-4 transition-colors" style={{ color: palette.primary }}>01</span>
             <h3 className="cell-title text-lg font-bold mb-3 transition-colors" style={{ color: theme.colors.text }}>Mijn achtergrond</h3>
             <p className="cell-text text-[15px] leading-[1.8] transition-colors" style={{ color: theme.colors.textMuted }}>
-              {paragraphs[0] || 'Met jarenlange ervaring in de zorg heb ik gewerkt in uiteenlopende settings: van ziekenhuizen en verpleeghuizen tot thuiszorg en hospices.'}
+              {paragraphs[0] ?? overMij?.intro ?? 'Met jarenlange ervaring in de zorg heb ik gewerkt in uiteenlopende settings.'}
             </p>
           </div>
-          
+
           {/* Cell 3: Motivatie */}
-          <div 
-            className={`p-8 lg:p-10 group cursor-pointer transition-colors ${getRevealClass('right', 100)}`}
+          <div
+            className={`p-8 lg:p-10 cursor-pointer transition-colors ${getRevealClass('right', 100)}`}
             style={{ backgroundColor: theme.colors.background }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = palette.primary;
-              e.currentTarget.querySelectorAll('.cell-num').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.3)');
-              e.currentTarget.querySelectorAll('.cell-title').forEach(el => (el as HTMLElement).style.color = 'white');
-              e.currentTarget.querySelectorAll('.cell-text').forEach(el => (el as HTMLElement).style.color = 'rgba(255,255,255,0.9)');
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = theme.colors.background;
-              e.currentTarget.querySelectorAll('.cell-num').forEach(el => (el as HTMLElement).style.color = palette.primary);
-              e.currentTarget.querySelectorAll('.cell-title').forEach(el => (el as HTMLElement).style.color = theme.colors.text);
-              e.currentTarget.querySelectorAll('.cell-text').forEach(el => (el as HTMLElement).style.color = theme.colors.textMuted);
-            }}
+            onMouseEnter={cellEnter}
+            onMouseLeave={cellLeave}
           >
             <span className="cell-num text-5xl font-bold block mb-4 transition-colors" style={{ color: palette.primary }}>02</span>
             <h3 className="cell-title text-lg font-bold mb-3 transition-colors" style={{ color: theme.colors.text }}>Wat mij drijft</h3>
             <p className="cell-text text-[15px] leading-[1.8] transition-colors" style={{ color: theme.colors.textMuted }}>
-              {paragraphs[1] || 'Het maken van een verschil in het leven van mensen. Of het nu gaat om wondzorg, palliatieve begeleiding, of een luisterend oor — ik doe het met passie.'}
+              {paragraphs[1] ?? overMij?.body ?? 'Het maken van een verschil in het leven van mensen.'}
             </p>
           </div>
-          
+
           {/* Cell 4: Quote */}
-          <div 
+          <div
             className={`p-8 lg:p-10 ${getRevealClass('up', 150)}`}
-            style={{ background: `linear-gradient(135deg, ${palette.primary}, ${palette.primaryDark || palette.primary})` }}
+            style={{ background: `linear-gradient(135deg, ${palette.primary}, ${palette.primaryDark})` }}
           >
-            <span className="text-5xl font-bold block mb-4" style={{ color: 'rgba(255,255,255,0.2)' }}>"</span>
-            <p className="text-lg italic text-white mb-4">
-              {quote}
-            </p>
-            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>— {content.naam?.split(' ')[0]}</p>
+            <span className="text-5xl font-bold block mb-4" style={{ color: 'rgba(255,255,255,0.2)' }}>&ldquo;</span>
+            <p className="text-lg italic text-white mb-4">{quote}</p>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>— {content.naam.split(' ')[0]}</p>
           </div>
-          
+
           {/* Cell 5: Expertises + CTA */}
-          <div 
-            className={`p-8 lg:p-10 ${getRevealClass('up', 200)}`}
-            style={{ backgroundColor: theme.colors.background }}
-          >
-            <span 
-              className="text-xs font-semibold uppercase tracking-wider block mb-4"
-              style={{ color: palette.primary }}
-            >
+          <div className={`p-8 lg:p-10 ${getRevealClass('up', 200)}`} style={{ backgroundColor: theme.colors.background }}>
+            <span className="text-xs font-semibold uppercase tracking-wider block mb-4" style={{ color: palette.primary }}>
               Expertises
             </span>
-            {expertises && expertises.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {expertises.map((expertise: string, index: number) => (
-                  <span 
-                    key={index}
-                    className="px-3 py-1.5 text-sm"
-                    style={{ backgroundColor: palette.primaryLight || `${palette.primary}15`, color: palette.primary }}
-                  >
-                    {expertise}
-                  </span>
-                ))}
-              </div>
-            )}
-            
-            <a 
+            <div className="mb-6">
+              <ExpertiseTags
+                expertises={expertises}
+                borderColor={theme.colors.border}
+                textColor={palette.primary}
+                variant="filled"
+                bgColor={palette.primaryLight}
+                pillTextColor={palette.primary}
+              />
+            </div>
+            <a
               href="#contact"
               className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
               style={{ color: palette.primary }}
@@ -886,136 +960,70 @@ export function OverProactief3({ theme, palette, content, overMij, jarenErvaring
               <span className="material-symbols-outlined text-lg">arrow_forward</span>
             </a>
           </div>
-          
         </div>
-        
       </div>
     </section>
   );
 }
-// ============================================
-// PORTFOLIO OVER SECTION VARIANTEN
-// ============================================
-// 
-// Styling DNA:
-// - Primary: #2d5a4a (donker groen/teal)
-// - Accent: #9ccc65 (lime groen)
-// - Fonts: Playfair Display (heading), Inter (body)
-// - Elegant, portfolio-achtig
-// - Organic corners (border-radius: 0 80px 0 0)
-// - Italic accent in headings
-// - Subtiele borders, GEEN shadows
-//
-// Focus van Over sectie:
-// - WIE is deze persoon (niet WAT kan deze persoon)
-// - Foto + tekst + naam/signature
-// - Quote optioneel voor persoonlijkheid
-//
-// Wat hier NIET hoort:
-// - Timeline → WerkervaringSection
-// - Certificaten/BIG → CredentialsSection
-// - Diensten → DienstenSection
-//
-// Varianten:
-// - portfolio:   Classic Split - Balans foto/tekst, organic corner
-// - portfolio-2: Quote Focus - Quote prominent, ronde foto
-// - portfolio-3: Typography First - Grote statement, foto als accent
-//
-// ============================================
-
 
 // ============================================
 // PORTFOLIO 1: Classic Split
-// Balans tussen foto en tekst, organic corner, signature
 // ============================================
-export function OverPortfolio({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverPortfolio({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
-  
-  // Titel met italic accent
-  const titel = overMij?.titel || 'Met passie voor persoonlijke zorg';
-  const { rest: titelRest, accent: titelAccent } = getTitleWithAccent(titel);
-  
+  const titel = getTitel(overMij, 'Met passie voor persoonlijke zorg');
+  const { rest: titelRest, accent: titelAccent } = splitTitleAccent(titel);
+
   return (
-    <section 
-      id="over"
-      className="py-24 lg:py-32 px-6 md:px-12"
-      style={{ backgroundColor: 'white' }}
-    >
+    <section id="over" className="py-24 lg:py-32 px-6 md:px-12" style={{ backgroundColor: palette.bg ?? '#ffffff' }}>
       <div className="max-w-[1100px] mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
-          {/* Foto met organic corner */}
+          {/* Photo with organic corner */}
           <div className={`relative ${getRevealClass('left')}`}>
-            {/* Decoratieve border (subtiel) */}
-            <div 
+            <div
               className="absolute -top-3 -left-3 w-24 h-24 border-2 opacity-20"
-              style={{ borderColor: palette.accent || palette.primary }}
+              style={{ borderColor: accent(palette) }}
             />
-            
-            <img 
-              src={content.foto || images.sfeer}
+            <img
+              src={content.foto ?? images.sfeer}
               alt={`Over ${content.naam}`}
               className="w-full h-[450px] lg:h-[480px] object-cover"
               style={{ borderRadius: '0 80px 0 0' }}
             />
           </div>
-          
+
           {/* Content */}
           <div className={getRevealClass('right')}>
-            {/* Label */}
-            <span 
+            <span
               className="text-[12px] font-semibold uppercase tracking-[0.2em] mb-4 block"
-              style={{ color: palette.accent || palette.primary }}
+              style={{ color: accent(palette) }}
             >
               Over mij
             </span>
-            
-            {/* Titel met italic accent */}
-            <h2 
+
+            <h2
               className="text-3xl lg:text-[40px] leading-[1.2] mb-6"
               style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
             >
               {titelRest}{' '}
-              <em className="italic" style={{ color: palette.accent || palette.primary }}>
-                {titelAccent}
-              </em>
+              <em className="italic" style={{ color: accent(palette) }}>{titelAccent}</em>
             </h2>
-            
-            {/* Tekst */}
+
             <div className="space-y-4 mb-8">
-              {paragraphs.length > 0 ? (
-                paragraphs.map((p: string, idx: number) => (
-                  <p 
-                    key={idx}
-                    className="leading-[1.8]"
-                    style={{ color: theme.colors.textMuted }}
-                  >
-                    {p}
-                  </p>
-                ))
-              ) : (
-                <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                  Met jarenlange ervaring in de zorg koos ik bewust voor zelfstandigheid. 
-                  Nu kan ik de zorg bieden zoals ik altijd al wilde: met aandacht, rust en 
-                  persoonlijke betrokkenheid.
+              {paragraphs.map((p, idx) => (
+                <p key={idx} className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
+                  {p}
                 </p>
-              )}
+              ))}
             </div>
-            
-            {/* Signature */}
-            <div 
-              className="flex items-center gap-4 pt-6"
-              style={{ borderTop: `1px solid ${theme.colors.border}` }}
-            >
-              <p 
-                className="text-2xl lg:text-3xl italic"
-                style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
-              >
-                {content.naam}
-              </p>
-            </div>
+
+            <Signature
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              borderColor={theme.colors.border}
+            />
           </div>
-          
         </div>
       </div>
     </section>
@@ -1024,120 +1032,49 @@ export function OverPortfolio({ theme, palette, content, overMij, jarenErvaring,
 
 // ============================================
 // PORTFOLIO 2: Quote Focus
-// Quote prominent, ronde foto, persoonlijkheid centraal
 // ============================================
-export function OverPortfolio2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverPortfolio2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
-  
-  // Split paragraphs voor twee kolommen
-  const midPoint = Math.ceil(paragraphs.length / 2);
-  const leftParagraphs = paragraphs.slice(0, midPoint);
-  const rightParagraphs = paragraphs.slice(midPoint);
-  
+
   return (
-    <section 
-      id="over"
-      className="py-24 lg:py-32 px-6 md:px-12"
-      style={{ backgroundColor: theme.colors.backgroundAlt }}
-    >
+    <section id="over" className="py-24 lg:py-32 px-6 md:px-12" style={{ backgroundColor: theme.colors.backgroundAlt }}>
       <div className="max-w-[900px] mx-auto">
-        
-        {/* Top: Quote + Foto */}
+        {/* Top: Quote + Photo */}
         <div className={`flex flex-col md:flex-row items-center gap-10 lg:gap-16 mb-12 ${getRevealClass('up')}`}>
-          
-          {/* Quote (dominant) */}
           <div className="flex-1">
-            <span 
-              className="text-6xl lg:text-7xl leading-none block mb-2"
-              style={{ fontFamily: theme.fonts.heading, color: `${palette.primary}15` }}
-            >
-              "
-            </span>
-            <p 
-              className="text-2xl lg:text-3xl italic leading-snug mb-6 -mt-8"
-              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-            >
-              {quote}
-            </p>
-            <div className="flex items-center gap-3">
-              <div 
-                className="w-10 h-px"
-                style={{ backgroundColor: palette.primary }}
-              />
-              <span 
-                className="text-sm font-semibold uppercase tracking-wider"
-                style={{ color: palette.primary }}
-              >
-                {content.naam}
-              </span>
-            </div>
+            <QuoteBlock
+              quote={quote}
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              textColor={theme.colors.text}
+            />
           </div>
-          
-          {/* Foto (rond) */}
           <div className="shrink-0">
-            <div className="relative">
-              <img 
-                src={content.foto || images.sfeer}
-                alt={`Over ${content.naam}`}
-                className="w-48 h-48 lg:w-56 lg:h-56 rounded-full object-cover"
-              />
-              {/* Accent ring */}
-              <div 
-                className="absolute -inset-2 rounded-full border-2 opacity-30"
-                style={{ borderColor: palette.accent || palette.primary }}
-              />
-            </div>
+            <RoundPhoto
+              src={content.foto ?? images.sfeer}
+              alt={`Over ${content.naam}`}
+              ringColor={accent(palette)}
+            />
           </div>
         </div>
-        
+
         {/* Divider */}
         <div className={`flex items-center gap-4 mb-8 ${getRevealClass('left', 100)}`}>
-          <span 
+          <span
             className="text-[11px] font-semibold uppercase tracking-[0.2em]"
-            style={{ color: palette.accent || palette.primary }}
+            style={{ color: accent(palette) }}
           >
             Mijn verhaal
           </span>
-          <div 
-            className="flex-1 h-px"
-            style={{ backgroundColor: theme.colors.border }}
-          />
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
         </div>
-        
-        {/* Tekst in twee kolommen */}
-        <div className={`grid md:grid-cols-2 gap-8 lg:gap-12 ${getRevealClass('up', 150)}`}>
-          <div className="space-y-4">
-            {leftParagraphs.length > 0 ? (
-              leftParagraphs.map((p: string, idx: number) => (
-                <p key={idx} className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                  {p}
-                </p>
-              ))
-            ) : (
-              <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                Met jarenlange ervaring in de zorg koos ik bewust voor zelfstandigheid. 
-                In ziekenhuizen en zorginstellingen leerde ik het vak, maar miste ik vaak 
-                de tijd voor een goed gesprek.
-              </p>
-            )}
-          </div>
-          <div className="space-y-4">
-            {rightParagraphs.length > 0 ? (
-              rightParagraphs.map((p: string, idx: number) => (
-                <p key={idx} className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                  {p}
-                </p>
-              ))
-            ) : (
-              <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                Nu kan ik de zorg bieden zoals ik altijd al wilde: met aandacht, rust en 
-                persoonlijke betrokkenheid. Elke cliënt is uniek en verdient zorg die daarbij past.
-              </p>
-            )}
-          </div>
+
+        {/* Two-column text */}
+        <div className={getRevealClass('up', 150)}>
+          <TwoColumnText paragraphs={paragraphs} textColor={theme.colors.textMuted} />
         </div>
-        
       </div>
     </section>
   );
@@ -1145,974 +1082,592 @@ export function OverPortfolio2({ theme, palette, content, overMij, jarenErvaring
 
 // ============================================
 // PORTFOLIO 3: Typography First
-// Grote statement titel, minimaal, foto als accent
 // ============================================
-export function OverPortfolio3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverPortfolio3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
-  
+  const titel = getTitel(overMij, 'Zorg is voor mij geen werk, het is wie ik ben.');
+
   return (
-    <section 
-      id="over"
-      className="py-24 lg:py-32 px-6 md:px-12"
-      style={{ backgroundColor: 'white' }}
-    >
+    <section id="over" className="py-24 lg:py-32 px-6 md:px-12" style={{ backgroundColor: palette.bg ?? '#ffffff' }}>
       <div className="max-w-[1000px] mx-auto">
-        
-        {/* Label */}
         <div className={`flex items-center gap-4 mb-6 ${getRevealClass('up')}`}>
-          <span 
-            className="text-[11px] font-semibold uppercase tracking-[0.2em]"
-            style={{ color: palette.accent || palette.primary }}
-          >
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: accent(palette) }}>
             Over mij
           </span>
-          <div 
-            className="flex-1 h-px"
-            style={{ backgroundColor: theme.colors.border }}
-          />
+          <div className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
         </div>
-        
-        {/* Grote statement titel */}
-        <h2 
+
+        {/* Large statement title */}
+        <h2
           className={`text-4xl sm:text-5xl lg:text-6xl leading-[1.1] mb-10 ${getRevealClass('up', 50)}`}
           style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
         >
-          Zorg is voor mij geen{' '}
-          <em className="italic" style={{ color: palette.accent || palette.primary }}>werk</em>,
-          <br />
-          het is wie ik{' '}
-          <em className="italic" style={{ color: palette.accent || palette.primary }}>ben</em>.
+          {(() => {
+            const { rest, accent: acc } = splitTitleAccent(titel, 2);
+            return (
+              <>
+                {rest}{' '}
+                <em className="italic" style={{ color: accent(palette) }}>{acc}</em>
+              </>
+            );
+          })()}
         </h2>
-        
-        {/* Content grid: tekst + kleine foto */}
+
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-          
-          {/* Tekst */}
+          {/* Text */}
           <div className={`lg:col-span-7 space-y-5 ${getRevealClass('up', 100)}`}>
-            {paragraphs.length > 0 ? (
-              <>
-                <p 
-                  className="text-lg leading-[1.8]"
-                  style={{ color: theme.colors.textMuted }}
-                >
-                  {paragraphs[0]}
-                </p>
-                {paragraphs.slice(1).map((p: string, idx: number) => (
-                  <p 
-                    key={idx}
-                    className="leading-[1.8]"
-                    style={{ color: theme.colors.textMuted }}
-                  >
-                    {p}
-                  </p>
-                ))}
-              </>
-            ) : (
-              <>
-                <p 
-                  className="text-lg leading-[1.8]"
-                  style={{ color: theme.colors.textMuted }}
-                >
-                  Na meer dan {jarenErvaring || 15} jaar ervaring in ziekenhuizen, verpleeghuizen 
-                  en de thuiszorg, koos ik voor zelfstandigheid. Niet om de zorg te verlaten, 
-                  maar om dichter bij de mens te komen.
-                </p>
-                <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                  Wat mij drijft is simpel: het verschil maken in iemands dag. Soms is dat 
-                  medische zorg, soms een goed gesprek. Altijd met aandacht en respect.
-                </p>
-              </>
+            {paragraphs.length > 0 && (
+              <p className="text-lg leading-[1.8]" style={{ color: theme.colors.textMuted }}>
+                {paragraphs[0]}
+              </p>
             )}
-            
-            {/* Signature */}
-            <p 
-              className="text-2xl italic pt-4"
-              style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
-            >
-              {content.naam}
-            </p>
+            {paragraphs.slice(1).map((p, idx) => (
+              <p key={idx} className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
+                {p}
+              </p>
+            ))}
+            <Signature
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              showBorder={false}
+            />
           </div>
-          
-          {/* Kleine foto als accent */}
+
+          {/* Small accent photo */}
           <div className={`lg:col-span-5 ${getRevealClass('right', 150)}`}>
-            <img 
-              src={content.foto || images.sfeer}
+            <img
+              src={content.foto ?? images.sfeer}
               alt={`Over ${content.naam}`}
               className="w-full h-64 lg:h-80 object-cover"
               style={{ borderRadius: '0 0 0 60px' }}
             />
           </div>
-          
         </div>
-        
       </div>
     </section>
   );
 }
 
-
-// components/templates/sections/over/OverMindoorVariants.tsx
-// Mindoor Over Section - 3 Varianten
-// Design DNA: Cormorant Garamond + Mulish | Primary #7c6a5d | Accent #d4644a
-//
-// ============================================
-// MINDOOR OVER SECTION VARIANTEN
-// ============================================
-// 
-// Styling DNA (uit Hero + Diensten):
-// - Primary: #7c6a5d (warm bruin/taupe)
-// - Accent: #d4644a (terracotta)
-// - Fonts: Cormorant Garamond (heading serif), Mulish (body)
-// - Warm, persoonlijk, uitnodigend
-// - Decoratieve cirkels: opacity-[0.08] tot opacity-[0.12] (subtiel!)
-// - Offset backgrounds: ${primary}15 achter foto
-// - Rounded corners: rounded-3xl, rounded-[2.5rem], rounded-[3rem]
-// - Floating cards: bg-white rounded-2xl border (GEEN shadow!)
-// - Italic accent op achternaam in primary/accent kleur
-// - NO gradient text, NO heavy shadows
-//
-// Focus van Over sectie:
-// - WIE is deze persoon (niet WAT kan deze persoon)
-// - Foto + tekst + naam/signature
-// - Quote optioneel voor persoonlijkheid
-//
-// Wat hier NIET hoort:
-// - USPs (BIG, DBA, VOG) → CredentialsSection
-// - Stats (jaren, 100%, 24h) → Hero of StatsSection
-// - Social proof card → Hero
-// - Timeline → WerkervaringSection
-// - Feature grid → CredentialsSection
-//
-// Varianten:
-// - mindoor:   Warm Split - Rotated bg shape, decoratieve cirkels
-// - mindoor-2: Quote Overlay - Offset bg, floating quote card
-// - mindoor-3: Centered Statement - Offset bg, floating white card
-//
-// ============================================
-
-
-
-
 // ============================================
 // MINDOOR 1: Warm Split
-// Patronen uit Hero 1: rotated bg shape, decoratieve cirkels, rounded-[2.5rem]
 // ============================================
-export function OverMindoor({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverMindoor({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
-  const { voornaam, achternaam } = getNaamParts(content.naam || 'Zorgprofessional');
-  
-  const titel = overMij?.titel || 'Zorg met warmte en aandacht';
-  const { rest: titelRest, accent: titelAccent } = getTitleWithAccent(titel);
-  
+  const titel = getTitel(overMij, 'Zorg met warmte en aandacht');
+  const { rest: titelRest, accent: titelAccent } = splitTitleAccent(titel);
+
   return (
-    <section 
+    <section
       id="over"
       className="relative py-24 lg:py-32 px-6 md:px-12 overflow-hidden"
       style={{ backgroundColor: theme.colors.backgroundAlt }}
     >
-      {/* Decorative circles (subtiel, kleiner dan Hero) */}
-      <div 
-        className="absolute -top-16 -right-16 w-56 h-56 rounded-full"
-        style={{ background: palette.primary, opacity: 0.07 }}
-      />
-      <div 
-        className="absolute bottom-16 -left-12 w-40 h-40 rounded-full"
-        style={{ background: palette.accent || palette.primary, opacity: 0.07 }}
-      />
-      
+      {/* Decorative circles */}
+      <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full" style={{ background: palette.primary, opacity: 0.07 }} />
+      <div className="absolute bottom-16 -left-12 w-40 h-40 rounded-full" style={{ background: accent(palette), opacity: 0.07 }} />
+
       <div className="relative max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
-          {/* Foto met rotated bg shape (exact als Hero 1) */}
+          {/* Photo with rotated bg shape */}
           <div className={`relative ${getRevealClass('left')}`}>
-            {/* Rotated background shape */}
-            <div 
+            <div
               className="absolute inset-0 rounded-[3rem] transform rotate-3"
-              style={{ 
-                background: `linear-gradient(to bottom right, ${theme.colors.border}, ${palette.primary}15)` 
-              }}
+              style={{ background: `linear-gradient(to bottom right, ${theme.colors.border}, ${palette.primary}15)` }}
             />
-            {/* Main image */}
             <div className="relative rounded-[2.5rem] overflow-hidden">
-              <img 
-                src={content.foto || images.sfeer}
+              <img
+                src={content.foto ?? images.sfeer}
                 alt={`Over ${content.naam}`}
                 className="w-full aspect-[4/5] object-cover"
               />
             </div>
           </div>
-          
+
           {/* Content */}
           <div className={getRevealClass('right')}>
-            <span 
-              className="text-sm font-medium mb-4 block"
-              style={{ color: palette.accent || palette.primary }}
-            >
+            <span className="text-sm font-medium mb-4 block" style={{ color: accent(palette) }}>
               Over mij
             </span>
-            
-            <h2 
+
+            <h2
               className="text-3xl sm:text-4xl lg:text-[42px] leading-[1.2] mb-6"
               style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
             >
               {titelRest}{' '}
-              <em className="italic" style={{ color: palette.accent || palette.primary }}>
-                {titelAccent}
-              </em>
+              <em className="italic" style={{ color: accent(palette) }}>{titelAccent}</em>
             </h2>
-            
+
             <div className="space-y-4 mb-8">
-              {paragraphs.length > 0 ? (
-                paragraphs.map((p: string, idx: number) => (
-                  <p 
-                    key={idx}
-                    className="leading-[1.8]"
-                    style={{ color: theme.colors.textMuted }}
-                  >
-                    {p}
-                  </p>
-                ))
-              ) : (
-                <>
-                  <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                    Zorg verlenen is voor mij meer dan een beroep — het is een roeping. 
-                    Na jarenlange ervaring in verschillende zorgsettings koos ik bewust 
-                    voor zelfstandigheid, zodat ik de tijd kan nemen die goede zorg vraagt.
-                  </p>
-                  <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                    Wat mij drijft? Het verschil maken in iemands dag. Een luisterend oor 
-                    bieden, een helpende hand zijn, en altijd met respect voor wie u bent.
-                  </p>
-                </>
-              )}
+              {paragraphs.map((p, idx) => (
+                <p key={idx} className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
+                  {p}
+                </p>
+              ))}
             </div>
-            
-            {/* Signature met border-top */}
-            <div 
-              className="pt-6"
-              style={{ borderTop: `1px solid ${theme.colors.border}` }}
-            >
-              <p 
-                className="text-2xl lg:text-3xl italic"
-                style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
-              >
-                {voornaam}{' '}
-                <em style={{ color: palette.accent || palette.primary }}>{achternaam}</em>
-              </p>
-            </div>
+
+            <Signature
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              accentColor={accent(palette)}
+              borderColor={theme.colors.border}
+            />
           </div>
-          
         </div>
       </div>
     </section>
   );
 }
 
-
 // ============================================
 // MINDOOR 2: Quote Overlay
-// Patronen uit Hero 3: offset bg, floating quote card (primary bg, witte tekst)
 // ============================================
-export function OverMindoor2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverMindoor2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
-  const { voornaam, achternaam } = getNaamParts(content.naam || 'Zorgprofessional');
-  
-  const titel = overMij?.titel || 'Persoonlijke zorg, op maat';
-  const { rest: titelRest, accent: titelAccent } = getTitleWithAccent(titel, 2);
-  
+  const { voornaam } = getNaamParts(content.naam || 'Zorgprofessional');
+  const titel = getTitel(overMij, 'Persoonlijke zorg, op maat');
+  const { rest: titelRest, accent: titelAccent } = splitTitleAccent(titel, 2);
+
   return (
-    <section 
+    <section
       id="over"
       className="py-24 lg:py-32 px-6 md:px-12 relative overflow-hidden"
       style={{ backgroundColor: theme.colors.background }}
     >
-      {/* Decorative circles (subtiel) */}
-      <div 
-        className="absolute -top-20 -left-20 w-56 h-56 rounded-full"
-        style={{ background: palette.primary, opacity: 0.06 }}
-      />
-      <div 
-        className="absolute -bottom-12 -right-12 w-40 h-40 rounded-full"
-        style={{ background: palette.accent || palette.primary, opacity: 0.07 }}
-      />
-      
+      <div className="absolute -top-20 -left-20 w-56 h-56 rounded-full" style={{ background: palette.primary, opacity: 0.06 }} />
+      <div className="absolute -bottom-12 -right-12 w-40 h-40 rounded-full" style={{ background: accent(palette), opacity: 0.07 }} />
+
       <div className="relative max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          
-          {/* Foto met offset bg + floating quote card */}
+          {/* Photo with offset bg + floating quote card */}
           <div className={`relative ${getRevealClass('left')}`}>
             <div className="rounded-3xl overflow-hidden">
-              <img 
-                src={content.foto || images.sfeer}
+              <img
+                src={content.foto ?? images.sfeer}
                 alt={`Over ${content.naam}`}
                 className="w-full aspect-[4/5] object-cover"
               />
             </div>
-            
-            {/* Offset background (exact als Hero 2/3) */}
-            <div 
+            <div
               className="absolute -z-10 -bottom-4 -right-4 w-full h-full rounded-3xl"
               style={{ background: `${palette.primary}15` }}
             />
-            
-            {/* Floating quote card (exact als Hero 3) */}
-            <div 
+            {/* Floating quote card */}
+            <div
               className="absolute -bottom-8 -left-4 lg:-left-8 max-w-[280px] p-6 rounded-2xl"
               style={{ background: palette.primary }}
             >
               <svg className="w-7 h-7 mb-2 opacity-30 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z"/>
+                <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
               </svg>
-              <p 
+              <p
                 className="text-base text-white/90 leading-relaxed italic"
                 style={{ fontFamily: theme.fonts.heading }}
               >
                 {quote}
               </p>
-              <p 
+              <p
                 className="mt-3 text-sm font-medium"
-                style={{ color: palette.accentLight || palette.accent || '#e07b5f' }}
+                style={{ color: accentLight(palette) }}
               >
                 — {voornaam}
               </p>
             </div>
           </div>
-          
+
           {/* Content */}
           <div className={getRevealClass('right')}>
-            <span 
-              className="text-sm font-medium mb-4 block"
-              style={{ color: palette.accent || palette.primary }}
-            >
+            <span className="text-sm font-medium mb-4 block" style={{ color: accent(palette) }}>
               Over mij
             </span>
-            
-            <h2 
+
+            <h2
               className="text-3xl sm:text-4xl lg:text-[42px] leading-[1.2] mb-6"
               style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
             >
               {titelRest}{' '}
-              <em className="italic" style={{ color: palette.accent || palette.primary }}>
-                {titelAccent}
-              </em>
+              <em className="italic" style={{ color: accent(palette) }}>{titelAccent}</em>
             </h2>
-            
+
             <div className="space-y-4 mb-8">
-              {paragraphs.length > 0 ? (
-                paragraphs.map((p: string, idx: number) => (
-                  <p 
-                    key={idx}
-                    className="leading-[1.8]"
-                    style={{ color: theme.colors.textMuted }}
-                  >
-                    {p}
-                  </p>
-                ))
-              ) : (
-                <>
-                  <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                    Na meer dan 15 jaar ervaring in de zorg weet ik één ding zeker: elk mens 
-                    is uniek en verdient zorg die daarbij past. In ziekenhuizen en zorginstellingen 
-                    leerde ik het vak, maar miste ik vaak de ruimte voor persoonlijke aandacht.
-                  </p>
-                  <p className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                    Als zelfstandige kan ik de zorg bieden zoals die bedoeld is: met warmte, 
-                    geduld en oprechte betrokkenheid. Geen haast, geen afvinken van lijstjes, 
-                    maar echte menselijke verbinding.
-                  </p>
-                </>
-              )}
+              {paragraphs.map((p, idx) => (
+                <p key={idx} className="leading-[1.8]" style={{ color: theme.colors.textMuted }}>
+                  {p}
+                </p>
+              ))}
             </div>
-            
-            {/* Signature */}
-            <div 
-              className="pt-6"
-              style={{ borderTop: `1px solid ${theme.colors.border}` }}
-            >
-              <p 
-                className="text-2xl lg:text-3xl italic"
-                style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
-              >
-                {voornaam}{' '}
-                <em style={{ color: palette.accent || palette.primary }}>{achternaam}</em>
-              </p>
-            </div>
+
+            <Signature
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              accentColor={accent(palette)}
+              borderColor={theme.colors.border}
+            />
           </div>
-          
         </div>
       </div>
     </section>
   );
 }
 
-
 // ============================================
 // MINDOOR 3: Centered Statement
-// Patronen uit Hero 2: offset bg, floating white card met border, 12-col grid
 // ============================================
-export function OverMindoor3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverMindoor3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
-  const { voornaam, achternaam } = getNaamParts(content.naam || 'Zorgprofessional');
-  
-  const titel = overMij?.titel || 'Met hart en ziel in de zorg';
-  const { rest: titelRest, accent: titelAccent } = getTitleWithAccent(titel);
-  
-  // Quote voor floating card
   const quote = getQuote(overMij);
-  
+  const titel = getTitel(overMij, 'Met hart en ziel in de zorg');
+  const { rest: titelRest, accent: titelAccent } = splitTitleAccent(titel);
+
   return (
-    <section 
+    <section
       id="over"
       className="py-24 lg:py-32 px-6 md:px-12 relative overflow-hidden"
       style={{ backgroundColor: theme.colors.backgroundAlt }}
     >
-      {/* Decorative circles (subtiel) */}
-      <div 
-        className="absolute -top-12 -right-20 w-48 h-48 rounded-full"
-        style={{ background: palette.primary, opacity: 0.06 }}
-      />
-      <div 
-        className="absolute bottom-20 -left-10 w-32 h-32 rounded-full"
-        style={{ background: palette.accent || palette.primary, opacity: 0.07 }}
-      />
-      
+      <div className="absolute -top-12 -right-20 w-48 h-48 rounded-full" style={{ background: palette.primary, opacity: 0.06 }} />
+      <div className="absolute bottom-20 -left-10 w-32 h-32 rounded-full" style={{ background: accent(palette), opacity: 0.07 }} />
+
       <div className="relative max-w-5xl mx-auto">
-        
         {/* Centered header */}
         <div className={`text-center mb-12 lg:mb-16 ${getRevealClass('up')}`}>
-          <span 
-            className="text-sm font-medium mb-4 block"
-            style={{ color: palette.accent || palette.primary }}
-          >
+          <span className="text-sm font-medium mb-4 block" style={{ color: accent(palette) }}>
             Over mij
           </span>
-          <h2 
+          <h2
             className="text-3xl sm:text-4xl lg:text-5xl leading-[1.2]"
             style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
           >
             {titelRest}{' '}
-            <em className="italic" style={{ color: palette.accent || palette.primary }}>
-              {titelAccent}
-            </em>
+            <em className="italic" style={{ color: accent(palette) }}>{titelAccent}</em>
           </h2>
         </div>
-        
-        {/* Grid: Tekst + Foto */}
+
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
-          {/* Tekst (5 kolommen) */}
+          {/* Text */}
           <div className={`lg:col-span-5 lg:pt-4 ${getRevealClass('up', 50)}`}>
             <div className="space-y-4 mb-8">
-              {paragraphs.length > 0 ? (
-                paragraphs.map((p: string, idx: number) => (
-                  <p 
-                    key={idx}
-                    className="leading-[1.85]"
-                    style={{ color: theme.colors.textMuted }}
-                  >
-                    {p}
-                  </p>
-                ))
-              ) : (
-                <>
-                  <p className="leading-[1.85]" style={{ color: theme.colors.textMuted }}>
-                    Mijn naam is {content.naam}. Al meer dan {jarenErvaring || 15} jaar werk 
-                    ik in de zorg, en nog steeds word ik gedreven door hetzelfde: het verschil 
-                    maken in iemands leven.
-                  </p>
-                  <p className="leading-[1.85]" style={{ color: theme.colors.textMuted }}>
-                    Als zelfstandige combineer ik professionele expertise met persoonlijke 
-                    aandacht. Geen haast, geen afvinken van lijstjes. Gewoon goede zorg, 
-                    zoals die bedoeld is.
-                  </p>
-                </>
-              )}
+              {paragraphs.map((p, idx) => (
+                <p key={idx} className="leading-[1.85]" style={{ color: theme.colors.textMuted }}>
+                  {p}
+                </p>
+              ))}
             </div>
-            
-            {/* Signature */}
-            <div 
-              className="pt-6"
-              style={{ borderTop: `1px solid ${theme.colors.border}` }}
-            >
-              <p 
-                className="text-2xl italic"
-                style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
-              >
-                {voornaam}{' '}
-                <em style={{ color: palette.accent || palette.primary }}>{achternaam}</em>
-              </p>
-            </div>
+            <Signature
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              accentColor={accent(palette)}
+              borderColor={theme.colors.border}
+            />
           </div>
-          
-          {/* Foto (7 kolommen) met floating card */}
+
+          {/* Photo with floating card */}
           <div className={`lg:col-span-7 relative ${getRevealClass('up', 100)}`}>
             <div className="rounded-3xl overflow-hidden">
-              <img 
-                src={content.foto || images.sfeer}
+              <img
+                src={content.foto ?? images.sfeer}
                 alt={`Over ${content.naam}`}
                 className="w-full aspect-[3/4] object-cover"
               />
             </div>
-            
-            {/* Offset background (exact als Hero 2) */}
-            <div 
+            <div
               className="absolute -z-10 -bottom-4 -right-4 w-full h-full rounded-3xl"
               style={{ background: `${palette.primary}15` }}
             />
-            
-            {/* Floating quote card (bg-white rounded-2xl border, exact als Hero 2 floating cards) */}
-            <div 
+            {/* Floating quote card */}
+            <div
               className="absolute -bottom-6 -left-6 max-w-[260px] p-5 rounded-2xl bg-white border"
               style={{ borderColor: theme.colors.border }}
             >
               <div className="flex items-start gap-3">
-                <div 
+                <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                   style={{ background: `${palette.primary}15` }}
                 >
-                  <span 
-                    className="material-symbols-outlined text-xl" 
-                    style={{ color: palette.primary }}
-                  >
+                  <span className="material-symbols-outlined text-xl" style={{ color: palette.primary }}>
                     format_quote
                   </span>
                 </div>
                 <div>
-                  <p 
+                  <p
                     className="text-sm italic leading-relaxed"
                     style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
                   >
-                    "{quote}"
+                    &ldquo;{quote}&rdquo;
                   </p>
-                  <p 
-                    className="text-xs mt-2" 
-                    style={{ color: theme.colors.textMuted }}
-                  >
+                  <p className="text-xs mt-2" style={{ color: theme.colors.textMuted }}>
                     — {content.naam}
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          
         </div>
       </div>
     </section>
   );
 }
 
-
-// ============================================
-// SERENE OVER SECTION VARIANTEN
-// ============================================
-//
-// Styling DNA:
-// - Primary: #3d4a3d (sage groen)
-// - PrimaryLight: #a8b5a8
-// - Accent: #5a6b5a
-// - Font heading: Cormorant Garamond (serif)
-// - Font body: Nunito Sans (sans-serif)
-// - Minimalistisch, rustgevend, veel whitespace
-// - Typography-first: oversized serif headings
-// - text-[9px] uppercase tracking-[2px] labels
-// - Organic corners: border-radius: 0 80px 0 0
-// - Subtiele borders als separators
-// - Duotone foto behandeling
-//
-// Varianten:
-// - serene:   Quote Lead — Grote quote + ronde duotone foto, twee-kolom tekst
-// - serene-2: Visual Margin — Foto + quote sticky links, content rechts
-// - serene-3: Numbered Blocks — Compact header, genummerde blokken, asymmetrisch
-//
-// ============================================
-
 // ============================================
 // SERENE 1: Quote Lead
-// Grote quote als opening, ronde duotone foto, twee-kolom tekst
 // ============================================
-export function OverSerene({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverSerene({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
-  
-  // Split paragraphs voor twee-kolom layout
-  const midPoint = Math.ceil(paragraphs.length / 2);
-  const leftParagraphs = paragraphs.slice(0, midPoint);
-  const rightParagraphs = paragraphs.slice(midPoint);
-  
+
   return (
-    <section 
+    <section
       id="over"
       className="px-6 md:px-12 lg:px-20 py-20 lg:py-28"
       style={{ backgroundColor: theme.colors.backgroundAlt, fontFamily: theme.fonts.body }}
     >
       <div className="max-w-6xl mx-auto">
-        
         {/* Quote + Photo header */}
         <div className={`flex flex-col lg:flex-row items-center gap-10 lg:gap-16 mb-16 ${getRevealClass('up')}`}>
-          
-          {/* Quote (dominant) */}
           <div className="flex-1">
-            <span 
-              className="text-6xl lg:text-7xl leading-none block mb-2"
-              style={{ fontFamily: theme.fonts.heading, color: `${palette.primary}30` }}
-            >
-              &ldquo;
-            </span>
-            <p 
-              className="text-2xl lg:text-3xl italic leading-snug mb-6 -mt-6"
-              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-            >
-              {quote}
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-              <span 
-                className="text-[9px] font-medium uppercase tracking-[2px]"
-                style={{ color: palette.primary }}
-              >
-                {content.naam}
-              </span>
-            </div>
+            <QuoteBlock
+              quote={quote}
+              naam={content.naam}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              textColor={theme.colors.text}
+            />
           </div>
-          
-          {/* Photo (rond, duotone) */}
           <div className="shrink-0">
-            <div className="relative">
-              <div className="w-48 h-48 lg:w-56 lg:h-56 rounded-full overflow-hidden">
-                <img 
-                  src={content.foto || images.sfeer}
-                  alt={`Over ${content.naam}`}
-                  className="w-full h-full object-cover"
-                  style={duotoneStyle}
-                />
-              </div>
-              {/* Accent ring */}
-              <div 
-                className="absolute -inset-3 rounded-full border opacity-20"
-                style={{ borderColor: palette.primary }}
-              />
-            </div>
+            <RoundPhoto
+              src={content.foto ?? images.sfeer}
+              alt={`Over ${content.naam}`}
+              ringColor={palette.primary}
+              duotone
+              size="md"
+            />
           </div>
         </div>
-        
+
         {/* Divider + Label */}
         <div className={`flex items-center gap-4 mb-10 ${getRevealClass('up', 100)}`}>
-          <span 
-            className="text-[9px] font-medium uppercase tracking-[2px]"
-            style={{ color: theme.colors.textMuted }}
-          >
+          <span className="text-[9px] font-medium uppercase tracking-[2px]" style={{ color: theme.colors.textMuted }}>
             Over mij
           </span>
           <div className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
         </div>
-        
+
         {/* Title */}
-        <h2 
+        <h2
           className={`text-3xl md:text-4xl mb-10 ${getRevealClass('up', 150)}`}
           style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
         >
           {jarenErvaring ? (
-            <>Al {jarenErvaring} jaar met <em className="italic" style={{ color: palette.primary }}>toewijding</em> in de zorg</>
+            <>
+              Al {jarenErvaring} jaar met{' '}
+              <em className="italic" style={{ color: palette.primary }}>toewijding</em> in de zorg
+            </>
           ) : (
-            <>Mijn <em className="italic" style={{ color: palette.primary }}>verhaal</em></>
+            <>
+              Mijn <em className="italic" style={{ color: palette.primary }}>verhaal</em>
+            </>
           )}
         </h2>
-        
-        {/* Two-column text */}
-        <div className={`grid md:grid-cols-2 gap-8 lg:gap-12 mb-10 ${getRevealClass('up', 200)}`}>
-          <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-            {leftParagraphs.map((p: string, i: number) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
-          <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-            {rightParagraphs.map((p: string, i: number) => (
-              <p key={i}>{p}</p>
-            ))}
-          </div>
+
+        <div className={`mb-10 ${getRevealClass('up', 200)}`}>
+          <TwoColumnText paragraphs={paragraphs} textColor={theme.colors.textMuted} />
         </div>
-        
-        {/* Expertise tags */}
-        {expertises && expertises.length > 0 && (
-          <div className={`flex flex-wrap gap-2 ${getRevealClass('up', 250)}`}>
-            {expertises.map((expertise: string, index: number) => (
-              <span 
-                key={index}
-                className="px-3 py-1.5 border text-sm"
-                style={{ borderColor: theme.colors.border, color: theme.colors.textMuted }}
-              >
-                {expertise}
-              </span>
-            ))}
-          </div>
-        )}
-        
+
+        <div className={getRevealClass('up', 250)}>
+          <ExpertiseTags expertises={expertises} borderColor={theme.colors.border} textColor={theme.colors.textMuted} />
+        </div>
       </div>
     </section>
   );
 }
 
-
 // ============================================
 // SERENE 2: Visual Margin
-// Foto + quote sticky links, content rechts, signature naam
 // ============================================
-export function OverSerene2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverSerene2({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
-  
-  const midPoint = Math.ceil(paragraphs.length / 2);
-  const leftParagraphs = paragraphs.slice(0, midPoint);
-  const rightParagraphs = paragraphs.slice(midPoint);
-  
+  const titel = getTitel(overMij, 'Persoonlijke zorg op maat');
+
   return (
-    <section 
+    <section
       id="over"
       className="px-6 md:px-12 lg:px-20 py-20 lg:py-28"
       style={{ backgroundColor: theme.colors.background, fontFamily: theme.fonts.body }}
     >
       <div className="max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
-          
-          {/* Left: Visual Margin (foto + quote) — sticky */}
+          {/* Left: Visual Margin — sticky */}
           <div className={`lg:col-span-4 ${getRevealClass('left')}`}>
             <div className="lg:sticky lg:top-24">
-              
-              {/* Photo met organic corner */}
               <div className="relative mb-8">
-                <img 
-                  src={content.foto || images.sfeer}
+                <img
+                  src={content.foto ?? images.sfeer}
                   alt={`Over ${content.naam}`}
                   className="w-full aspect-[3/4] object-cover"
-                  style={{ ...duotoneStyle, borderRadius: '0 80px 0 0' }}
+                  style={{ ...DUOTONE_STYLE, borderRadius: '0 80px 0 0' }}
                 />
-                {/* Accent lijn onderaan foto */}
-                <div 
+                <div
                   className="absolute bottom-0 left-0 w-full h-px"
                   style={{ backgroundColor: palette.primary }}
                 />
               </div>
-              
-              {/* Quote met border-left */}
-              <div 
-                className="border-l pl-5"
-                style={{ borderColor: palette.primary }}
-              >
-                <p 
+              <div className="border-l pl-5" style={{ borderColor: palette.primary }}>
+                <p
                   className="text-lg italic leading-relaxed mb-4"
                   style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
                 >
                   &ldquo;{quote}&rdquo;
                 </p>
-                <p 
-                  className="text-[9px] font-medium uppercase tracking-[2px]"
-                  style={{ color: palette.primary }}
-                >
-                  — {content.naam?.split(' ')[0]}
+                <p className="text-[9px] font-medium uppercase tracking-[2px]" style={{ color: palette.primary }}>
+                  — {content.naam.split(' ')[0]}
                 </p>
               </div>
-              
             </div>
           </div>
-          
+
           {/* Right: Content */}
           <div className={`lg:col-span-8 ${getRevealClass('right')}`}>
-            
-            {/* Label + lijn */}
             <div className="flex items-center gap-4 mb-6">
               <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-              <span 
-                className="text-[9px] font-medium uppercase tracking-[3px]"
-                style={{ color: theme.colors.textMuted }}
-              >
+              <span className="text-[9px] font-medium uppercase tracking-[3px]" style={{ color: theme.colors.textMuted }}>
                 Over mij
               </span>
             </div>
-            
-            {/* Heading */}
-            <h2 
-              className="text-3xl md:text-4xl mb-8"
-              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-            >
-              Persoonlijke <em className="italic" style={{ color: palette.primary }}>zorg</em> op maat
+
+            <h2 className="text-3xl md:text-4xl mb-8" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
+              {(() => {
+                const { rest, accent: acc } = splitTitleAccent(titel);
+                return (
+                  <>
+                    {rest} <em className="italic" style={{ color: palette.primary }}>{acc}</em>
+                  </>
+                );
+              })()}
             </h2>
-            
-            {/* Two-column text */}
-            <div className="grid md:grid-cols-2 gap-8 mb-10">
-              <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                {leftParagraphs.map((p: string, i: number) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
-              <div className="flex flex-col gap-4 leading-[1.8]" style={{ color: theme.colors.textMuted }}>
-                {rightParagraphs.map((p: string, i: number) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
+
+            <div className="mb-10">
+              <TwoColumnText paragraphs={paragraphs} textColor={theme.colors.textMuted} />
             </div>
-            
-            {/* Bottom: tags + signature naam */}
-            <div 
+
+            <div
               className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 pt-8 border-t"
               style={{ borderColor: theme.colors.border }}
             >
-              {expertises && expertises.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {expertises.map((expertise: string, index: number) => (
-                    <span 
-                      key={index}
-                      className="px-3 py-1.5 border text-sm"
-                      style={{ borderColor: theme.colors.border, color: theme.colors.textMuted }}
-                    >
-                      {expertise}
-                    </span>
-                  ))}
-                </div>
-              )}
-              <p 
-                className="text-2xl italic shrink-0"
-                style={{ fontFamily: theme.fonts.heading, color: palette.primary }}
-              >
+              <ExpertiseTags expertises={expertises} borderColor={theme.colors.border} textColor={theme.colors.textMuted} />
+              <p className="text-2xl italic shrink-0" style={{ fontFamily: theme.fonts.heading, color: palette.primary }}>
                 {content.naam}
               </p>
             </div>
-            
           </div>
-          
         </div>
       </div>
     </section>
   );
 }
 
-
 // ============================================
 // SERENE 3: Numbered Blocks
-// Compact header, genummerde blokken, asymmetrisch grid
 // ============================================
-export function OverSerene3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: any) {
+export function OverSerene3({ theme, palette, content, overMij, jarenErvaring, expertises, images }: VariantProps) {
   const paragraphs = getParagraphs(overMij, content);
   const quote = getQuote(overMij);
-  
-  // Split paragraphs into numbered blocks (max 3)
+
   const blocks = [
     { num: '01', title: 'Mijn achtergrond', text: paragraphs[0] },
     { num: '02', title: 'Wat mij drijft', text: paragraphs[1] },
     { num: '03', title: 'Mijn aanpak', text: paragraphs[2] },
-  ].filter(block => block.text);
-  
-  // Fallback als er minder dan 3 paragraphs zijn
+  ].filter((b) => b.text);
+
+  // Fallback when < 2 paragraphs available
   const defaultBlocks = [
-    { num: '01', title: 'Mijn achtergrond', text: 'Met jarenlange ervaring in de zorg heb ik een brede basis opgebouwd. Van ziekenhuiszorg en revalidatie tot thuiszorg en palliatieve begeleiding.' },
-    { num: '02', title: 'Wat mij drijft', text: 'Het maken van een verschil in het leven van mensen. Of het nu gaat om wondzorg, palliatieve begeleiding, of een luisterend oor.' },
-    { num: '03', title: 'Mijn aanpak', text: 'Als ZZP\'er combineer ik zelfstandigheid met professionele kwaliteit. Flexibel, betrouwbaar en met persoonlijke aandacht.' },
+    { num: '01', title: 'Mijn achtergrond', text: overMij?.intro ?? 'Met jarenlange ervaring in de zorg heb ik een brede basis opgebouwd.' },
+    { num: '02', title: 'Wat mij drijft', text: overMij?.body ?? 'Het maken van een verschil in het leven van mensen.' },
+    { num: '03', title: 'Mijn aanpak', text: overMij?.persoonlijk ?? 'Flexibel, betrouwbaar en met persoonlijke aandacht.' },
   ];
-  
+
   const displayBlocks = blocks.length >= 2 ? blocks : defaultBlocks;
-  
-  // Split blocks: eerste helft links, rest rechts (offset)
   const leftBlocks = displayBlocks.slice(0, 2);
   const rightBlocks = displayBlocks.slice(2);
-  
+
   return (
-    <section 
+    <section
       id="over"
       className="px-6 md:px-12 lg:px-20 py-20 lg:py-28"
       style={{ backgroundColor: theme.colors.backgroundAlt, fontFamily: theme.fonts.body }}
     >
       <div className="max-w-5xl mx-auto">
-        
-        {/* Label + lijn */}
+        {/* Label */}
         <div className={`flex items-center gap-4 mb-10 ${getRevealClass('up')}`}>
           <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-          <span 
-            className="text-[9px] font-medium uppercase tracking-[3px]"
-            style={{ color: theme.colors.textMuted }}
-          >
+          <span className="text-[9px] font-medium uppercase tracking-[3px]" style={{ color: theme.colors.textMuted }}>
             Over mij
           </span>
           <div className="flex-1 h-px" style={{ backgroundColor: theme.colors.border }} />
         </div>
-        
+
         {/* Compact header: Photo + Quote */}
         <div className={`flex flex-col md:flex-row gap-8 lg:gap-12 mb-12 ${getRevealClass('up', 100)}`}>
-          {/* Vierkante foto */}
           <div className="shrink-0">
             <div className="relative w-40 h-40 lg:w-48 lg:h-48 overflow-hidden">
-              <img 
-                src={content.foto || images.sfeer}
+              <img
+                src={content.foto ?? images.sfeer}
                 alt={`Over ${content.naam}`}
                 className="w-full h-full object-cover"
-                style={duotoneStyle}
+                style={DUOTONE_STYLE}
               />
-              {/* Accent block rechtsonder */}
-              <div 
+              <div
                 className="absolute bottom-0 right-0 w-8 h-8 opacity-80"
                 style={{ backgroundColor: palette.primary }}
               />
             </div>
           </div>
-          
-          {/* Quote */}
           <div className="flex-1 flex flex-col justify-center">
-            <span 
-              className="text-5xl leading-none block mb-1"
-              style={{ fontFamily: theme.fonts.heading, color: `${palette.primary}30` }}
-            >
-              &ldquo;
-            </span>
-            <p 
-              className="text-xl lg:text-2xl italic leading-snug mb-4 -mt-4"
-              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-            >
-              {quote}
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-px" style={{ backgroundColor: palette.primary }} />
-              <span 
-                className="text-[9px] font-medium uppercase tracking-[2px]"
-                style={{ color: palette.primary }}
-              >
-                {content.naam?.split(' ')[0]}
-              </span>
-            </div>
+            <QuoteBlock
+              quote={quote}
+              naam={content.naam.split(' ')[0]}
+              headingFont={theme.fonts.heading}
+              primaryColor={palette.primary}
+              textColor={theme.colors.text}
+              size="md"
+            />
           </div>
         </div>
-        
-        {/* Grote heading met jaren ervaring */}
-        <h2 
+
+        {/* Heading with jaren ervaring */}
+        <h2
           className={`text-3xl md:text-4xl lg:text-[42px] leading-[1.15] mb-12 ${getRevealClass('up', 150)}`}
           style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
         >
           {jarenErvaring ? (
-            <>Al {jarenErvaring} jaar met <em className="italic" style={{ color: palette.primary }}>toewijding</em> in de zorg</>
+            <>
+              Al {jarenErvaring} jaar met{' '}
+              <em className="italic" style={{ color: palette.primary }}>toewijding</em> in de zorg
+            </>
           ) : (
-            <>Met <em className="italic" style={{ color: palette.primary }}>passie</em> voor persoonlijke zorg</>
+            <>
+              Met <em className="italic" style={{ color: palette.primary }}>passie</em> voor persoonlijke zorg
+            </>
           )}
         </h2>
-        
-        {/* Genummerde blokken in asymmetrisch grid */}
+
+        {/* Numbered blocks in asymmetric grid */}
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-12 mb-12">
-          
-          {/* Linker kolom */}
           <div className="lg:col-span-6 space-y-0">
             {leftBlocks.map((block, idx) => (
-              <div 
+              <div
                 key={idx}
                 className={`border-l pl-6 py-6 ${getRevealClass('up', (idx + 2) * 50)}`}
                 style={{ borderColor: idx === 0 ? palette.primary : theme.colors.border }}
               >
-                <span 
-                  className="text-[9px] font-medium uppercase tracking-[2px] block mb-2"
-                  style={{ color: theme.colors.textMuted }}
-                >
+                <span className="text-[9px] font-medium uppercase tracking-[2px] block mb-2" style={{ color: theme.colors.textMuted }}>
                   {block.num}
                 </span>
-                <h3 
-                  className="text-xl mb-3"
-                  style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-                >
+                <h3 className="text-xl mb-3" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
                   {block.title}
                 </h3>
                 <p className="text-sm leading-[1.8]" style={{ color: theme.colors.textMuted }}>
@@ -2121,25 +1676,18 @@ export function OverSerene3({ theme, palette, content, overMij, jarenErvaring, e
               </div>
             ))}
           </div>
-          
-          {/* Rechter kolom: offset naar beneden */}
+
           <div className="lg:col-span-6 lg:pt-16 space-y-0">
             {rightBlocks.map((block, idx) => (
-              <div 
+              <div
                 key={idx}
                 className={`border-l pl-6 py-6 ${getRevealClass('up', (idx + 3) * 50)}`}
                 style={{ borderColor: theme.colors.border }}
               >
-                <span 
-                  className="text-[9px] font-medium uppercase tracking-[2px] block mb-2"
-                  style={{ color: theme.colors.textMuted }}
-                >
+                <span className="text-[9px] font-medium uppercase tracking-[2px] block mb-2" style={{ color: theme.colors.textMuted }}>
                   {block.num}
                 </span>
-                <h3 
-                  className="text-xl mb-3"
-                  style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-                >
+                <h3 className="text-xl mb-3" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
                   {block.title}
                 </h3>
                 <p className="text-sm leading-[1.8]" style={{ color: theme.colors.textMuted }}>
@@ -2147,10 +1695,9 @@ export function OverSerene3({ theme, palette, content, overMij, jarenErvaring, e
                 </p>
               </div>
             ))}
-            
             {/* Sfeerbeeld */}
             <div className={`pt-6 ${getRevealClass('up', 200)}`}>
-              <img 
+              <img
                 src={images.sfeer}
                 alt="Zorg sfeer"
                 className="w-full h-48 object-cover"
@@ -2158,34 +1705,20 @@ export function OverSerene3({ theme, palette, content, overMij, jarenErvaring, e
               />
             </div>
           </div>
-          
         </div>
-        
+
         {/* Bottom: tags + CTA */}
-        <div 
+        <div
           className={`flex flex-col md:flex-row md:items-end md:justify-between gap-6 pt-8 border-t ${getRevealClass('up', 250)}`}
           style={{ borderColor: theme.colors.border }}
         >
-          {expertises && expertises.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {expertises.map((expertise: string, index: number) => (
-                <span 
-                  key={index}
-                  className="px-3 py-1.5 border text-sm"
-                  style={{ borderColor: theme.colors.border, color: theme.colors.textMuted }}
-                >
-                  {expertise}
-                </span>
-              ))}
-            </div>
-          )}
-          
-          <a 
+          <ExpertiseTags expertises={expertises} borderColor={theme.colors.border} textColor={theme.colors.textMuted} />
+          <a
             href="#contact"
             className="inline-flex items-center gap-3 text-[10px] uppercase tracking-[2px]"
             style={{ color: palette.primary }}
           >
-            <span 
+            <span
               className="w-10 h-10 rounded-full border flex items-center justify-center"
               style={{ borderColor: palette.primary }}
             >
@@ -2194,78 +1727,9 @@ export function OverSerene3({ theme, palette, content, overMij, jarenErvaring, e
             Neem contact op
           </a>
         </div>
-        
       </div>
     </section>
   );
 }
 
-// ============================================
-// SPLIT - Foto links, tekst rechts
-// ============================================
-function OverSplit({ theme, palette, content, overMij, jarenErvaring, images }: any) {
-  const overMijText = overMij?.body || overMij?.intro || content.over_mij || '';
-  
-  return (
-    <section 
-      id="over"
-      className="py-20 md:py-28 px-6 md:px-12"
-      style={{ backgroundColor: theme.colors.backgroundAlt }}
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Image */}
-          <div className={getRevealClass('left')}>
-            <div 
-              className="aspect-[4/5] bg-cover bg-center rounded-2xl shadow-lg"
-              style={{ backgroundImage: `url("${content.foto || images.sfeer}")` }}
-            />
-          </div>
-          
-          {/* Content */}
-          <div className={getRevealClass('right')}>
-            <h2 
-              className="text-3xl md:text-4xl font-bold mb-6"
-              style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-            >
-              Over Mij
-            </h2>
-            
-            <div className="space-y-4 mb-8">
-              <p style={{ color: theme.colors.textMuted, lineHeight: 1.8 }}>
-                {overMijText || 'Met jarenlange ervaring in de zorg sta ik klaar om u te helpen met professionele en persoonlijke zorg.'}
-              </p>
-            </div>
-            
-            {/* Stats */}
-            <div 
-              className="grid grid-cols-2 gap-4 p-6 rounded-xl"
-              style={{ backgroundColor: theme.colors.surface }}
-            >
-              {jarenErvaring && (
-                <div>
-                  <p className="text-3xl font-bold" style={{ color: palette.primary }}>
-                    {jarenErvaring}+
-                  </p>
-                  <p className="text-sm" style={{ color: theme.colors.textMuted }}>
-                    Jaar ervaring
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className="text-3xl font-bold" style={{ color: palette.primary }}>
-                  100%
-                </p>
-                <p className="text-sm" style={{ color: theme.colors.textMuted }}>
-                  Inzet
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-} 
-  
 export default OverSection;

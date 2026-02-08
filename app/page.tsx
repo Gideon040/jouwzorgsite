@@ -1,7 +1,8 @@
 'use client';
 
 // app/page.tsx - Single page funnel
-// v2: 3-step wizard (naam → beroep → stijl), fullscreen generating state
+// v3: 4-step wizard (naam → beroep → profiel → stijl), fullscreen generating state
+// Profiel step adds regio, jarenErvaring, omschrijving for better AI content
 
 import { useState } from 'react';
 import { Site, SiteContent, Theme, GeneratedContent } from '@/types';
@@ -19,9 +20,10 @@ import {
   DoneSection,
 } from '@/components/landing';
 import type { StijlKeuze } from '@/components/landing/WizardSection';
+import { ERVARING_OPTIES, type ErvaringId } from '@/components/landing/WizardSection';
 
 type FlowStep = 'hero' | 'wizard' | 'generating' | 'preview' | 'verification' | 'checkout' | 'done';
-type WizardStep = 1 | 2 | 3;
+type WizardStep = 1 | 2 | 3 | 4;
 
 const MAX_REGENERATIONS = 3;
 
@@ -30,10 +32,16 @@ export default function Home() {
   const [flowStep, setFlowStep] = useState<FlowStep>('hero');
   const [wizardStep, setWizardStep] = useState<WizardStep>(1);
   
-  // User input
+  // User input — step 1 & 2
   const [naam, setNaam] = useState('');
   const [beroep, setBeroep] = useState('');
+  
+  // User input — step 3 (profiel)
+  const [regio, setRegio] = useState('');
+  const [jarenErvaring, setJarenErvaring] = useState<ErvaringId | ''>('');
   const [omschrijving, setOmschrijving] = useState('');
+  
+  // User input — step 4
   const [stijl, setStijl] = useState<StijlKeuze | ''>('');
   
   // Generated site
@@ -50,6 +58,23 @@ export default function Home() {
   const [regenerateCount, setRegenerateCount] = useState(0);
   const [isRegenerating, setIsRegenerating] = useState(false);
 
+  // ── Helpers ─────────────────────────────────
+
+  // Convert regio id to werkgebied array for edge function
+  const getWerkgebied = (): string[] => {
+    if (!regio) return [];
+    // Capitalize first letter for display
+    const label = regio.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-');
+    return [label];
+  };
+
+  // Convert ervaring id to number for edge function
+  const getJarenErvaringNumber = (): number | undefined => {
+    if (!jarenErvaring) return undefined;
+    const found = ERVARING_OPTIES.find(e => e.id === jarenErvaring);
+    return found?.value;
+  };
+
   // ── Handlers ────────────────────────────────
 
   const handleStartWizard = () => {
@@ -64,8 +89,12 @@ export default function Home() {
     } else if (wizardStep === 2 && beroep) {
       trackWizardStep(2, 'beroep');
       setWizardStep(3);
-    } else if (wizardStep === 3 && stijl) {
-      trackWizardStep(3, 'stijl');
+    } else if (wizardStep === 3) {
+      // Step 3 (profiel) always proceeds — fields are encouraged but not blocking
+      trackWizardStep(3, 'profiel');
+      setWizardStep(4);
+    } else if (wizardStep === 4 && stijl) {
+      trackWizardStep(4, 'stijl');
       await handleGenerateSite();
     }
   };
@@ -89,7 +118,10 @@ export default function Home() {
     try {
       const supabase = createClient();
       
-      // Roep generate-site Edge Function aan
+      // Build payload — werkgebied and jarenErvaring are already in WizardInput interface
+      const werkgebied = getWerkgebied();
+      const jarenErvaringNumber = getJarenErvaringNumber();
+      
       const { data: generated, error } = await supabase.functions.invoke(
         'generate-site',
         {
@@ -98,6 +130,8 @@ export default function Home() {
             beroep,
             omschrijving: omschrijving.trim() || undefined,
             stijlKeuze: stijl,
+            werkgebied: werkgebied.length > 0 ? werkgebied : undefined,
+            jarenErvaring: jarenErvaringNumber,
             regeneration: isRegeneration,
             regenerationCount: regenerateCount + 1,
           },
@@ -132,16 +166,13 @@ export default function Home() {
             : generatePlaceholderContent({ naam, beroep, email: '' }).over_mij,
           contact: {
             email: '',
-            werkgebied: inputData.werkgebied || [],
+            werkgebied: werkgebied,
           },
           diensten: gen?.diensten?.items || generatePlaceholderContent({ naam, beroep, email: '' }).diensten,
-          werkervaring: inputData.werkervaring || [],
-          certificaten: inputData.certificaten || [],
-          zakelijk: inputData.zakelijk || { 
-            kvk: '',
-            handelsnaam: `${naam} Zorg`,
-          },
+          certificaten: customContent?.certificaten || [],
+          zakelijk: { kvk: '' },
           beschikbaar: true,
+          generated: gen,
         };
         
         templateId = generated.template_id || 'flex';
@@ -235,8 +266,6 @@ export default function Home() {
     }
   };
 
-  // ── Render ──────────────────────────────────
-
   return (
     <div className="min-h-screen bg-white">
       {flowStep === 'hero' && (
@@ -252,6 +281,10 @@ export default function Home() {
           setBeroep={setBeroep}
           omschrijving={omschrijving}
           setOmschrijving={setOmschrijving}
+          regio={regio}
+          setRegio={setRegio}
+          jarenErvaring={jarenErvaring}
+          setJarenErvaring={setJarenErvaring}
           stijl={stijl}
           setStijl={setStijl}
           onNext={handleWizardNext}

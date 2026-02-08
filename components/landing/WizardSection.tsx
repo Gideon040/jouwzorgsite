@@ -2,9 +2,49 @@
 
 import { BEROEPEN } from '@/constants';
 
-type WizardStep = 1 | 2 | 3;
+type WizardStep = 1 | 2 | 3 | 4;
 
 export type StijlKeuze = 'warm' | 'modern' | 'zakelijk' | 'energiek' | 'calm';
+
+// Regio opties (12 provincies)
+export const REGIO_OPTIES = [
+  { id: 'groningen', label: 'Groningen' },
+  { id: 'friesland', label: 'Friesland' },
+  { id: 'drenthe', label: 'Drenthe' },
+  { id: 'overijssel', label: 'Overijssel' },
+  { id: 'flevoland', label: 'Flevoland' },
+  { id: 'gelderland', label: 'Gelderland' },
+  { id: 'utrecht', label: 'Utrecht' },
+  { id: 'noord-holland', label: 'Noord-Holland' },
+  { id: 'zuid-holland', label: 'Zuid-Holland' },
+  { id: 'zeeland', label: 'Zeeland' },
+  { id: 'noord-brabant', label: 'Noord-Brabant' },
+  { id: 'limburg', label: 'Limburg' },
+] as const;
+
+export type RegioId = typeof REGIO_OPTIES[number]['id'];
+
+// Ervaring opties
+export const ERVARING_OPTIES = [
+  { id: '0-2', label: '0-2 jaar', value: 1 },
+  { id: '2-5', label: '2-5 jaar', value: 3 },
+  { id: '5-10', label: '5-10 jaar', value: 7 },
+  { id: '10-15', label: '10-15 jaar', value: 12 },
+  { id: '15+', label: '15+ jaar', value: 20 },
+] as const;
+
+export type ErvaringId = typeof ERVARING_OPTIES[number]['id'];
+
+// Beroep-specifieke placeholder teksten voor specialisatie
+const SPECIALISATIE_PLACEHOLDERS: Record<string, string> = {
+  verpleegkundige: 'Bijv. Gespecialiseerd in palliatieve zorg en wondzorg. Ik werk graag met ouderen in de thuissituatie.',
+  verzorgende_ig: 'Bijv. Ervaren in dementiezorg en persoonlijke begeleiding. Ik richt me op het behouden van eigen regie.',
+  helpende: 'Bijv. Ik help bij dagelijkse activiteiten en bied structuur. Ervaring met licht huishoudelijk werk en begeleiding.',
+  kraamverzorgende: 'Bijv. Ik begeleid gezinnen in de eerste week na de bevalling. Lactatiekundige en ervaren met meerlingen.',
+  thuiszorg: 'Bijv. Brede ervaring in thuiszorg, van persoonlijke verzorging tot lichte huishoudelijke hulp.',
+  pgb_zorgverlener: 'Bijv. Ik bied persoonlijke zorg via PGB. Ervaring met NAH en psychiatrische problematiek.',
+  anders: 'Bijv. Beschrijf kort wat je doet en wat je uniek maakt als zorgprofessional.',
+};
 
 interface WizardSectionProps {
   step: WizardStep;
@@ -14,6 +54,10 @@ interface WizardSectionProps {
   setBeroep: (v: string) => void;
   omschrijving: string;
   setOmschrijving: (v: string) => void;
+  regio: string;
+  setRegio: (v: string) => void;
+  jarenErvaring: ErvaringId | '';
+  setJarenErvaring: (v: ErvaringId) => void;
   stijl: StijlKeuze | '';
   setStijl: (v: StijlKeuze) => void;
   onNext: () => void;
@@ -60,12 +104,16 @@ const STIJL_OPTIES: { id: StijlKeuze; label: string; description: string; icon: 
 
 export function WizardSection({ 
   step, naam, setNaam, beroep, setBeroep, 
-  omschrijving, setOmschrijving, stijl, setStijl, onNext, onBack,
+  omschrijving, setOmschrijving,
+  regio, setRegio, jarenErvaring, setJarenErvaring,
+  stijl, setStijl, onNext, onBack,
 }: WizardSectionProps) {
+  // Step 3 (profiel) can ALWAYS proceed — fields are encouraged but not blocking
   const canProceed = 
     (step === 1 && naam.trim().length >= 2) ||
     (step === 2 && beroep) ||
-    (step === 3 && stijl);
+    (step === 3) ||
+    (step === 4 && stijl);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && canProceed) {
@@ -79,7 +127,7 @@ export function WizardSection({
         
         {/* Progress */}
         <div className="flex items-center justify-center gap-2 mb-8">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`h-2 rounded-full transition-all duration-500 ${
                 s < step ? 'w-12 bg-orange-500' :
@@ -101,9 +149,19 @@ export function WizardSection({
           )}
           
           {step === 3 && (
-            <StepStijl
+            <StepProfiel
+              beroep={beroep}
+              regio={regio}
+              setRegio={setRegio}
+              jarenErvaring={jarenErvaring}
+              setJarenErvaring={setJarenErvaring}
               omschrijving={omschrijving}
               setOmschrijving={setOmschrijving}
+            />
+          )}
+          
+          {step === 4 && (
+            <StepStijl
               stijl={stijl}
               setStijl={setStijl}
             />
@@ -130,7 +188,7 @@ export function WizardSection({
                   : 'bg-slate-100 text-slate-400 cursor-not-allowed'
               }`}
             >
-              {step === 3 ? (
+              {step === 4 ? (
                 <>
                   Genereer mijn website
                   <span className="material-symbols-outlined">auto_awesome</span>
@@ -146,17 +204,16 @@ export function WizardSection({
         </div>
         
         <p className="text-center text-slate-400 mt-6 text-sm">
-          Stap {step} van 3 · Klaar in 30 seconden
+          Stap {step} van 4
         </p>
       </div>
     </div>
   );
 }
 
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// STEP 1: Naam
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ═══════════════════════════════════════════════
+// SUB-COMPONENTS
+// ═══════════════════════════════════════════════
 
 function StepNaam({ 
   naam, setNaam, onKeyDown 
@@ -185,11 +242,6 @@ function StepNaam({
     </div>
   );
 }
-
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// STEP 2: Beroep / Specialisatie
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 function StepBeroep({ 
   beroep, setBeroep 
@@ -237,76 +289,135 @@ function StepBeroep({
   );
 }
 
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// STEP 3: Omschrijving + Stijlkeuze
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function StepStijl({
+function StepProfiel({
+  beroep,
+  regio,
+  setRegio,
+  jarenErvaring,
+  setJarenErvaring,
   omschrijving,
   setOmschrijving,
-  stijl,
-  setStijl,
 }: {
+  beroep: string;
+  regio: string;
+  setRegio: (v: string) => void;
+  jarenErvaring: ErvaringId | '';
+  setJarenErvaring: (v: ErvaringId) => void;
   omschrijving: string;
   setOmschrijving: (v: string) => void;
-  stijl: StijlKeuze | '';
-  setStijl: (v: StijlKeuze) => void;
 }) {
+  const placeholder = SPECIALISATIE_PLACEHOLDERS[beroep] || SPECIALISATIE_PLACEHOLDERS.anders;
+
   return (
     <div>
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-6">
-          <span className="material-symbols-outlined text-3xl text-orange-600">auto_awesome</span>
+          <span className="material-symbols-outlined text-3xl text-orange-600">tune</span>
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Bijna klaar!</h2>
-        <p className="text-slate-500">Vertel iets over jezelf zodat we de perfecte website kunnen maken</p>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">Vertel meer over jezelf</h2>
+        <p className="text-slate-500">Hoe meer we weten, hoe persoonlijker je website</p>
       </div>
-      
-      {/* Omschrijving */}
-      <div className="mb-8 text-left">
+
+      {/* Regio dropdown */}
+      <div className="mb-5">
         <label className="block text-sm font-medium text-slate-700 mb-2">
-          Vertel kort iets over jezelf of je praktijk <span className="text-slate-400">(optioneel)</span>
+          Werkgebied <span className="text-slate-400">(optioneel)</span>
+        </label>
+        <select
+          value={regio}
+          onChange={(e) => setRegio(e.target.value)}
+          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none transition-colors bg-white text-slate-700 appearance-none"
+          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px' }}
+        >
+          <option value="">Selecteer je regio</option>
+          {REGIO_OPTIES.map((r) => (
+            <option key={r.id} value={r.id}>{r.label}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Jaren ervaring buttons */}
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Jaren ervaring <span className="text-slate-400">(optioneel)</span>
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {ERVARING_OPTIES.map((e) => (
+            <button
+              key={e.id}
+              onClick={() => setJarenErvaring(e.id)}
+              className={`px-4 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
+                jarenErvaring === e.id
+                  ? 'border-orange-500 bg-orange-50 text-orange-700'
+                  : 'border-slate-200 text-slate-600 hover:border-orange-300'
+              }`}
+            >
+              {e.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Specialisatie textarea */}
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-2">
+          Wat maakt jou uniek? <span className="text-slate-400">(optioneel)</span>
         </label>
         <textarea
           value={omschrijving}
           onChange={(e) => setOmschrijving(e.target.value)}
-          placeholder="Bijv. Ik ben gespecialiseerd in thuiszorg voor ouderen en werk al 8 jaar als ZZP'er..."
-          rows={3}
-          className="w-full px-4 py-3 text-base border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none transition-colors resize-none"
+          placeholder={placeholder}
+          rows={4}
+          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none transition-colors resize-none text-slate-700"
         />
-        <p className="text-xs text-slate-400 mt-1.5">Dit helpt ons de juiste stijl en teksten te kiezen</p>
+        <p className="text-xs text-slate-400 mt-1.5">
+          Deze info helpt de AI om teksten te schrijven die echt bij jou passen
+        </p>
       </div>
+    </div>
+  );
+}
 
-      {/* Stijlkeuze */}
-      <div className="text-left">
-        <label className="block text-sm font-medium text-slate-700 mb-3">Welke sfeer past bij jou?</label>
-        <div className="grid grid-cols-1 gap-2.5">
-          {STIJL_OPTIES.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setStijl(s.id)}
-              className={`flex items-center gap-3.5 p-3.5 rounded-xl border-2 transition-all text-left ${
-                stijl === s.id 
-                  ? 'border-orange-500 bg-orange-50' 
-                  : 'border-slate-200 hover:border-orange-300'
-              }`}
-            >
-              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center flex-shrink-0`}>
-                <span className="material-symbols-outlined text-white text-xl">{s.icon}</span>
+function StepStijl({
+  stijl,
+  setStijl,
+}: {
+  stijl: StijlKeuze | '';
+  setStijl: (v: StijlKeuze) => void;
+}) {
+  return (
+    <div className="text-center">
+      <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-6">
+        <span className="material-symbols-outlined text-3xl text-orange-600">palette</span>
+      </div>
+      <h2 className="text-2xl font-bold text-slate-900 mb-2">Kies je stijl</h2>
+      <p className="text-slate-500 mb-8">Welke uitstraling past het beste bij jou?</p>
+      
+      <div className="grid grid-cols-1 gap-3">
+        {STIJL_OPTIES.map((s) => (
+          <button
+            key={s.id}
+            onClick={() => setStijl(s.id)}
+            className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+              stijl === s.id 
+                ? 'border-orange-500 bg-orange-50' 
+                : 'border-slate-200 hover:border-orange-300'
+            }`}
+          >
+            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center flex-shrink-0`}>
+              <span className="material-symbols-outlined text-white text-xl">{s.icon}</span>
+            </div>
+            <div>
+              <div className={`font-semibold ${stijl === s.id ? 'text-orange-700' : 'text-slate-700'}`}>
+                {s.label}
               </div>
-              <div className="min-w-0">
-                <div className={`font-semibold text-sm ${stijl === s.id ? 'text-orange-700' : 'text-slate-700'}`}>
-                  {s.label}
-                </div>
-                <div className="text-xs text-slate-500">{s.description}</div>
-              </div>
-              {stijl === s.id && (
-                <span className="material-symbols-outlined text-orange-500 ml-auto flex-shrink-0">check_circle</span>
-              )}
-            </button>
-          ))}
-        </div>
+              <div className="text-sm text-slate-500">{s.description}</div>
+            </div>
+            {stijl === s.id && (
+              <span className="material-symbols-outlined text-orange-500 ml-auto">check_circle</span>
+            )}
+          </button>
+        ))}
       </div>
     </div>
   );
