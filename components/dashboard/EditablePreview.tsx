@@ -94,6 +94,11 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
 
     // Texts
     applyTextReplacements(el, customTexts);
+
+    // Force-reveal all animated elements in editor (no scroll animation needed)
+    el.querySelectorAll('.reveal').forEach(revealEl => {
+      revealEl.classList.add('revealed');
+    });
   });
 
   // ── Close button toolbar on outside click ──
@@ -149,7 +154,17 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
         return;
       }
 
-      // ── BUTTON CLICK ──
+      // ── TEXT CLICK (before button — text inside a button-like card should be editable) ──
+      const textEl = findEditableTextElement(target);
+      if (textEl && textEl !== activeEditEl) {
+        e.preventDefault();
+        e.stopPropagation();
+        setActiveBtnId(null);
+        startTextEdit(textEl);
+        return;
+      }
+
+      // ── BUTTON CLICK (only if no editable text was found) ──
       const btnEl = target.closest(BTN_SELECTORS) as HTMLElement | null;
       if (btnEl && btnEl.dataset.btnId) {
         e.preventDefault();
@@ -168,7 +183,6 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
         setBtnStyle(customButtons[btnId] || {});
         setActiveBtnId(btnId);
         setActiveBtnEl(btnEl);
-        // Close any text editing
         setActiveEditEl(null);
         return;
       }
@@ -185,16 +199,6 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
         setClickedImgSrc(bgDiv.dataset.bgId);
         setUploadingEl(bgDiv);
         fileInputRef.current?.click();
-        return;
-      }
-
-      // ── TEXT CLICK ──
-      const textEl = findEditableTextElement(target);
-      if (textEl && textEl !== activeEditEl) {
-        e.preventDefault();
-        e.stopPropagation();
-        setActiveBtnId(null); // close btn toolbar
-        startTextEdit(textEl);
         return;
       }
     };

@@ -53,6 +53,7 @@ const MAIN_TEMPLATES = ['editorial', 'proactief', 'portfolio', 'mindoor', 'seren
 
 export const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
   editorial: [
+    { type: 'header', style: 'editorial' },
     { type: 'hero', style: 'editorial' },
     { type: 'diensten', style: 'editorial' },
     { type: 'over', style: 'editorial' },
@@ -67,6 +68,7 @@ export const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'footer', style: 'editorial' },
   ],
   proactief: [
+    { type: 'header', style: 'proactief' },
     { type: 'hero', style: 'proactief' },
     { type: 'diensten', style: 'proactief' },
     { type: 'over', style: 'proactief' },
@@ -81,6 +83,7 @@ export const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'footer', style: 'proactief' },
   ],
   portfolio: [
+    { type: 'header', style: 'portfolio' },
     { type: 'hero', style: 'portfolio' },
     { type: 'diensten', style: 'portfolio' },
     { type: 'over', style: 'portfolio' },
@@ -95,6 +98,7 @@ export const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'footer', style: 'portfolio' },
   ],
   mindoor: [
+    { type: 'header', style: 'mindoor' },
     { type: 'hero', style: 'mindoor' },
     { type: 'diensten', style: 'mindoor' },
     { type: 'over', style: 'mindoor' },
@@ -109,6 +113,7 @@ export const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'footer', style: 'mindoor' },
   ],
   serene: [
+    { type: 'header', style: 'serene' },
     { type: 'hero', style: 'serene' },
     { type: 'diensten', style: 'serene' },
     { type: 'over', style: 'serene' },
@@ -123,6 +128,7 @@ export const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'footer', style: 'serene' },
   ],
   classic: [
+    { type: 'header', style: 'editorial' },
     { type: 'hero', style: 'editorial' },
     { type: 'diensten', style: 'editorial' },
     { type: 'over', style: 'editorial' },
@@ -245,6 +251,8 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   const beroepLabel = getBeroepLabel(beroep);
 
   // ── 8. Scroll reveal ────────────────────────────
+  // Re-observe when sections change (reorder/toggle visibility)
+  const sectionKey = visibleSections.map(s => s.type).join(',');
   useEffect(() => {
     const revealElements = document.querySelectorAll('.reveal');
     const observer = new IntersectionObserver((entries) => {
@@ -257,7 +265,7 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
 
     revealElements.forEach(el => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [sectionKey]);
 
   // ── Shared props ────────────────────────────────
   const sectionProps = {

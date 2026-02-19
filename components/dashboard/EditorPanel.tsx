@@ -101,15 +101,46 @@ function AccordionItem({ id, label, icon, isOpen, onToggle, children }: {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STYLE LABEL HELPERS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const QUOTE_STYLE_LABELS: Record<string, string> = {
+  banner: 'Banner',
+  minimal: 'Minimaal',
+  dark: 'Donker',
+  serene: 'Sereen',
+};
+
+function getStyleLabel(style: string, templateStyle: string): string {
+  // Quote has its own names
+  if (QUOTE_STYLE_LABELS[style]) return QUOTE_STYLE_LABELS[style];
+  // Base template style = "Standaard"
+  if (style === templateStyle || style === `${templateStyle}-1`) return 'Standaard';
+  // Numbered variants
+  const match = style.match(/-(\d)$/);
+  if (match) return `Variant ${match[1]}`;
+  return style;
+}
+
+function getRelevantStyles(allStyles: string[], templateStyle: string): string[] {
+  if (!allStyles.length) return [];
+  // Only show styles that belong to the active template
+  const filtered = allStyles.filter(s =>
+    s === templateStyle || s.startsWith(`${templateStyle}-`)
+  );
+  // For quote section: show all (banner, minimal, dark, serene)
+  if (filtered.length === 0) return allStyles;
+  return filtered;
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SECTION MANAGER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-function SectionManager({ sections, onSectionsChange }: {
+function SectionManager({ sections, templateStyle, onSectionsChange }: {
   sections: SectionConfig[];
+  templateStyle: string;
   onSectionsChange: (sections: SectionConfig[]) => void;
 }) {
   const [expandedType, setExpandedType] = useState<string | null>(null);
-  const [dragIdx, setDragIdx] = useState<number | null>(null);
-  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
   const toggleVisibility = (index: number) => {
     const section = sections[index];
@@ -117,6 +148,15 @@ function SectionManager({ sections, onSectionsChange }: {
     const updated = sections.map((s, i) =>
       i === index ? { ...s, visible: s.visible === false ? true : false } : s
     );
+    onSectionsChange(updated);
+  };
+
+  const moveSection = (index: number, direction: -1 | 1) => {
+    const targetIdx = index + direction;
+    if (targetIdx < 0 || targetIdx >= sections.length) return;
+    if (sections[targetIdx].type === 'header' || sections[targetIdx].type === 'footer') return;
+    const updated = [...sections];
+    [updated[index], updated[targetIdx]] = [updated[targetIdx], updated[index]];
     onSectionsChange(updated);
   };
 
@@ -134,39 +174,9 @@ function SectionManager({ sections, onSectionsChange }: {
     onSectionsChange(updated);
   };
 
-  const handleDragStart = (index: number) => {
-    const section = sections[index];
-    if (section.type === 'header' || section.type === 'footer') return;
-    setDragIdx(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    const section = sections[index];
-    if (section.type === 'header' || section.type === 'footer') return;
-    setDragOverIdx(index);
-  };
-
-  const handleDrop = (index: number) => {
-    if (dragIdx === null || dragIdx === index) {
-      setDragIdx(null);
-      setDragOverIdx(null);
-      return;
-    }
-    const section = sections[index];
-    if (section.type === 'header' || section.type === 'footer') {
-      setDragIdx(null);
-      setDragOverIdx(null);
-      return;
-    }
-
-    const updated = [...sections];
-    const [moved] = updated.splice(dragIdx, 1);
-    updated.splice(index, 0, moved);
-    onSectionsChange(updated);
-    setDragIdx(null);
-    setDragOverIdx(null);
-  };
+  // Determine move boundaries (skip header at start, footer at end)
+  const firstMovable = sections.findIndex(s => s.type !== 'header');
+  const lastMovable = sections.length - 1 - [...sections].reverse().findIndex(s => s.type !== 'footer');
 
   return (
     <div className="space-y-1">
@@ -177,45 +187,46 @@ function SectionManager({ sections, onSectionsChange }: {
         const isLocked = section.type === 'header' || section.type === 'footer';
         const isVisible = section.visible !== false;
         const isExpanded = expandedType === section.type;
-        const hasStyles = meta.styles.length > 0;
+        const relevantStyles = getRelevantStyles(meta.styles, templateStyle);
+        const hasStyles = relevantStyles.length > 1;
         const hasVariant = meta.useVariant;
+        const canMoveUp = !isLocked && index > firstMovable;
+        const canMoveDown = !isLocked && index < lastMovable;
 
         return (
           <div
-            key={`${section.type}-${index}`}
-            draggable={!isLocked}
-            onDragStart={() => handleDragStart(index)}
-            onDragOver={(e) => handleDragOver(e, index)}
-            onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
-            onDrop={() => handleDrop(index)}
+            key={section.type}
             className={`rounded-lg border transition-all ${
-              dragOverIdx === index && dragIdx !== null ? 'border-orange-400 bg-orange-50/50' :
-              !isVisible ? 'border-slate-100 bg-slate-50/50 opacity-60' :
-              'border-slate-200 bg-white'
+              !isVisible ? 'border-slate-100 bg-slate-50/50 opacity-60' : 'border-slate-200 bg-white'
             }`}
           >
             {/* Row */}
-            <div className="flex items-center gap-1.5 px-2.5 py-2">
-              {/* Drag handle */}
-              <span className={`material-symbols-outlined text-sm ${isLocked ? 'text-slate-200' : 'text-slate-400 cursor-grab'}`}>
-                {isLocked ? 'lock' : 'drag_indicator'}
-              </span>
+            <div className="flex items-center gap-1.5 px-2 py-1.5">
+              {/* Move arrows or lock */}
+              {!isLocked ? (
+                <div className="flex flex-col -space-y-1">
+                  <button
+                    onClick={() => moveSection(index, -1)}
+                    disabled={!canMoveUp}
+                    className={`p-0 leading-none ${canMoveUp ? 'text-slate-400 hover:text-orange-500' : 'text-slate-200'}`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">keyboard_arrow_up</span>
+                  </button>
+                  <button
+                    onClick={() => moveSection(index, 1)}
+                    disabled={!canMoveDown}
+                    className={`p-0 leading-none ${canMoveDown ? 'text-slate-400 hover:text-orange-500' : 'text-slate-200'}`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">keyboard_arrow_down</span>
+                  </button>
+                </div>
+              ) : (
+                <span className="material-symbols-outlined text-sm text-slate-300 w-[18px] text-center">lock</span>
+              )}
 
               {/* Icon + Name */}
-              <span className="material-symbols-outlined text-sm text-slate-400">{meta.icon}</span>
-              <span className="text-xs font-medium text-slate-700 flex-1">{meta.name}</span>
-
-              {/* Style badge */}
-              {section.style && !isLocked && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">
-                  {section.style}
-                </span>
-              )}
-              {hasVariant && section.variant && (
-                <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">
-                  v{section.variant}
-                </span>
-              )}
+              <span className={`material-symbols-outlined text-sm ${isVisible ? 'text-slate-400' : 'text-slate-300'}`}>{meta.icon}</span>
+              <span className={`text-xs font-medium flex-1 ${isVisible ? 'text-slate-700' : 'text-slate-400'}`}>{meta.name}</span>
 
               {/* Style expand button */}
               {(hasStyles || hasVariant) && !isLocked && (
@@ -228,8 +239,8 @@ function SectionManager({ sections, onSectionsChange }: {
                 </button>
               )}
 
-              {/* Visibility toggle */}
-              {!meta.required ? (
+              {/* Visibility toggle (not on required sections) */}
+              {!meta.required && (
                 <button
                   onClick={() => toggleVisibility(index)}
                   className={`p-0.5 rounded transition-colors ${isVisible ? 'text-green-500 hover:text-red-400' : 'text-slate-300 hover:text-green-500'}`}
@@ -239,27 +250,25 @@ function SectionManager({ sections, onSectionsChange }: {
                     {isVisible ? 'visibility' : 'visibility_off'}
                   </span>
                 </button>
-              ) : (
-                <span className="material-symbols-outlined text-sm text-slate-200 p-0.5">lock</span>
               )}
             </div>
 
-            {/* Style picker */}
+            {/* Style picker (filtered to active template) */}
             {isExpanded && hasStyles && (
               <div className="px-2.5 pb-2.5 pt-1 border-t border-slate-100">
                 <p className="text-[10px] text-slate-400 font-medium mb-1.5">Stijlvariant</p>
-                <div className="flex flex-wrap gap-1">
-                  {meta.styles.map(s => (
+                <div className="flex flex-wrap gap-1.5">
+                  {relevantStyles.map(s => (
                     <button
                       key={s}
                       onClick={() => changeStyle(index, s)}
-                      className={`text-[10px] px-2 py-1 rounded-full border transition-all ${
+                      className={`text-[11px] px-2.5 py-1 rounded-lg border-2 transition-all ${
                         section.style === s
                           ? 'border-orange-400 bg-orange-50 text-orange-700 font-semibold'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                          : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      {s}
+                      {getStyleLabel(s, templateStyle)}
                     </button>
                   ))}
                 </div>
@@ -269,19 +278,19 @@ function SectionManager({ sections, onSectionsChange }: {
             {/* Variant picker (werkwijze) */}
             {isExpanded && hasVariant && (
               <div className="px-2.5 pb-2.5 pt-1 border-t border-slate-100">
-                <p className="text-[10px] text-slate-400 font-medium mb-1.5">Variant</p>
+                <p className="text-[10px] text-slate-400 font-medium mb-1.5">Layout</p>
                 <div className="flex gap-1.5">
                   {[1, 2, 3].map(v => (
                     <button
                       key={v}
                       onClick={() => changeVariant(index, v)}
-                      className={`text-xs px-3 py-1.5 rounded-lg border-2 transition-all ${
+                      className={`text-[11px] px-3 py-1.5 rounded-lg border-2 transition-all ${
                         (section.variant || 1) === v
                           ? 'border-orange-400 bg-orange-50 text-orange-700 font-semibold'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                          : 'border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
                       }`}
                     >
-                      Variant {v}
+                      Layout {v}
                     </button>
                   ))}
                 </div>
@@ -290,6 +299,18 @@ function SectionManager({ sections, onSectionsChange }: {
           </div>
         );
       })}
+
+      {/* Reset button */}
+      <button
+        onClick={() => {
+          const defaults = TEMPLATE_SECTIONS[templateStyle] || TEMPLATE_SECTIONS.editorial;
+          onSectionsChange(defaults.map(s => ({ ...s })));
+        }}
+        className="w-full mt-2 py-1.5 text-[11px] font-medium text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg border border-dashed border-slate-200 hover:border-red-200 transition-all flex items-center justify-center gap-1"
+      >
+        <span className="material-symbols-outlined text-sm">restart_alt</span>
+        Standaard volgorde herstellen
+      </button>
     </div>
   );
 }
@@ -407,7 +428,7 @@ export function EditorPanel({ site, content, generated, onContentUpdate, onGener
           isOpen={openSection === 'secties'}
           onToggle={() => toggle('secties')}
         >
-          <SectionManager sections={activeSections} onSectionsChange={handleSectionsChange} />
+          <SectionManager sections={activeSections} templateStyle={templateStyle} onSectionsChange={handleSectionsChange} />
         </AccordionItem>
 
         {/* Dynamic: content editors for visible sections */}
