@@ -362,7 +362,11 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
       <main>
         {visibleSections
           .filter(s => s.type !== 'footer' && s.type !== 'header')
-          .map((section, index) => renderSection(section, index))}
+          .map((section, index) => (
+            <div key={`${section.type}-${index}`} data-section={section.type}>
+              {renderSection(section, index)}
+            </div>
+          ))}
       </main>
 
       {/* Footer */}

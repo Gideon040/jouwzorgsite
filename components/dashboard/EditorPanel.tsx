@@ -133,6 +133,20 @@ function getRelevantStyles(allStyles: string[], templateStyle: string): string[]
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SCROLL TO SECTION HELPER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function scrollToSection(sectionType: string) {
+  // Find the section in the preview panel via data-section attribute
+  const el = document.querySelector(`.editable-preview [data-section="${sectionType}"]`);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Brief highlight flash
+    el.classList.add('ring-2', 'ring-orange-400', 'ring-offset-2');
+    setTimeout(() => el.classList.remove('ring-2', 'ring-orange-400', 'ring-offset-2'), 1500);
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // SECTION MANAGER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function SectionManager({ sections, templateStyle, onSectionsChange }: {
@@ -141,6 +155,31 @@ function SectionManager({ sections, templateStyle, onSectionsChange }: {
   onSectionsChange: (sections: SectionConfig[]) => void;
 }) {
   const [expandedType, setExpandedType] = useState<string | null>(null);
+  const [showAddMenu, setShowAddMenu] = useState(false);
+
+  // Section types that can be added
+  const existingTypes = new Set(sections.map(s => s.type));
+  const addableTypes = Object.entries(SECTION_META)
+    .filter(([type, meta]) => !existingTypes.has(type) && !meta.required)
+    .map(([type, meta]) => ({ type, ...meta }));
+
+  const addSection = (type: string) => {
+    const meta = SECTION_META[type];
+    if (!meta) return;
+    const defaultStyle = meta.styles.find(s => s === templateStyle || s.startsWith(templateStyle)) || meta.styles[0] || templateStyle;
+    const newSection: SectionConfig = { type, style: defaultStyle, visible: true };
+    // Insert before footer
+    const footerIdx = sections.findIndex(s => s.type === 'footer');
+    const updated = [...sections];
+    if (footerIdx >= 0) {
+      updated.splice(footerIdx, 0, newSection);
+    } else {
+      updated.push(newSection);
+    }
+    onSectionsChange(updated);
+    setShowAddMenu(false);
+    setTimeout(() => scrollToSection(type), 200);
+  };
 
   const toggleVisibility = (index: number) => {
     const section = sections[index];
@@ -161,17 +200,21 @@ function SectionManager({ sections, templateStyle, onSectionsChange }: {
   };
 
   const changeStyle = (index: number, style: string) => {
+    const section = sections[index];
     const updated = sections.map((s, i) =>
       i === index ? { ...s, style } : s
     );
     onSectionsChange(updated);
+    setTimeout(() => scrollToSection(section.type), 100);
   };
 
   const changeVariant = (index: number, variant: number) => {
+    const section = sections[index];
     const updated = sections.map((s, i) =>
       i === index ? { ...s, variant } : s
     );
     onSectionsChange(updated);
+    setTimeout(() => scrollToSection(section.type), 100);
   };
 
   // Determine move boundaries (skip header at start, footer at end)
@@ -311,6 +354,35 @@ function SectionManager({ sections, templateStyle, onSectionsChange }: {
         <span className="material-symbols-outlined text-sm">restart_alt</span>
         Standaard volgorde herstellen
       </button>
+
+      {/* Add section */}
+      {addableTypes.length > 0 && (
+        <div className="mt-2">
+          <button
+            onClick={() => setShowAddMenu(!showAddMenu)}
+            className="w-full py-1.5 text-[11px] font-medium text-slate-500 hover:text-orange-600 hover:bg-orange-50 rounded-lg border border-dashed border-slate-200 hover:border-orange-300 transition-all flex items-center justify-center gap-1"
+          >
+            <span className="material-symbols-outlined text-sm">{showAddMenu ? 'close' : 'add'}</span>
+            {showAddMenu ? 'Annuleren' : 'Sectie toevoegen'}
+          </button>
+
+          {showAddMenu && (
+            <div className="mt-1.5 space-y-1">
+              {addableTypes.map(({ type, name, icon }) => (
+                <button
+                  key={type}
+                  onClick={() => addSection(type)}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 text-left rounded-lg border border-slate-200 hover:border-orange-300 hover:bg-orange-50 transition-all"
+                >
+                  <span className="material-symbols-outlined text-sm text-orange-400">{icon}</span>
+                  <span className="text-xs font-medium text-slate-700">{name}</span>
+                  <span className="material-symbols-outlined text-sm text-slate-300 ml-auto">add_circle</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
