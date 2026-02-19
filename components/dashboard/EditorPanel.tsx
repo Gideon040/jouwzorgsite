@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Site, SiteContent, GeneratedContent } from '@/types';
 import { createClient } from '@/lib/supabase/client';
+import type { SectionConfig } from '@/components/templates/sections/types';
+import { TEMPLATE_SECTIONS } from '@/components/templates/TemplateRenderer';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // PROPS
@@ -38,24 +40,278 @@ function deepSet(obj: any, path: string, value: any): any {
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// SECTION CONFIG
+// SECTION META (per section type)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const SECTIONS = [
-  { id: 'stijl',        label: 'Stijl & Kleuren', icon: 'palette' },
-  { id: 'hero',         label: 'Hero',          icon: 'campaign' },
-  { id: 'stats',        label: 'Statistieken',  icon: 'bar_chart' },
-  { id: 'diensten',     label: 'Diensten',      icon: 'medical_services' },
-  { id: 'over',         label: 'Over Mij',      icon: 'person' },
-  { id: 'credentials',  label: 'Credentials',   icon: 'verified' },
-  { id: 'werkervaring', label: 'Werkervaring',  icon: 'work' },
-  { id: 'voorwie',      label: 'Voor Wie',      icon: 'groups' },
-  { id: 'quote',        label: 'Quote',         icon: 'format_quote' },
-  { id: 'werkwijze',    label: 'Werkwijze',     icon: 'route' },
-  { id: 'testimonials', label: 'Testimonials',  icon: 'star' },
-  { id: 'faq',          label: 'FAQ',           icon: 'help' },
-  { id: 'cta',          label: 'Call to Action', icon: 'ads_click' },
-  { id: 'contact',      label: 'Contact',       icon: 'call' },
-] as const;
+const SECTION_META: Record<string, {
+  name: string;
+  icon: string;
+  styles: string[];
+  required?: boolean;
+  useVariant?: boolean;
+}> = {
+  header:       { name: 'Header',       icon: 'web',               styles: [],                                                          required: true },
+  hero:         { name: 'Hero',         icon: 'campaign',          styles: ['editorial', 'editorial-2', 'editorial-3', 'proactief', 'proactief-2', 'proactief-3', 'portfolio', 'portfolio-2', 'portfolio-3', 'mindoor', 'mindoor-2', 'mindoor-3', 'serene', 'serene-2', 'serene-3'] },
+  stats:        { name: 'Statistieken', icon: 'bar_chart',         styles: ['editorial', 'proactief', 'portfolio', 'mindoor', 'serene'] },
+  diensten:     { name: 'Diensten',     icon: 'medical_services',  styles: ['editorial', 'editorial-2', 'editorial-3', 'proactief', 'proactief-2', 'proactief-3', 'portfolio', 'portfolio-2', 'portfolio-3', 'mindoor', 'mindoor-2', 'mindoor-3', 'serene', 'serene-2', 'serene-3'] },
+  over:         { name: 'Over Mij',     icon: 'person',            styles: ['editorial', 'editorial-2', 'editorial-3', 'proactief', 'proactief-2', 'proactief-3', 'portfolio', 'portfolio-2', 'portfolio-3', 'mindoor', 'mindoor-2', 'mindoor-3', 'serene', 'serene-2', 'serene-3'] },
+  credentials:  { name: 'Credentials',  icon: 'verified',          styles: ['editorial', 'proactief', 'portfolio', 'mindoor', 'serene'] },
+  werkervaring: { name: 'Werkervaring', icon: 'work',              styles: ['editorial-1', 'editorial-2', 'editorial-3', 'proactief-1', 'proactief-2', 'proactief-3', 'portfolio-1', 'portfolio-2', 'portfolio-3', 'mindoor-1', 'mindoor-2', 'mindoor-3', 'serene-1', 'serene-2', 'serene-3'] },
+  voorwie:      { name: 'Voor Wie',     icon: 'groups',            styles: ['editorial', 'editorial-2', 'editorial-3', 'proactief', 'proactief-2', 'proactief-3', 'portfolio', 'portfolio-2', 'portfolio-3', 'mindoor', 'mindoor-2', 'mindoor-3', 'serene', 'serene-2', 'serene-3'] },
+  quote:        { name: 'Quote',        icon: 'format_quote',      styles: ['banner', 'minimal', 'dark', 'serene'] },
+  werkwijze:    { name: 'Werkwijze',    icon: 'route',             styles: [],                                                          useVariant: true },
+  testimonials: { name: 'Testimonials', icon: 'star',              styles: ['editorial', 'editorial-2', 'editorial-3', 'proactief', 'proactief-2', 'proactief-3', 'portfolio', 'portfolio-2', 'portfolio-3', 'mindoor', 'mindoor-2', 'mindoor-3', 'serene', 'serene-2', 'serene-3'] },
+  faq:          { name: 'FAQ',          icon: 'help',              styles: ['editorial', 'editorial-2', 'editorial-3', 'proactief', 'proactief-2', 'proactief-3', 'portfolio', 'portfolio-2', 'portfolio-3', 'mindoor', 'mindoor-2', 'mindoor-3', 'serene', 'serene-2', 'serene-3'] },
+  cta:          { name: 'Call to Action', icon: 'ads_click',       styles: ['editorial', 'proactief', 'portfolio', 'mindoor', 'serene'] },
+  contact:      { name: 'Contact',      icon: 'call',              styles: ['editorial', 'editorial-2', 'editorial-3', 'proactief', 'proactief-2', 'proactief-3', 'portfolio', 'portfolio-2', 'portfolio-3', 'mindoor', 'mindoor-2', 'mindoor-3', 'serene', 'serene-2', 'serene-3'] },
+  footer:       { name: 'Footer',       icon: 'bottom_navigation', styles: [],                                                          required: true },
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ACCORDION ITEM
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function AccordionItem({ id, label, icon, isOpen, onToggle, children }: {
+  id: string;
+  label: string;
+  icon: string;
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border-b border-slate-100">
+      <button
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between px-5 py-3 text-left transition-colors ${
+          isOpen ? 'bg-orange-50/80' : 'hover:bg-slate-50'
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <span className={`material-symbols-outlined text-lg ${isOpen ? 'text-orange-500' : 'text-slate-400'}`}>{icon}</span>
+          <span className={`text-sm font-semibold ${isOpen ? 'text-orange-700' : 'text-slate-700'}`}>{label}</span>
+        </div>
+        <span className={`material-symbols-outlined text-lg text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
+      </button>
+      {isOpen && (
+        <div className="px-5 pb-5 pt-2 space-y-3">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SECTION MANAGER
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function SectionManager({ sections, onSectionsChange }: {
+  sections: SectionConfig[];
+  onSectionsChange: (sections: SectionConfig[]) => void;
+}) {
+  const [expandedType, setExpandedType] = useState<string | null>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  const toggleVisibility = (index: number) => {
+    const section = sections[index];
+    if (SECTION_META[section.type]?.required) return;
+    const updated = sections.map((s, i) =>
+      i === index ? { ...s, visible: s.visible === false ? true : false } : s
+    );
+    onSectionsChange(updated);
+  };
+
+  const changeStyle = (index: number, style: string) => {
+    const updated = sections.map((s, i) =>
+      i === index ? { ...s, style } : s
+    );
+    onSectionsChange(updated);
+  };
+
+  const changeVariant = (index: number, variant: number) => {
+    const updated = sections.map((s, i) =>
+      i === index ? { ...s, variant } : s
+    );
+    onSectionsChange(updated);
+  };
+
+  const handleDragStart = (index: number) => {
+    const section = sections[index];
+    if (section.type === 'header' || section.type === 'footer') return;
+    setDragIdx(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    const section = sections[index];
+    if (section.type === 'header' || section.type === 'footer') return;
+    setDragOverIdx(index);
+  };
+
+  const handleDrop = (index: number) => {
+    if (dragIdx === null || dragIdx === index) {
+      setDragIdx(null);
+      setDragOverIdx(null);
+      return;
+    }
+    const section = sections[index];
+    if (section.type === 'header' || section.type === 'footer') {
+      setDragIdx(null);
+      setDragOverIdx(null);
+      return;
+    }
+
+    const updated = [...sections];
+    const [moved] = updated.splice(dragIdx, 1);
+    updated.splice(index, 0, moved);
+    onSectionsChange(updated);
+    setDragIdx(null);
+    setDragOverIdx(null);
+  };
+
+  return (
+    <div className="space-y-1">
+      {sections.map((section, index) => {
+        const meta = SECTION_META[section.type];
+        if (!meta) return null;
+
+        const isLocked = section.type === 'header' || section.type === 'footer';
+        const isVisible = section.visible !== false;
+        const isExpanded = expandedType === section.type;
+        const hasStyles = meta.styles.length > 0;
+        const hasVariant = meta.useVariant;
+
+        return (
+          <div
+            key={`${section.type}-${index}`}
+            draggable={!isLocked}
+            onDragStart={() => handleDragStart(index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDragEnd={() => { setDragIdx(null); setDragOverIdx(null); }}
+            onDrop={() => handleDrop(index)}
+            className={`rounded-lg border transition-all ${
+              dragOverIdx === index && dragIdx !== null ? 'border-orange-400 bg-orange-50/50' :
+              !isVisible ? 'border-slate-100 bg-slate-50/50 opacity-60' :
+              'border-slate-200 bg-white'
+            }`}
+          >
+            {/* Row */}
+            <div className="flex items-center gap-1.5 px-2.5 py-2">
+              {/* Drag handle */}
+              <span className={`material-symbols-outlined text-sm ${isLocked ? 'text-slate-200' : 'text-slate-400 cursor-grab'}`}>
+                {isLocked ? 'lock' : 'drag_indicator'}
+              </span>
+
+              {/* Icon + Name */}
+              <span className="material-symbols-outlined text-sm text-slate-400">{meta.icon}</span>
+              <span className="text-xs font-medium text-slate-700 flex-1">{meta.name}</span>
+
+              {/* Style badge */}
+              {section.style && !isLocked && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">
+                  {section.style}
+                </span>
+              )}
+              {hasVariant && section.variant && (
+                <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">
+                  v{section.variant}
+                </span>
+              )}
+
+              {/* Style expand button */}
+              {(hasStyles || hasVariant) && !isLocked && (
+                <button
+                  onClick={() => setExpandedType(isExpanded ? null : section.type)}
+                  className={`p-0.5 rounded transition-colors ${isExpanded ? 'text-orange-500' : 'text-slate-400 hover:text-slate-600'}`}
+                  title="Stijl wijzigen"
+                >
+                  <span className="material-symbols-outlined text-sm">tune</span>
+                </button>
+              )}
+
+              {/* Visibility toggle */}
+              {!meta.required ? (
+                <button
+                  onClick={() => toggleVisibility(index)}
+                  className={`p-0.5 rounded transition-colors ${isVisible ? 'text-green-500 hover:text-red-400' : 'text-slate-300 hover:text-green-500'}`}
+                  title={isVisible ? 'Verbergen' : 'Tonen'}
+                >
+                  <span className="material-symbols-outlined text-sm">
+                    {isVisible ? 'visibility' : 'visibility_off'}
+                  </span>
+                </button>
+              ) : (
+                <span className="material-symbols-outlined text-sm text-slate-200 p-0.5">lock</span>
+              )}
+            </div>
+
+            {/* Style picker */}
+            {isExpanded && hasStyles && (
+              <div className="px-2.5 pb-2.5 pt-1 border-t border-slate-100">
+                <p className="text-[10px] text-slate-400 font-medium mb-1.5">Stijlvariant</p>
+                <div className="flex flex-wrap gap-1">
+                  {meta.styles.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => changeStyle(index, s)}
+                      className={`text-[10px] px-2 py-1 rounded-full border transition-all ${
+                        section.style === s
+                          ? 'border-orange-400 bg-orange-50 text-orange-700 font-semibold'
+                          : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Variant picker (werkwijze) */}
+            {isExpanded && hasVariant && (
+              <div className="px-2.5 pb-2.5 pt-1 border-t border-slate-100">
+                <p className="text-[10px] text-slate-400 font-medium mb-1.5">Variant</p>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3].map(v => (
+                    <button
+                      key={v}
+                      onClick={() => changeVariant(index, v)}
+                      className={`text-xs px-3 py-1.5 rounded-lg border-2 transition-all ${
+                        (section.variant || 1) === v
+                          ? 'border-orange-400 bg-orange-50 text-orange-700 font-semibold'
+                          : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      Variant {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SECTION CONTENT EDITORS MAPPING
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SECTION_EDITORS: Record<string, { label: string; icon: string }> = {
+  hero:         { label: 'Hero',          icon: 'campaign' },
+  stats:        { label: 'Statistieken',  icon: 'bar_chart' },
+  diensten:     { label: 'Diensten',      icon: 'medical_services' },
+  over:         { label: 'Over Mij',      icon: 'person' },
+  credentials:  { label: 'Credentials',   icon: 'verified' },
+  werkervaring: { label: 'Werkervaring',  icon: 'work' },
+  voorwie:      { label: 'Voor Wie',      icon: 'groups' },
+  quote:        { label: 'Quote',         icon: 'format_quote' },
+  werkwijze:    { label: 'Werkwijze',     icon: 'route' },
+  testimonials: { label: 'Testimonials',  icon: 'star' },
+  faq:          { label: 'FAQ',           icon: 'help' },
+  cta:          { label: 'Call to Action', icon: 'ads_click' },
+  contact:      { label: 'Contact',       icon: 'call' },
+};
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN COMPONENT
@@ -87,6 +343,41 @@ export function EditorPanel({ site, content, generated, onContentUpdate, onGener
     setGen(arrayPath, newArr);
   };
 
+  // ── Resolve active sections ──
+  const templateStyle = site.template_id || 'editorial';
+  const activeSections: SectionConfig[] =
+    (generated.sections as SectionConfig[] | undefined) ||
+    TEMPLATE_SECTIONS[templateStyle] ||
+    TEMPLATE_SECTIONS.editorial;
+
+  const visibleTypes = new Set(
+    activeSections.filter(s => s.visible !== false).map(s => s.type)
+  );
+
+  const handleSectionsChange = useCallback((newSections: SectionConfig[]) => {
+    onGeneratedUpdate({ ...generated, sections: newSections });
+  }, [generated, onGeneratedUpdate]);
+
+  // ── Render section content editor ──
+  const renderEditor = (id: string) => {
+    switch (id) {
+      case 'hero':         return <HeroFields gen={generated} content={content} setGen={setGen} setCont={setCont} />;
+      case 'stats':        return <StatsFields gen={generated} setGenItem={setGenItem} />;
+      case 'diensten':     return <DienstenFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
+      case 'over':         return <OverFields gen={generated} content={content} setGen={setGen} setCont={setCont} />;
+      case 'credentials':  return <CredentialsFields gen={generated} setGen={setGen} />;
+      case 'werkervaring': return <WerkervaringFields content={content} setCont={setCont} />;
+      case 'voorwie':      return <VoorWieFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
+      case 'quote':        return <QuoteFields gen={generated} setGen={setGen} />;
+      case 'werkwijze':    return <WerkwijzeFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
+      case 'testimonials': return <TestimonialsFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
+      case 'faq':          return <FaqFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
+      case 'cta':          return <CtaFields gen={generated} setGen={setGen} />;
+      case 'contact':      return <ContactFields gen={generated} content={content} setGen={setGen} setCont={setCont} />;
+      default: return null;
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -97,44 +388,47 @@ export function EditorPanel({ site, content, generated, onContentUpdate, onGener
 
       {/* Scrollable accordion */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
-        {SECTIONS.map(({ id, label, icon }) => {
-          const isOpen = openSection === id;
-          return (
-            <div key={id} className="border-b border-slate-100">
-              <button
-                onClick={() => toggle(id)}
-                className={`w-full flex items-center justify-between px-5 py-3 text-left transition-colors ${
-                  isOpen ? 'bg-orange-50/80' : 'hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <span className={`material-symbols-outlined text-lg ${isOpen ? 'text-orange-500' : 'text-slate-400'}`}>{icon}</span>
-                  <span className={`text-sm font-semibold ${isOpen ? 'text-orange-700' : 'text-slate-700'}`}>{label}</span>
-                </div>
-                <span className={`material-symbols-outlined text-lg text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>expand_more</span>
-              </button>
+        {/* Fixed: Stijl & Kleuren */}
+        <AccordionItem
+          id="stijl"
+          label="Stijl & Kleuren"
+          icon="palette"
+          isOpen={openSection === 'stijl'}
+          onToggle={() => toggle('stijl')}
+        >
+          <StijlFields gen={generated} setGen={setGen} />
+        </AccordionItem>
 
-              {isOpen && (
-                <div className="px-5 pb-5 pt-2 space-y-3">
-                  {id === 'stijl'        && <StijlFields gen={generated} setGen={setGen} />}
-                  {id === 'hero'         && <HeroFields gen={generated} content={content} setGen={setGen} setCont={setCont} />}
-                  {id === 'stats'        && <StatsFields gen={generated} setGenItem={setGenItem} />}
-                  {id === 'diensten'     && <DienstenFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
-                  {id === 'over'         && <OverFields gen={generated} content={content} setGen={setGen} setCont={setCont} />}
-                  {id === 'credentials'  && <CredentialsFields gen={generated} setGen={setGen} />}
-                  {id === 'werkervaring' && <WerkervaringFields content={content} setCont={setCont} />}
-                  {id === 'voorwie'      && <VoorWieFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
-                  {id === 'quote'        && <QuoteFields gen={generated} setGen={setGen} />}
-                  {id === 'werkwijze'    && <WerkwijzeFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
-                  {id === 'testimonials' && <TestimonialsFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
-                  {id === 'faq'          && <FaqFields gen={generated} setGen={setGen} setGenItem={setGenItem} />}
-                  {id === 'cta'          && <CtaFields gen={generated} setGen={setGen} />}
-                  {id === 'contact'      && <ContactFields gen={generated} content={content} setGen={setGen} setCont={setCont} />}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {/* Fixed: Secties manager */}
+        <AccordionItem
+          id="secties"
+          label="Secties"
+          icon="view_list"
+          isOpen={openSection === 'secties'}
+          onToggle={() => toggle('secties')}
+        >
+          <SectionManager sections={activeSections} onSectionsChange={handleSectionsChange} />
+        </AccordionItem>
+
+        {/* Dynamic: content editors for visible sections */}
+        {activeSections
+          .filter(s => s.type !== 'header' && s.type !== 'footer' && s.visible !== false)
+          .map(s => {
+            const editor = SECTION_EDITORS[s.type];
+            if (!editor) return null;
+            return (
+              <AccordionItem
+                key={s.type}
+                id={s.type}
+                label={editor.label}
+                icon={editor.icon}
+                isOpen={openSection === s.type}
+                onToggle={() => toggle(s.type)}
+              >
+                {renderEditor(s.type)}
+              </AccordionItem>
+            );
+          })}
         <div className="h-8" />
       </div>
     </div>

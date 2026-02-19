@@ -1,11 +1,10 @@
 // components/templates/TemplateRenderer.tsx
 // v3: Color Story System — palette overschrijft achtergrondkleuren
+// v3.1: TrustWidget integratie
 //
-// CHANGELOG v3:
-// - FIX: palette.bg/bgAlt/text/textMuted/border overschrijven theme.colors
-//   zodat elke palette een compleet ander kleurenverhaal oplevert
-//   (niet alleen knoppen maar hele pagina-achtergrond en tekst)
-// - Inherited from v2: palette fix, Serene fonts, scrollbar fix
+// CHANGELOG v3.1:
+// - TrustWidget toegevoegd naast WhatsAppButton
+// - Widget haalt data op via /api/widget/[subdomain]
 
 'use client';
 
@@ -34,6 +33,8 @@ import {
   THEME_DEFAULT_STYLES,
 } from './sections';
 
+import { TrustWidget } from './widgets/TrustWidget';
+
 import type { SectionConfig } from './sections/types';
 
 interface TemplateRendererProps {
@@ -49,15 +50,14 @@ const MAIN_TEMPLATES = ['editorial', 'proactief', 'portfolio', 'mindoor', 'seren
 // ============================================
 // TEMPLATE SECTION CONFIGURATIONS (FALLBACKS)
 // ============================================
-// Alleen gebruikt als edge function GEEN sections meestuurt
 
-const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
+export const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
   editorial: [
     { type: 'hero', style: 'editorial' },
     { type: 'diensten', style: 'editorial' },
     { type: 'over', style: 'editorial' },
     { type: 'credentials', style: 'editorial' },
-    { type: 'werkervaring', style: 'editorial' },
+    { type: 'werkervaring', style: 'editorial-1' },
     { type: 'voorwie', style: 'editorial' },
     { type: 'quote', style: 'minimal' },
     { type: 'werkwijze', style: 'editorial' },
@@ -71,7 +71,7 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'proactief' },
     { type: 'over', style: 'proactief' },
     { type: 'credentials', style: 'proactief' },
-    { type: 'werkervaring', style: 'proactief' },
+    { type: 'werkervaring', style: 'proactief-1' },
     { type: 'voorwie', style: 'proactief' },
     { type: 'quote', style: 'banner' },
     { type: 'werkwijze', style: 'proactief' },
@@ -85,7 +85,7 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'portfolio' },
     { type: 'over', style: 'portfolio' },
     { type: 'credentials', style: 'portfolio' },
-    { type: 'werkervaring', style: 'portfolio' },
+    { type: 'werkervaring', style: 'portfolio-1' },
     { type: 'voorwie', style: 'portfolio' },
     { type: 'quote', style: 'dark' },
     { type: 'werkwijze', style: 'portfolio' },
@@ -99,7 +99,7 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'mindoor' },
     { type: 'over', style: 'mindoor' },
     { type: 'credentials', style: 'mindoor' },
-    { type: 'werkervaring', style: 'mindoor' },
+    { type: 'werkervaring', style: 'mindoor-1' },
     { type: 'voorwie', style: 'mindoor' },
     { type: 'quote', style: 'minimal' },
     { type: 'werkwijze', style: 'mindoor' },
@@ -113,7 +113,7 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'diensten', style: 'serene' },
     { type: 'over', style: 'serene' },
     { type: 'credentials', style: 'serene' },
-    { type: 'werkervaring', style: 'serene' },
+    { type: 'werkervaring', style: 'serene-1' },
     { type: 'voorwie', style: 'serene' },
     { type: 'quote', style: 'minimal' },
     { type: 'werkwijze', style: 'serene' },
@@ -122,27 +122,25 @@ const TEMPLATE_SECTIONS: Record<string, SectionConfig[]> = {
     { type: 'contact', style: 'serene' },
     { type: 'footer', style: 'serene' },
   ],
-  // Legacy
   classic: [
-    { type: 'hero', style: 'split' },
-    { type: 'diensten', style: 'cards' },
-    { type: 'over', style: 'split' },
-    { type: 'credentials', style: 'full' },
-    { type: 'werkervaring', style: 'timeline' },
-    { type: 'voorwie', style: 'cards' },
+    { type: 'hero', style: 'editorial' },
+    { type: 'diensten', style: 'editorial' },
+    { type: 'over', style: 'editorial' },
+    { type: 'credentials', style: 'editorial' },
+    { type: 'werkervaring', style: 'editorial-1' },
+    { type: 'voorwie', style: 'editorial' },
     { type: 'quote', style: 'minimal' },
-    { type: 'werkwijze', style: 'steps' },
-    { type: 'testimonials', style: 'cards' },
-    { type: 'faq', style: 'accordion' },
-    { type: 'contact', style: 'split' },
-    { type: 'footer', style: 'simple' },
+    { type: 'werkwijze', style: 'editorial' },
+    { type: 'testimonials', style: 'editorial' },
+    { type: 'faq', style: 'editorial' },
+    { type: 'contact', style: 'editorial' },
+    { type: 'footer', style: 'editorial' },
   ],
 };
 
 // ============================================
 // GLOBAL STYLES
 // ============================================
-// v2: Cormorant Garamond + Nunito Sans + Mulish toegevoegd
 
 const GLOBAL_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&family=Mulish:ital,wght@0,200..1000;1,200..1000&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Manrope:wght@300;400;500;600;700;800&family=Nunito:wght@300;400;500;600;700&family=Open+Sans:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Lato:wght@300;400;700&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap');
@@ -173,6 +171,15 @@ const GLOBAL_STYLES = `
   .theme-mindoor::-webkit-scrollbar-thumb { background: #5a7c5a; border-radius: 4px; }
   .theme-serene::-webkit-scrollbar-track { background: #f9faf8; }
   .theme-serene::-webkit-scrollbar-thumb { background: #3d4a3d; border-radius: 4px; }
+
+  /* Trust Widget animation */
+  @keyframes trust-slide-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up {
+    animation: trust-slide-up 0.2s ease-out;
+  }
 `;
 
 // ============================================
@@ -183,7 +190,6 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   const { content, beroep, theme: siteTheme, generated_content, template_id } = site;
 
   // ── 1. Template bepalen ─────────────────────────
-  // Priority: template_id > siteTheme.template > 'editorial'
   const templateStyle = template_id || (siteTheme as any)?.template || 'editorial';
   const isMainTemplate = MAIN_TEMPLATES.includes(templateStyle);
 
@@ -191,16 +197,11 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   const theme = getTheme(isMainTemplate ? templateStyle : 'classic');
 
   // ── 3. Color palette ────────────────────────────
-  // v3: Palette bevat nu ook bg/text/border die theme.colors overschrijven
   const paletteId = (siteTheme as any)?.palette
     || (isMainTemplate ? templateStyle : 'sage');
   const palette = getPalette(paletteId);
 
   // ── 3b. Palette → Theme override ───────────────
-  // Palette kleuren overschrijven theme.colors zodat de hele
-  // pagina de palette-specifieke achtergrond/tekst krijgt.
-  // Dit is de kern van het Color Story systeem: niet alleen
-  // knoppen veranderen, maar de complete visuele sfeer.
   if ((palette as any).bg) {
     theme.colors.background = (palette as any).bg;
   }
@@ -225,12 +226,14 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   }
 
   // ── 5. Sections configuratie ────────────────────
-  // Priority: edge function > siteTheme > template defaults
   const sections: SectionConfig[] =
     (generated_content?.sections as SectionConfig[]) ||
     (Array.isArray((siteTheme as any)?.sections) ? (siteTheme as any).sections : null) ||
     TEMPLATE_SECTIONS[templateStyle] ||
     TEMPLATE_SECTIONS.editorial;
+
+  // ── 5b. Filter invisible sections ───────────────
+  const visibleSections = sections.filter(s => s.visible !== false);
 
   // ── 6. Debug logging ────────────────────────────
   if (generated_content?.sections) {
@@ -266,7 +269,6 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   };
 
   // ── Section style resolver ──────────────────────
-  // Priority: section.style (edge function) > templateStyle > 'editorial'
   const getSectionStyle = (section: SectionConfig) => {
     if (section.style) return section.style;
     if (isMainTemplate) return templateStyle;
@@ -314,10 +316,10 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
   };
 
   // ── Header & Footer ─────────────────────────────
-  const headerSection = sections.find(s => s.type === 'header');
+  const headerSection = visibleSections.find(s => s.type === 'header');
   const headerStyle = headerSection?.style || (isMainTemplate ? templateStyle : 'solid');
 
-  const footerSection = sections.find(s => s.type === 'footer');
+  const footerSection = visibleSections.find(s => s.type === 'footer');
   const footerStyle = footerSection?.style || (isMainTemplate ? templateStyle : 'simple');
 
   // ── Render ──────────────────────────────────────
@@ -331,10 +333,7 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
     >
       <style jsx global>{GLOBAL_STYLES}</style>
 
-      {/* Font safety net: ensures ALL headings use template font,
-          even when components forget to set fontFamily inline.
-          Inline styles (specificity) still override this when present. */}
-    <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{ __html: `
   .theme-${templateStyle} h1,
   .theme-${templateStyle} h2,
   .theme-${templateStyle} h3,
@@ -344,23 +343,27 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
 `}} />
 
       {/* Header */}
-      <HeaderSection
-        {...sectionProps}
-        style={headerStyle as any}
-      />
+      {headerSection !== undefined && (
+        <HeaderSection
+          {...sectionProps}
+          style={headerStyle as any}
+        />
+      )}
 
       {/* Sections */}
       <main>
-        {sections
+        {visibleSections
           .filter(s => s.type !== 'footer' && s.type !== 'header')
           .map((section, index) => renderSection(section, index))}
       </main>
 
       {/* Footer */}
-      <FooterSection
-        {...sectionProps}
-        style={footerStyle as any}
-      />
+      {footerSection !== undefined && (
+        <FooterSection
+          {...sectionProps}
+          style={footerStyle as any}
+        />
+      )}
 
       {/* WhatsApp */}
       {(content as any).telefoon && (
@@ -370,6 +373,13 @@ export function TemplateRenderer({ site }: TemplateRendererProps) {
           palette={palette}
         />
       )}
+
+      {/* Trust Widget — Professioneel Zorgprofiel keurmerk */}
+      <TrustWidget
+        subdomain={site.subdomain}
+        palette={palette}
+        position="bottom-left"
+      />
     </div>
   );
 }

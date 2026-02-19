@@ -133,6 +133,30 @@ export function SiteStyleInjector({ customImages, customTexts, customButtons, cu
     .site-content p, .site-content li, .site-content dd, .site-content td,
     .site-content span:not(.material-symbols-outlined) { color: ${customStyles.bodyColor} !important; }
     ` : ''}
+    ${customStyles.buttonColor ? `
+    .site-content a[class*="bg-"],
+    .site-content a[class*="btn"],
+    .site-content a[class*="rounded"][class*="bg-"],
+    .site-content a[style*="background"],
+    .site-content button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
+    .site-content button[style*="background"] { background-color: ${customStyles.buttonColor} !important; }
+    ` : ''}
+    ${customStyles.buttonTextColor ? `
+    .site-content a[class*="bg-"],
+    .site-content a[class*="btn"],
+    .site-content a[class*="rounded"][class*="bg-"],
+    .site-content a[style*="background"],
+    .site-content button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
+    .site-content button[style*="background"] { color: ${customStyles.buttonTextColor} !important; }
+    ` : ''}
+    ${customStyles.buttonRadius ? `
+    .site-content a[class*="bg-"],
+    .site-content a[class*="btn"],
+    .site-content a[class*="rounded"][class*="bg-"],
+    .site-content a[style*="background"],
+    .site-content button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
+    .site-content button[style*="background"] { border-radius: ${customStyles.buttonRadius} !important; }
+    ` : ''}
   `;
 
   return <style dangerouslySetInnerHTML={{ __html: css }} />;

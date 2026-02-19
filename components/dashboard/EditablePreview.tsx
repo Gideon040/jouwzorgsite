@@ -495,6 +495,30 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
           color: ${customStyles.bodyColor} !important;
         }
         ` : ''}
+        ${customStyles.buttonColor ? `
+        .editable-preview a[class*="bg-"],
+        .editable-preview a[class*="btn"],
+        .editable-preview a[class*="rounded"][class*="bg-"],
+        .editable-preview a[style*="background"],
+        .editable-preview button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
+        .editable-preview button[style*="background"] { background-color: ${customStyles.buttonColor} !important; }
+        ` : ''}
+        ${customStyles.buttonTextColor ? `
+        .editable-preview a[class*="bg-"],
+        .editable-preview a[class*="btn"],
+        .editable-preview a[class*="rounded"][class*="bg-"],
+        .editable-preview a[style*="background"],
+        .editable-preview button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
+        .editable-preview button[style*="background"] { color: ${customStyles.buttonTextColor} !important; }
+        ` : ''}
+        ${customStyles.buttonRadius ? `
+        .editable-preview a[class*="bg-"],
+        .editable-preview a[class*="btn"],
+        .editable-preview a[class*="rounded"][class*="bg-"],
+        .editable-preview a[style*="background"],
+        .editable-preview button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
+        .editable-preview button[style*="background"] { border-radius: ${customStyles.buttonRadius} !important; }
+        ` : ''}
 
         /* ── IMAGE HOVER ── */
         .editable-preview img {
