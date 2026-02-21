@@ -158,8 +158,23 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       // 3. Track conversion
       trackSignupComplete(localEmail);
 
-      // 4. TODO: Redirect to Mollie checkout
-      onComplete();
+      // 4. Redirect to Mollie checkout
+      const mollieRes = await fetch('/api/mollie/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siteId: siteData.id }),
+      });
+
+      const mollieData = await mollieRes.json();
+
+      if (!mollieRes.ok || !mollieData.checkoutUrl) {
+        setError(mollieData.error || 'Kon betaling niet starten. Probeer het opnieuw.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Redirect to Mollie payment page
+      window.location.href = mollieData.checkoutUrl;
 
     } catch (err) {
       console.error('Signup error:', err);
@@ -169,14 +184,14 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-rose-50 py-12 px-4">
+    <div className="min-h-screen bg-[#fafaf9] py-12 px-4">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-4">
-            <span className="material-symbols-outlined text-3xl text-orange-600">rocket_launch</span>
+          <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-4">
+            <span className="material-symbols-outlined text-3xl text-teal-600">rocket_launch</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+          <h1 className="text-2xl font-bold font-serif text-slate-900 mb-2">
             Laatste stap!
           </h1>
           <p className="text-slate-500">
@@ -201,7 +216,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Jouw website adres
             </label>
-            <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-orange-500 transition-colors">
+            <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-teal-600 transition-colors">
               <input
                 type="text"
                 value={subdomain}
@@ -250,7 +265,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
                   onChange={(e) => setWantCustomDomain(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-orange-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-teal-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
               </div>
             </label>
             
@@ -269,7 +284,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
                       setDomainError(null);
                     }}
                     placeholder="mijn-naam.nl"
-                    className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:border-orange-500 outline-none"
+                    className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:border-teal-600 outline-none"
                   />
                   <button
                     onClick={() => checkCustomDomain(customDomain)}
@@ -316,7 +331,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               value={localEmail}
               onChange={(e) => setLocalEmail(e.target.value)}
               placeholder="je@email.nl"
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-600 outline-none transition-colors"
             />
           </div>
           
@@ -329,7 +344,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 outline-none transition-colors"
+              className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-600 outline-none transition-colors"
               placeholder="Minimaal 8 tekens"
             />
             {password.length > 0 && password.length < 8 && (
@@ -368,10 +383,10 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             <hr className="my-3 border-slate-200" />
             <div className="flex items-center justify-between">
               <span className="font-bold text-slate-900">Vandaag</span>
-              <span className="font-bold text-emerald-600">€0,00</span>
+              <span className="font-bold text-emerald-600">€0,01</span>
             </div>
             <p className="text-xs text-slate-400 mt-2">
-              14 dagen gratis, daarna €14,95/maand{wantCustomDomain && domainAvailable ? ` + ${domainPrice} domein` : ''}. Elk moment opzegbaar.
+              Eenmalig €0,01 om je betaalmethode te verifiëren. 14 dagen gratis, daarna €14,95/maand{wantCustomDomain && domainAvailable ? ` + ${domainPrice} domein` : ''}. Elk moment opzegbaar.
             </p>
           </div>
           
@@ -381,14 +396,14 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             disabled={!isAvailable || !localEmail.includes('@') || password.length < 8 || isLoading}
             className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg transition-all ${
               isAvailable && localEmail.includes('@') && password.length >= 8 && !isLoading
-                ? 'bg-orange-500 text-white hover:bg-orange-600 hover:shadow-lg'
+                ? 'bg-gradient-to-br from-teal-600 to-[#0f766e] text-white hover:shadow-lg'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}
           >
             {isLoading ? (
               <>
                 <span className="material-symbols-outlined animate-spin">progress_activity</span>
-                Account aanmaken...
+                Even geduld...
               </>
             ) : (
               <>
