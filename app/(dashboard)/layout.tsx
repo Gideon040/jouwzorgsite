@@ -17,6 +17,19 @@ export default async function DashboardLayout({
     redirect('/login');
   }
 
+  // Check for active subscription (active = trial or paid)
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('status')
+    .eq('user_id', user.id)
+    .in('status', ['active'])
+    .maybeSingle();
+
+  if (!subscription) {
+    // No active subscription — redirect to wizard to start/complete checkout
+    redirect('/wizard');
+  }
+
   return (
     <div className="min-h-screen bg-[#fafaf9]">
       {/* Sidebar */}

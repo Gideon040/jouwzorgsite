@@ -119,6 +119,20 @@ export async function togglePublish(siteId: string, publish: boolean) {
     return { error: 'Je moet ingelogd zijn' };
   }
 
+  // Block publishing without active subscription
+  if (publish) {
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('status')
+      .eq('user_id', user.id)
+      .in('status', ['active'])
+      .maybeSingle();
+
+    if (!subscription) {
+      return { error: 'Je hebt een actief abonnement nodig om je site te publiceren' };
+    }
+  }
+
   const { data: site, error } = await supabase
     .from('sites')
     .update({ published: publish })
