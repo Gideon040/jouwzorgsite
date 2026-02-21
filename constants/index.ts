@@ -44,13 +44,12 @@ export const PLANS = [
     naam: 'Starter',
     prijs: 1495, // in centen
     prijsLabel: '€14,95',
-    beschrijving: 'Perfect om te starten',
+    beschrijving: 'Basis website',
     features: [
-      '1 pagina (onepage)',
+      'Professionele website',
       'Subdomein (naam.jouwzorgsite.nl)',
       'BIG-badge verificatie',
       'SSL certificaat',
-      'AVG-compliant',
     ],
   },
   {
@@ -58,10 +57,15 @@ export const PLANS = [
     naam: 'Professional',
     prijs: 1995,
     prijsLabel: '€19,95',
+    oudePrijs: '€24,95',
     beschrijving: 'Meest gekozen',
     popular: true,
     features: [
-      'Eigen .nl domein',
+      'Eigen .nl domein (gratis)',
+      'SEO-optimalisatie voor Google',
+      'Aanpasbare kleuren & stijl',
+      'Kwaliteitskeurmerk widget',
+      'Prioriteit support',
       'Alles van Starter',
     ],
   },
@@ -74,7 +78,6 @@ export const PLANS = [
     features: [
       '10 pagina\'s',
       'Blog functie',
-      'Prioriteit support',
       'Tarieven pagina',
       'Alles van Professional',
     ],

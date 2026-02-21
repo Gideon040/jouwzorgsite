@@ -44,7 +44,7 @@ export default async function DashboardLayout({
 
     const siteName = (site.content as any)?.naam || site.subdomain;
 
-    return <ActivateSubscription siteId={site.id} siteName={siteName} />;
+    return <ActivateSubscription siteId={site.id} siteName={siteName} subdomain={site.subdomain} />;
   }
 
   return (
