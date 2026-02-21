@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { cleanDomain, isValidDomain } from '@/lib/transip';
+import { addDomainToVercel } from '@/lib/vercel';
 
 export async function POST(request: NextRequest) {
   try {
@@ -107,6 +108,14 @@ export async function POST(request: NextRequest) {
         { error: 'Kon domein niet opslaan' },
         { status: 500 }
       );
+    }
+
+    // Add domain to Vercel project
+    const vercelResult = await addDomainToVercel(cleanedDomain);
+    await addDomainToVercel(`www.${cleanedDomain}`);
+
+    if (!vercelResult.success) {
+      console.error('Vercel domain add failed for connect:', cleanedDomain, vercelResult.error);
     }
 
     return NextResponse.json({

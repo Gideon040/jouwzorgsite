@@ -3,16 +3,17 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { 
+import {
   checkDomain,
-  registerDomain, 
+  registerDomain,
   configureDNSForVercel,
-  getTransIPConfig, 
-  isValidDomain, 
+  getTransIPConfig,
+  isValidDomain,
   cleanDomain,
   getDomainPrice,
-  getTLD 
+  getTLD
 } from '@/lib/transip';
+import { addDomainToVercel } from '@/lib/vercel';
 
 export async function POST(request: NextRequest) {
   try {
@@ -157,12 +158,20 @@ export async function POST(request: NextRequest) {
     // 4. Configure DNS for Vercel
     const dnsConfigured = await configureDNSForVercel(cleanedDomain, config);
 
-    // 5. Update database with success
+    // 5. Add domain to Vercel project
+    const vercelResult = await addDomainToVercel(cleanedDomain);
+    // Also add www variant
+    await addDomainToVercel(`www.${cleanedDomain}`);
+
+    const isFullyActive = dnsConfigured && vercelResult.success;
+
+    // 6. Update database with success
     await supabase
       .from('custom_domains')
-      .update({ 
-        status: dnsConfigured ? 'active' : 'dns_configuring',
+      .update({
+        status: isFullyActive ? 'active' : 'dns_configuring',
         dns_configured: dnsConfigured,
+        vercel_verified: vercelResult.verified,
         registered_at: new Date().toISOString(),
         // Expires in 1 year
         expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
@@ -178,11 +187,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       domain: cleanedDomain,
-      status: dnsConfigured ? 'active' : 'dns_configuring',
+      status: isFullyActive ? 'active' : 'dns_configuring',
       message: 'Domein succesvol geregistreerd!',
       price: price,
       priceFormatted: `€${price.toFixed(2).replace('.', ',')}/jaar`,
-      nextSteps: dnsConfigured 
+      nextSteps: isFullyActive
         ? ['Je domein is actief en klaar voor gebruik!']
         : [
             'DNS wordt geconfigureerd (kan tot 24 uur duren)',
