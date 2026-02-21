@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { DashboardTopbar } from '@/components/dashboard/DashboardTopbar';
+import { ActivateSubscription } from '@/components/dashboard/ActivateSubscription';
 
 export default async function DashboardLayout({
   children,
@@ -26,8 +27,24 @@ export default async function DashboardLayout({
     .maybeSingle();
 
   if (!subscription) {
-    // No active subscription — redirect to wizard to start/complete checkout
-    redirect('/wizard');
+    // No active subscription — show activation screen
+    // Find the user's site to pass to checkout
+    const { data: site } = await supabase
+      .from('sites')
+      .select('id, subdomain, content')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!site) {
+      // No site at all — send to wizard
+      redirect('/wizard');
+    }
+
+    const siteName = (site.content as any)?.naam || site.subdomain;
+
+    return <ActivateSubscription siteId={site.id} siteName={siteName} />;
   }
 
   return (
