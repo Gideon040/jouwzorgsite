@@ -91,6 +91,10 @@ export function ActivateSubscription({ siteId, siteName, subdomain }: ActivateSu
                 <span className="material-symbols-outlined text-slate-400 text-sm">check</span>
                 BIG-badge & SSL
               </li>
+              <li className="flex items-center gap-1.5 text-xs text-red-400">
+                <span className="material-symbols-outlined text-red-300 text-sm">close</span>
+                Niet zichtbaar in Google
+              </li>
             </ul>
           </button>
 
@@ -119,9 +123,9 @@ export function ActivateSubscription({ siteId, siteName, subdomain }: ActivateSu
                 <span className="material-symbols-outlined text-teal-600 text-sm">add_circle</span>
                 Eigen .nl domein (gratis)
               </li>
-              <li className="flex items-center gap-1.5 text-xs text-slate-600">
+              <li className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
                 <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
-                SEO-optimalisatie voor Google
+                Zichtbaar in Google
               </li>
               <li className="flex items-center gap-1.5 text-xs text-slate-600">
                 <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
@@ -145,7 +149,7 @@ export function ActivateSubscription({ siteId, siteName, subdomain }: ActivateSu
             <p className="text-xs text-amber-800 flex items-start gap-2">
               <span className="material-symbols-outlined text-sm mt-0.5">info</span>
               <span>
-                Met Starter wordt je adres <strong className="font-mono">{displayName}.jouwzorgsite.nl</strong> — voor slechts €5/mnd meer krijg je een professioneel <strong className="font-mono">{displayName}.nl</strong> domein.
+                Met Starter wordt je adres <strong className="font-mono">{displayName}.jouwzorgsite.nl</strong> en ben je niet vindbaar in Google. Voor slechts €5/mnd meer krijg je <strong className="font-mono">{displayName}.nl</strong> en vinden opdrachtgevers je wél.
               </span>
             </p>
           </div>
@@ -169,10 +173,16 @@ export function ActivateSubscription({ siteId, siteName, subdomain }: ActivateSu
               </div>
             </div>
             {selectedPlan === 'professional' && (
-              <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
-                <span>Eigen .nl domein</span>
-                <span className="text-emerald-600 font-medium text-xs">Inbegrepen</span>
-              </div>
+              <>
+                <div className="flex items-center justify-between text-sm text-slate-500 mb-1">
+                  <span>Eigen .nl domein</span>
+                  <span className="text-emerald-600 font-medium text-xs">Inbegrepen</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500 mb-2">
+                  <span>Google indexering</span>
+                  <span className="text-emerald-600 font-medium text-xs">Inbegrepen</span>
+                </div>
+              </>
             )}
             <hr className="border-slate-200 my-2" />
             <div className="flex items-center justify-between">

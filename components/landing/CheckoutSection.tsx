@@ -27,16 +27,17 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Custom domain state (only for professional)
+  // Custom domain state (only for professional — no TransIP check, just collect name)
   const [customDomain, setCustomDomain] = useState('');
-  const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
-  const [isCheckingDomain, setIsCheckingDomain] = useState(false);
-  const [domainError, setDomainError] = useState<string | null>(null);
 
   const planPrijs = selectedPlan === 'professional' ? '€19,95' : '€14,95';
-  const planPrijsCent = selectedPlan === 'professional' ? '19.95' : '14.95';
 
-  // Check subdomain availability via API
+  // Derive a clean domain suggestion from the name
+  const nameSuggestion = (content.naam || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
+
+  // Check subdomain availability via API (runs in background for both plans)
   useEffect(() => {
     if (!subdomain.trim() || subdomain.length < 3) {
       setIsAvailable(null);
@@ -65,38 +66,19 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
     return () => clearTimeout(timer);
   }, [subdomain]);
 
-  // Check custom domain availability via TransIP API
-  const checkCustomDomain = async (domain: string) => {
-    if (!domain || !domain.includes('.')) return;
-
-    setIsCheckingDomain(true);
-    try {
-      const response = await fetch('/api/domains/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain }),
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        setDomainError(data.error);
-        setDomainAvailable(false);
-      } else {
-        setDomainAvailable(data.available);
-        setDomainError(null);
-      }
-    } catch (err) {
-      console.error('Domain check error:', err);
-      setDomainError('Kon beschikbaarheid niet controleren');
-      setDomainAvailable(false);
-    } finally {
-      setIsCheckingDomain(false);
-    }
+  // Normalize domain input: ensure it ends with .nl
+  const normalizeDomain = (input: string): string => {
+    const trimmed = input.trim().toLowerCase();
+    if (!trimmed) return '';
+    if (trimmed.includes('.')) return trimmed;
+    return trimmed + '.nl';
   };
 
   const handleSubmit = async () => {
-    if (!isAvailable || !localEmail.includes('@') || password.length < 8) return;
+    // Starter needs subdomain check; Professional needs domain name
+    if (selectedPlan === 'starter' && !isAvailable) return;
+    if (selectedPlan === 'professional' && !customDomain.trim()) return;
+    if (!localEmail.includes('@') || password.length < 8) return;
 
     setIsLoading(true);
     setError(null);
@@ -132,6 +114,8 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       }
 
       // 2. Create the site in database
+      const finalDomain = selectedPlan === 'professional' ? normalizeDomain(customDomain) : undefined;
+
       const { data: siteData, error: siteError } = await supabase
         .from('sites')
         .insert({
@@ -161,14 +145,14 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       // 3. Track conversion
       trackSignupComplete(localEmail);
 
-      // 4. Redirect to Mollie checkout
+      // 4. Redirect to Mollie checkout (domain registration happens AFTER payment via dashboard)
       const mollieRes = await fetch('/api/mollie/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           siteId: siteData.id,
           plan: selectedPlan,
-          customDomain: selectedPlan === 'professional' && customDomain && domainAvailable ? customDomain : undefined,
+          customDomain: finalDomain,
         }),
       });
 
@@ -189,6 +173,14 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       setIsLoading(false);
     }
   };
+
+  // Can submit check
+  const canSubmit = (() => {
+    if (!localEmail.includes('@') || password.length < 8 || isLoading) return false;
+    if (selectedPlan === 'starter') return isAvailable === true;
+    // Professional: subdomain must be available (background check) + domain filled in
+    return isAvailable !== false && customDomain.trim().length > 0;
+  })();
 
   return (
     <div className="min-h-screen bg-[#fafaf9] py-12 px-4">
@@ -216,7 +208,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
         </button>
 
         {/* Plan Selection */}
-        <div className="grid grid-cols-[5fr_7fr] gap-3 mb-6">
+        <div className="grid grid-cols-[5fr_7fr] gap-3 mb-4">
           {/* Starter — compact */}
           <button
             onClick={() => setSelectedPlan('starter')}
@@ -243,6 +235,10 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               <li className="flex items-center gap-1.5 text-xs text-slate-500">
                 <span className="material-symbols-outlined text-slate-400 text-sm">check</span>
                 BIG-badge & SSL
+              </li>
+              <li className="flex items-center gap-1.5 text-xs text-red-400">
+                <span className="material-symbols-outlined text-red-300 text-sm">close</span>
+                Niet zichtbaar in Google
               </li>
             </ul>
           </button>
@@ -272,9 +268,9 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
                 <span className="material-symbols-outlined text-teal-600 text-sm">add_circle</span>
                 Eigen .nl domein (gratis)
               </li>
-              <li className="flex items-center gap-1.5 text-xs text-slate-600">
+              <li className="flex items-center gap-1.5 text-xs font-medium text-emerald-700">
                 <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
-                SEO-optimalisatie voor Google
+                Zichtbaar in Google
               </li>
               <li className="flex items-center gap-1.5 text-xs text-slate-600">
                 <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
@@ -292,110 +288,83 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
           </button>
         </div>
 
-        {/* URL vergelijking */}
+        {/* URL vergelijking nudge */}
         {selectedPlan === 'starter' && (
           <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl">
             <p className="text-xs text-amber-800 flex items-start gap-2">
               <span className="material-symbols-outlined text-sm mt-0.5">info</span>
               <span>
-                Met Starter wordt je adres <strong className="font-mono">{subdomain || 'jouwnaam'}.jouwzorgsite.nl</strong> — voor slechts €5/mnd meer krijg je een professioneel <strong className="font-mono">{subdomain || 'jouwnaam'}.nl</strong> domein.
+                Met Starter wordt je adres <strong className="font-mono">{subdomain || 'jouwnaam'}.jouwzorgsite.nl</strong> en ben je niet vindbaar in Google. Voor slechts €5/mnd meer krijg je <strong className="font-mono">{nameSuggestion || 'jouwnaam'}.nl</strong> en vinden opdrachtgevers je wél.
               </span>
             </p>
           </div>
         )}
 
+        {selectedPlan === 'professional' && <div className="mb-6" />}
+
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-8">
 
-          {/* Subdomain */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Jouw website adres
-            </label>
-            <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-teal-600 transition-colors">
-              <input
-                type="text"
-                value={subdomain}
-                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                className="flex-1 px-4 py-3 outline-none text-slate-900"
-                placeholder="jouw-naam"
-              />
-              <span className="px-4 py-3 bg-slate-50 text-slate-500 text-sm font-mono border-l border-slate-200">
-                .jouwzorgsite.nl
-              </span>
-            </div>
-            {isChecking && (
-              <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
-                <span className="material-symbols-outlined animate-spin text-xs">progress_activity</span>
-                Controleren...
-              </p>
-            )}
-            {!isChecking && isAvailable === true && subdomain.length >= 3 && (
-              <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                <span className="material-symbols-outlined text-xs">check_circle</span>
-                Beschikbaar!
-              </p>
-            )}
-            {!isChecking && isAvailable === false && (
-              <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                <span className="material-symbols-outlined text-xs">error</span>
-                Helaas bezet, kies een andere naam
-              </p>
-            )}
-          </div>
-
-          {/* Custom domain — only for professional */}
-          {selectedPlan === 'professional' && (
-            <div className="mb-6 p-4 bg-teal-50/50 border border-teal-100 rounded-xl">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="material-symbols-outlined text-teal-600 text-lg">language</span>
-                <span className="text-sm font-medium text-slate-700">Eigen .nl domein vastleggen</span>
+          {/* Website adres — different per plan */}
+          {selectedPlan === 'starter' ? (
+            /* Starter: subdomain input */
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Jouw website adres
+              </label>
+              <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-teal-600 transition-colors">
+                <input
+                  type="text"
+                  value={subdomain}
+                  onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                  className="flex-1 px-4 py-3 outline-none text-slate-900"
+                  placeholder="jouw-naam"
+                />
+                <span className="px-4 py-3 bg-slate-50 text-slate-500 text-sm font-mono border-l border-slate-200">
+                  .jouwzorgsite.nl
+                </span>
               </div>
-              <div className="flex gap-2">
+              {isChecking && (
+                <p className="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined animate-spin text-xs">progress_activity</span>
+                  Controleren...
+                </p>
+              )}
+              {!isChecking && isAvailable === true && subdomain.length >= 3 && (
+                <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs">check_circle</span>
+                  Beschikbaar!
+                </p>
+              )}
+              {!isChecking && isAvailable === false && (
+                <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs">error</span>
+                  Helaas bezet, kies een andere naam
+                </p>
+              )}
+            </div>
+          ) : (
+            /* Professional: eigen .nl domein input (geen TransIP check, pas na betaling) */
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Jouw eigen domeinnaam
+              </label>
+              <div className="flex items-center border-2 border-slate-200 rounded-xl overflow-hidden focus-within:border-teal-600 transition-colors">
                 <input
                   type="text"
                   value={customDomain}
-                  onChange={(e) => {
-                    setCustomDomain(e.target.value.toLowerCase());
-                    setDomainAvailable(null);
-                    setDomainError(null);
-                  }}
-                  placeholder={`${subdomain || 'jouw-naam'}.nl`}
-                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:border-teal-600 outline-none bg-white"
+                  onChange={(e) => setCustomDomain(e.target.value.toLowerCase().replace(/[^a-z0-9.-]/g, ''))}
+                  className="flex-1 px-4 py-3 outline-none text-slate-900"
+                  placeholder={nameSuggestion || 'jouwnaam'}
                 />
-                <button
-                  onClick={() => checkCustomDomain(customDomain)}
-                  disabled={!customDomain.includes('.') || isCheckingDomain}
-                  className={`px-4 py-2.5 rounded-lg font-medium transition-colors ${
-                    customDomain.includes('.') && !isCheckingDomain
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                  }`}
-                >
-                  {isCheckingDomain ? (
-                    <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
-                  ) : (
-                    'Check'
-                  )}
-                </button>
+                {!customDomain.includes('.') && (
+                  <span className="px-4 py-3 bg-slate-50 text-slate-500 text-sm font-mono border-l border-slate-200">
+                    .nl
+                  </span>
+                )}
               </div>
-              {domainError && (
-                <p className="text-xs text-red-500 mt-2">{domainError}</p>
-              )}
-              {domainAvailable === true && (
-                <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">check_circle</span>
-                  {customDomain} is beschikbaar!
-                </p>
-              )}
-              {domainAvailable === false && !domainError && (
-                <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                  <span className="material-symbols-outlined text-xs">error</span>
-                  Dit domein is niet beschikbaar
-                </p>
-              )}
               <p className="text-xs text-slate-400 mt-2">
-                Optioneel — je kunt dit ook later doen vanuit je dashboard.
+                We registreren je domein na het activeren van je proefperiode.
               </p>
             </div>
           )}
@@ -456,13 +425,20 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
                 <span className="font-bold text-slate-900">{planPrijs}/mnd</span>
               </div>
             </div>
-            <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>{subdomain}.jouwzorgsite.nl</span>
-              <span className="text-emerald-600 font-medium text-xs">Inbegrepen</span>
-            </div>
-            {selectedPlan === 'professional' && (
-              <div className="flex items-center justify-between text-sm text-slate-500 mt-2">
-                <span>{customDomain && domainAvailable ? customDomain : 'Eigen .nl domein'}</span>
+            {selectedPlan === 'professional' ? (
+              <>
+                <div className="flex items-center justify-between text-sm text-slate-500">
+                  <span>{customDomain ? normalizeDomain(customDomain) : `${nameSuggestion || 'jouwnaam'}.nl`}</span>
+                  <span className="text-emerald-600 font-medium text-xs">Inbegrepen</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-slate-500 mt-1">
+                  <span>Google indexering</span>
+                  <span className="text-emerald-600 font-medium text-xs">Inbegrepen</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-between text-sm text-slate-500">
+                <span>{subdomain}.jouwzorgsite.nl</span>
                 <span className="text-emerald-600 font-medium text-xs">Inbegrepen</span>
               </div>
             )}
@@ -479,9 +455,9 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
           {/* Submit */}
           <button
             onClick={handleSubmit}
-            disabled={!isAvailable || !localEmail.includes('@') || password.length < 8 || isLoading}
+            disabled={!canSubmit}
             className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold text-lg transition-all ${
-              isAvailable && localEmail.includes('@') && password.length >= 8 && !isLoading
+              canSubmit
                 ? 'bg-gradient-to-br from-teal-600 to-[#0f766e] text-white hover:shadow-lg'
                 : 'bg-slate-200 text-slate-400 cursor-not-allowed'
             }`}

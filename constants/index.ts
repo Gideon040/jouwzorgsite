@@ -50,6 +50,7 @@ export const PLANS = [
       'Subdomein (naam.jouwzorgsite.nl)',
       'BIG-badge verificatie',
       'SSL certificaat',
+      'Niet zichtbaar in Google',
     ],
   },
   {
@@ -62,7 +63,7 @@ export const PLANS = [
     popular: true,
     features: [
       'Eigen .nl domein (gratis)',
-      'SEO-optimalisatie voor Google',
+      'Zichtbaar in Google',
       'Aanpasbare kleuren & stijl',
       'Kwaliteitskeurmerk widget',
       'Prioriteit support',
