@@ -56,15 +56,12 @@ export const PLANS = [
   {
     id: 'professional',
     naam: 'Professional',
-    prijs: 2495,
-    prijsLabel: '€24,95',
+    prijs: 1995,
+    prijsLabel: '€19,95',
     beschrijving: 'Meest gekozen',
     popular: true,
     features: [
-      '5 pagina\'s',
       'Eigen .nl domein',
-      'Certificaten pagina',
-      'Contact formulier',
       'Alles van Starter',
     ],
   },

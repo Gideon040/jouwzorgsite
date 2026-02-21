@@ -16,7 +16,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { siteId } = await request.json();
+    const { siteId, plan, customDomain } = await request.json();
+    const selectedPlan = plan === 'professional' ? 'professional' : 'starter';
 
     if (!siteId) {
       return NextResponse.json(
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
       description: 'JouwZorgSite - Proefperiode activeren',
       redirectUrl: `${baseUrl}/checkout/return?siteId=${siteId}`,
       webhookUrl: `${baseUrl}/api/mollie/webhook`,
-      metadata: JSON.stringify({ siteId, userId: user.id }),
+      metadata: JSON.stringify({ siteId, userId: user.id, plan: selectedPlan, customDomain: customDomain || undefined }),
     }) as { _links: { checkout?: { href: string } } };
 
     // Create or update subscription record
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
         .from('subscriptions')
         .update({
           mollie_customer_id: customer.id,
+          plan: selectedPlan,
           status: 'pending',
         })
         .eq('id', existingSub.id);
@@ -93,7 +95,7 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           site_id: siteId,
           mollie_customer_id: customer.id,
-          plan: 'starter',
+          plan: selectedPlan,
           status: 'pending',
         });
     }

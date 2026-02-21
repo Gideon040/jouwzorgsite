@@ -14,8 +14,11 @@ interface CheckoutSectionProps {
   onComplete: () => void;
 }
 
+type PlanChoice = 'starter' | 'professional';
+
 export function CheckoutSection({ site, content, email, onBack, onComplete }: CheckoutSectionProps) {
   const router = useRouter();
+  const [selectedPlan, setSelectedPlan] = useState<PlanChoice>('professional');
   const [subdomain, setSubdomain] = useState(site.subdomain);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -23,14 +26,15 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // Custom domain state - nu optioneel
-  const [wantCustomDomain, setWantCustomDomain] = useState(false);
+
+  // Custom domain state (only for professional)
   const [customDomain, setCustomDomain] = useState('');
   const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
   const [isCheckingDomain, setIsCheckingDomain] = useState(false);
   const [domainError, setDomainError] = useState<string | null>(null);
-  const [domainPrice, setDomainPrice] = useState('€14,95/jaar');
+
+  const planPrijs = selectedPlan === 'professional' ? '€19,95' : '€14,95';
+  const planPrijsCent = selectedPlan === 'professional' ? '19.95' : '14.95';
 
   // Check subdomain availability via API
   useEffect(() => {
@@ -42,12 +46,12 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
     const timer = setTimeout(async () => {
       setIsChecking(true);
       setError(null);
-      
+
       try {
         const supabase = createClient();
         const { data, error } = await supabase
           .rpc('is_subdomain_available', { check_subdomain: subdomain.toLowerCase() });
-        
+
         if (error) throw error;
         setIsAvailable(data === true);
       } catch (err) {
@@ -64,7 +68,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
   // Check custom domain availability via TransIP API
   const checkCustomDomain = async (domain: string) => {
     if (!domain || !domain.includes('.')) return;
-    
+
     setIsCheckingDomain(true);
     try {
       const response = await fetch('/api/domains/check', {
@@ -72,15 +76,14 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ domain }),
       });
-      
+
       const data = await response.json();
-      
+
       if (data.error) {
         setDomainError(data.error);
         setDomainAvailable(false);
       } else {
         setDomainAvailable(data.available);
-        setDomainPrice(data.priceFormatted || '€14,95/jaar');
         setDomainError(null);
       }
     } catch (err) {
@@ -94,12 +97,12 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
 
   const handleSubmit = async () => {
     if (!isAvailable || !localEmail.includes('@') || password.length < 8) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     const supabase = createClient();
-    
+
     try {
       // 1. Create Supabase account
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -162,7 +165,11 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
       const mollieRes = await fetch('/api/mollie/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ siteId: siteData.id }),
+        body: JSON.stringify({
+          siteId: siteData.id,
+          plan: selectedPlan,
+          customDomain: selectedPlan === 'professional' && customDomain && domainAvailable ? customDomain : undefined,
+        }),
       });
 
       const mollieData = await mollieRes.json();
@@ -195,10 +202,10 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             Laatste stap!
           </h1>
           <p className="text-slate-500">
-            Maak je account aan en je website gaat direct online
+            Kies je abonnement en maak je account aan
           </p>
         </div>
-        
+
         {/* Back button */}
         <button
           onClick={onBack}
@@ -207,10 +214,72 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
           <span className="material-symbols-outlined text-sm">arrow_back</span>
           Terug naar verificatie
         </button>
-        
+
+        {/* Plan Selection */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {/* Starter */}
+          <button
+            onClick={() => setSelectedPlan('starter')}
+            className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+              selectedPlan === 'starter'
+                ? 'border-teal-600 bg-teal-50/50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            {selectedPlan === 'starter' && (
+              <span className="absolute top-3 right-3 material-symbols-outlined text-teal-600 text-lg">check_circle</span>
+            )}
+            <div className="text-sm font-semibold text-slate-900">Starter</div>
+            <div className="text-xl font-bold text-slate-900 mt-1">€14,95<span className="text-sm font-normal text-slate-500">/mnd</span></div>
+            <ul className="mt-3 space-y-1.5">
+              <li className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
+                Professionele website
+              </li>
+              <li className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
+                naam.jouwzorgsite.nl
+              </li>
+              <li className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
+                BIG-badge & SSL
+              </li>
+            </ul>
+          </button>
+
+          {/* Professional */}
+          <button
+            onClick={() => setSelectedPlan('professional')}
+            className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+              selectedPlan === 'professional'
+                ? 'border-teal-600 bg-teal-50/50'
+                : 'border-slate-200 bg-white hover:border-slate-300'
+            }`}
+          >
+            <span className="absolute -top-2.5 left-3 px-2 py-0.5 bg-teal-600 text-white text-[10px] font-bold uppercase tracking-wide rounded-full">
+              Populair
+            </span>
+            {selectedPlan === 'professional' && (
+              <span className="absolute top-3 right-3 material-symbols-outlined text-teal-600 text-lg">check_circle</span>
+            )}
+            <div className="text-sm font-semibold text-slate-900">Professional</div>
+            <div className="text-xl font-bold text-slate-900 mt-1">€19,95<span className="text-sm font-normal text-slate-500">/mnd</span></div>
+            <ul className="mt-3 space-y-1.5">
+              <li className="flex items-center gap-1.5 text-xs text-slate-600">
+                <span className="material-symbols-outlined text-emerald-500 text-sm">check</span>
+                Alles van Starter
+              </li>
+              <li className="flex items-center gap-1.5 text-xs font-medium text-slate-900">
+                <span className="material-symbols-outlined text-teal-600 text-sm">add_circle</span>
+                Eigen .nl domein
+              </li>
+            </ul>
+          </button>
+        </div>
+
         {/* Form Card */}
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-8">
-          
+
           {/* Subdomain */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -247,80 +316,63 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               </p>
             )}
           </div>
-          
-          {/* Custom domain toggle */}
-          <div className="mb-6 p-4 bg-slate-50 rounded-xl">
-            <label className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-slate-500">language</span>
-                <div>
-                  <span className="font-medium text-slate-700">Eigen .nl domein</span>
-                  <p className="text-xs text-slate-400">Bijvoorbeeld: {subdomain || 'jouw-naam'}.nl</p>
-                </div>
+
+          {/* Custom domain — only for professional */}
+          {selectedPlan === 'professional' && (
+            <div className="mb-6 p-4 bg-teal-50/50 border border-teal-100 rounded-xl">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-teal-600 text-lg">language</span>
+                <span className="text-sm font-medium text-slate-700">Eigen .nl domein vastleggen</span>
               </div>
-              <div className="relative">
+              <div className="flex gap-2">
                 <input
-                  type="checkbox"
-                  checked={wantCustomDomain}
-                  onChange={(e) => setWantCustomDomain(e.target.checked)}
-                  className="sr-only peer"
+                  type="text"
+                  value={customDomain}
+                  onChange={(e) => {
+                    setCustomDomain(e.target.value.toLowerCase());
+                    setDomainAvailable(null);
+                    setDomainError(null);
+                  }}
+                  placeholder={`${subdomain || 'jouw-naam'}.nl`}
+                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:border-teal-600 outline-none bg-white"
                 />
-                <div className="w-11 h-6 bg-slate-200 peer-focus:ring-4 peer-focus:ring-teal-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                <button
+                  onClick={() => checkCustomDomain(customDomain)}
+                  disabled={!customDomain.includes('.') || isCheckingDomain}
+                  className={`px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                    customDomain.includes('.') && !isCheckingDomain
+                      ? 'bg-slate-900 text-white hover:bg-slate-800'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {isCheckingDomain ? (
+                    <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
+                  ) : (
+                    'Check'
+                  )}
+                </button>
               </div>
-            </label>
-            
-            {wantCustomDomain && (
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Welk domein wil je?
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={customDomain}
-                    onChange={(e) => {
-                      setCustomDomain(e.target.value.toLowerCase());
-                      setDomainAvailable(null);
-                      setDomainError(null);
-                    }}
-                    placeholder="mijn-naam.nl"
-                    className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg focus:border-teal-600 outline-none"
-                  />
-                  <button
-                    onClick={() => checkCustomDomain(customDomain)}
-                    disabled={!customDomain.includes('.') || isCheckingDomain}
-                    className={`px-4 py-2.5 rounded-lg font-medium transition-colors ${
-                      customDomain.includes('.') && !isCheckingDomain
-                        ? 'bg-slate-900 text-white hover:bg-slate-800'
-                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                    }`}
-                  >
-                    {isCheckingDomain ? (
-                      <span className="material-symbols-outlined animate-spin text-base">progress_activity</span>
-                    ) : (
-                      'Check'
-                    )}
-                  </button>
-                </div>
-                {domainError && (
-                  <p className="text-xs text-red-500 mt-2">{domainError}</p>
-                )}
-                {domainAvailable === true && (
-                  <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-xs">check_circle</span>
-                    {customDomain} is beschikbaar voor {domainPrice}
-                  </p>
-                )}
-                {domainAvailable === false && !domainError && (
-                  <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-xs">error</span>
-                    Dit domein is niet beschikbaar
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-          
+              {domainError && (
+                <p className="text-xs text-red-500 mt-2">{domainError}</p>
+              )}
+              {domainAvailable === true && (
+                <p className="text-xs text-emerald-600 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs">check_circle</span>
+                  {customDomain} is beschikbaar!
+                </p>
+              )}
+              {domainAvailable === false && !domainError && (
+                <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs">error</span>
+                  Dit domein is niet beschikbaar
+                </p>
+              )}
+              <p className="text-xs text-slate-400 mt-2">
+                Optioneel — je kunt dit ook later doen vanuit je dashboard.
+              </p>
+            </div>
+          )}
+
           {/* Email */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -334,7 +386,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-600 outline-none transition-colors"
             />
           </div>
-          
+
           {/* Password */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-slate-700 mb-2">
@@ -353,7 +405,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               </p>
             )}
           </div>
-          
+
           {/* Error message */}
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -363,21 +415,23 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               </p>
             </div>
           )}
-          
+
           {/* Pricing summary */}
           <div className="bg-slate-50 rounded-xl p-5 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-slate-600">JouwZorgSite abonnement</span>
-              <span className="font-bold text-slate-900">€14,95/mnd</span>
+              <span className="text-slate-600">
+                JouwZorgSite {selectedPlan === 'professional' ? 'Professional' : 'Starter'}
+              </span>
+              <span className="font-bold text-slate-900">{planPrijs}/mnd</span>
             </div>
             <div className="flex items-center justify-between text-sm text-slate-500">
-              <span>Subdomein {subdomain}.jouwzorgsite.nl</span>
+              <span>{subdomain}.jouwzorgsite.nl</span>
               <span className="text-emerald-600 font-medium">Inbegrepen</span>
             </div>
-            {wantCustomDomain && customDomain && domainAvailable && (
+            {selectedPlan === 'professional' && customDomain && domainAvailable && (
               <div className="flex items-center justify-between text-sm text-slate-500 mt-2">
-                <span>Domein {customDomain}</span>
-                <span className="text-slate-900 font-medium">{domainPrice}</span>
+                <span>{customDomain}</span>
+                <span className="text-emerald-600 font-medium">Inbegrepen</span>
               </div>
             )}
             <hr className="my-3 border-slate-200" />
@@ -386,10 +440,10 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               <span className="font-bold text-emerald-600">€0,01</span>
             </div>
             <p className="text-xs text-slate-400 mt-2">
-              Eenmalig €0,01 om je betaalmethode te verifiëren. 14 dagen gratis, daarna €14,95/maand{wantCustomDomain && domainAvailable ? ` + ${domainPrice} domein` : ''}. Elk moment opzegbaar.
+              Eenmalig €0,01 om je betaalmethode te verifiëren. 14 dagen gratis, daarna {planPrijs}/maand. Elk moment opzegbaar.
             </p>
           </div>
-          
+
           {/* Submit */}
           <button
             onClick={handleSubmit}
@@ -412,7 +466,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
               </>
             )}
           </button>
-          
+
           {/* Terms */}
           <p className="text-xs text-slate-400 text-center mt-4">
             Door te registreren ga je akkoord met onze{' '}
@@ -421,7 +475,7 @@ export function CheckoutSection({ site, content, email, onBack, onComplete }: Ch
             <a href="/privacy" className="underline hover:text-slate-600">privacybeleid</a>.
           </p>
         </div>
-        
+
         {/* Trust badges */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-slate-500">
           <div className="flex items-center gap-2">

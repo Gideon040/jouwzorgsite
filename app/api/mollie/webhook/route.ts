@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const payment = await getMollieClient().payments.get(paymentId);
     const metadata = typeof payment.metadata === 'string'
       ? JSON.parse(payment.metadata)
-      : payment.metadata as { siteId?: string; userId?: string } | null;
+      : payment.metadata as { siteId?: string; userId?: string; plan?: string; customDomain?: string } | null;
 
     const siteId = metadata?.siteId;
     const userId = metadata?.userId;
@@ -57,15 +57,29 @@ export async function POST(request: NextRequest) {
 
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://jouwzorgsite.nl';
 
+      // Determine amount based on plan
+      const plan = sub.plan || metadata?.plan || 'starter';
+      const amount = plan === 'professional' ? '19.95' : '14.95';
+      const planLabel = plan === 'professional' ? 'Professional' : 'Starter';
+
       const mollieSubscription = await getMollieClient().customerSubscriptions.create({
         customerId: sub.mollie_customer_id,
-        amount: { currency: 'EUR', value: '14.95' },
+        amount: { currency: 'EUR', value: amount },
         interval: '1 month',
         startDate: startDateStr,
-        description: 'JouwZorgSite Starter - Maandelijks',
+        description: `JouwZorgSite ${planLabel} - Maandelijks`,
         webhookUrl: `${baseUrl}/api/mollie/webhook`,
         metadata: JSON.stringify({ siteId, userId }),
       });
+
+      // Save custom domain preference if provided (actual registration happens from dashboard)
+      const customDomain = metadata?.customDomain;
+      if (customDomain && plan === 'professional') {
+        await supabase
+          .from('sites')
+          .update({ custom_domain: customDomain })
+          .eq('id', siteId);
+      }
 
       // Calculate trial period end
       const periodEnd = new Date(startDateStr);
