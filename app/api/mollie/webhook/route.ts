@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js';
-import mollieClient from '@/lib/mollie';
+import { getMollieClient } from '@/lib/mollie';
 
 // Use service role for webhook — no user session available
 function getAdminClient() {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch payment from Mollie to verify and get details
-    const payment = await mollieClient.payments.get(paymentId);
+    const payment = await getMollieClient().payments.get(paymentId);
     const metadata = typeof payment.metadata === 'string'
       ? JSON.parse(payment.metadata)
       : payment.metadata as { siteId?: string; userId?: string } | null;
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://jouwzorgsite.nl';
 
-      const mollieSubscription = await mollieClient.customerSubscriptions.create({
+      const mollieSubscription = await getMollieClient().customerSubscriptions.create({
         customerId: sub.mollie_customer_id,
         amount: { currency: 'EUR', value: '14.95' },
         interval: '1 month',

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import mollieClient from '@/lib/mollie';
+import { getMollieClient } from '@/lib/mollie';
 import { SequenceType } from '@mollie/api-client';
 
 export async function POST(request: NextRequest) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Mollie customer
-    const customer = await mollieClient.customers.create({
+    const customer = await getMollieClient().customers.create({
       name: user.user_metadata?.full_name || user.email || 'Klant',
       email: user.email!,
       metadata: JSON.stringify({ userId: user.id }),
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || 'https://jouwzorgsite.nl';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payment = await (mollieClient.payments.create as any)({
+    const payment = await (getMollieClient().payments.create as any)({
       amount: { currency: 'EUR', value: '0.01' },
       customerId: customer.id,
       sequenceType: SequenceType.first,
