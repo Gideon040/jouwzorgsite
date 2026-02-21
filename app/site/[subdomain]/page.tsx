@@ -15,10 +15,10 @@ interface SitePageProps {
 
 export async function generateMetadata({ params }: SitePageProps) {
   const supabase = await createClient();
-  
+
   const { data: site } = await supabase
     .from('sites')
-    .select('content, beroep, published')
+    .select('content, beroep, published, generated_content')
     .eq('subdomain', params.subdomain.toLowerCase())
     .single();
 
@@ -27,14 +27,19 @@ export async function generateMetadata({ params }: SitePageProps) {
   }
 
   const content = site.content as any;
+  const gen = (site.generated_content || content.generated || {}) as any;
+  const seo = gen.seo as { metaTitle?: string; metaDescription?: string } | undefined;
+
+  const title = seo?.metaTitle || `${content.naam} - ${content.tagline}`;
+  const description = seo?.metaDescription || content.over_mij?.slice(0, 160) || content.tagline;
 
   return {
-    title: `${content.naam} - ${content.tagline}`,
-    description: content.over_mij?.slice(0, 160) || content.tagline,
+    title,
+    description,
     robots: site.published ? 'index, follow' : 'noindex, nofollow',
     openGraph: {
-      title: content.naam,
-      description: content.tagline,
+      title: seo?.metaTitle || content.naam,
+      description: seo?.metaDescription || content.tagline,
       type: 'website',
       images: content.foto ? [{ url: content.foto }] : [],
     },

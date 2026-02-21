@@ -62,9 +62,9 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
       
       {/* Animated background orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-[120px] animate-pulse" />
         <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-violet-500/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/5 rounded-full blur-[150px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/5 rounded-full blur-[150px]" />
       </div>
 
       {/* Floating particles */}
@@ -72,7 +72,7 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
         {[...Array(20)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-orange-400/30 rounded-full"
+            className="absolute w-1 h-1 bg-teal-400/30 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -88,7 +88,7 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
         {/* Main spinner */}
         <div className="relative w-28 h-28 mx-auto mb-10">
           {/* Outer ring */}
-          <div className="absolute inset-0 rounded-full border-2 border-orange-500/20" />
+          <div className="absolute inset-0 rounded-full border-2 border-teal-500/20" />
           <svg className="absolute inset-0 w-28 h-28 -rotate-90" viewBox="0 0 112 112">
             <circle
               cx="56" cy="56" r="54"
@@ -101,15 +101,15 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
             />
             <defs>
               <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#f97316" />
-                <stop offset="100%" stopColor="#ec4899" />
+                <stop offset="0%" stopColor="#0d9488" />
+                <stop offset="100%" stopColor="#2dd4bf" />
               </linearGradient>
             </defs>
           </svg>
           {/* Center icon */}
           <div className="absolute inset-0 flex items-center justify-center">
             <span 
-              className="material-symbols-outlined text-4xl text-orange-400 transition-all duration-500"
+              className="material-symbols-outlined text-4xl text-teal-400 transition-all duration-500"
               key={activeStep}
               style={{ animation: 'iconPop 0.5s ease-out' }}
             >
@@ -135,7 +135,7 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
                 idx < activeStep 
                   ? 'bg-white/5' 
                   : idx === activeStep 
-                    ? 'bg-orange-500/10 border border-orange-500/20' 
+                    ? 'bg-teal-500/10 border border-teal-500/20' 
                     : 'opacity-30'
               }`}
             >
@@ -144,13 +144,13 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
                 idx < activeStep 
                   ? 'bg-emerald-500/20' 
                   : idx === activeStep 
-                    ? 'bg-orange-500/20' 
+                    ? 'bg-teal-500/20' 
                     : 'bg-slate-700/50'
               }`}>
                 {idx < activeStep ? (
                   <span className="material-symbols-outlined text-lg text-emerald-400">check</span>
                 ) : idx === activeStep ? (
-                  <span className="material-symbols-outlined text-lg text-orange-400 animate-pulse">
+                  <span className="material-symbols-outlined text-lg text-teal-400 animate-pulse">
                     {step.icon}
                   </span>
                 ) : (
@@ -172,9 +172,9 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
               {/* Active indicator */}
               {idx === activeStep && (
                 <div className="ml-auto flex gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               )}
             </div>
@@ -184,7 +184,7 @@ export function GeneratingSection({ naam, beroep }: GeneratingSectionProps) {
         {/* Fun fact */}
         <div className={`transition-all duration-400 ${factVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'}`}>
           <div className="inline-flex items-start gap-2 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 max-w-sm">
-            <span className="material-symbols-outlined text-orange-400/60 text-lg mt-0.5 flex-shrink-0">lightbulb</span>
+            <span className="material-symbols-outlined text-teal-400/60 text-lg mt-0.5 flex-shrink-0">lightbulb</span>
             <p className="text-sm text-slate-400 text-left">{FUN_FACTS[factIndex]}</p>
           </div>
         </div>

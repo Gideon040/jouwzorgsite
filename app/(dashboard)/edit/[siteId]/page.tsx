@@ -5,9 +5,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Site, SiteContent, GeneratedContent } from '@/types';
+import { Site, SiteContent, GeneratedContent, Theme } from '@/types';
 import { EditorPanel } from '@/components/dashboard/EditorPanel';
 import { EditablePreview } from '@/components/dashboard/EditablePreview';
+import { revalidateSite } from '@/lib/actions/sites';
 
 interface EditPageProps {
   params: { siteId: string };
@@ -18,6 +19,7 @@ export default function EditPage({ params }: EditPageProps) {
   const [site, setSite] = useState<Site | null>(null);
   const [content, setContent] = useState<SiteContent | null>(null);
   const [generated, setGenerated] = useState<GeneratedContent>({});
+  const [siteTheme, setSiteTheme] = useState<Theme>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'error'>('idle');
@@ -42,6 +44,7 @@ export default function EditPage({ params }: EditPageProps) {
       setSite(s);
       setContent(s.content);
       setGenerated((s.generated_content || {}) as GeneratedContent);
+      setSiteTheme((s.theme || {}) as Theme);
       setIsLoading(false);
     };
     load();
@@ -56,6 +59,12 @@ export default function EditPage({ params }: EditPageProps) {
 
   const handleGeneratedUpdate = useCallback((newGen: GeneratedContent) => {
     setGenerated(newGen);
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, []);
+
+  const handleThemeUpdate = useCallback((newTheme: Theme) => {
+    setSiteTheme(newTheme);
     setHasChanges(true);
     setSaveStatus('idle');
   }, []);
@@ -108,6 +117,7 @@ export default function EditPage({ params }: EditPageProps) {
       .update({
         content: content,
         generated_content: generated,
+        theme: siteTheme,
         updated_at: new Date().toISOString(),
       })
       .eq('id', site.id);
@@ -118,11 +128,15 @@ export default function EditPage({ params }: EditPageProps) {
     } else {
       setSaveStatus('saved');
       setHasChanges(false);
-      setSite(prev => prev ? { ...prev, content, generated_content: generated } : prev);
+      setSite(prev => prev ? { ...prev, content, generated_content: generated, theme: siteTheme } : prev);
+      // Invalidate public site cache
+      if (site.subdomain) {
+        revalidateSite(site.subdomain).catch(() => {});
+      }
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
     setIsSaving(false);
-  }, [site, content, generated]);
+  }, [site, content, generated, siteTheme]);
 
   // ── Cmd+S ────────────────────────────────
   useEffect(() => {
@@ -148,7 +162,7 @@ export default function EditPage({ params }: EditPageProps) {
     );
   }
 
-  const previewSite: Site = { ...site, content, generated_content: generated };
+  const previewSite: Site = { ...site, content, generated_content: generated, theme: siteTheme };
 
   return (
     <div className="h-screen flex flex-col bg-slate-100">
@@ -241,11 +255,13 @@ export default function EditPage({ params }: EditPageProps) {
       <div className="flex flex-1 min-h-0">
         <div className="w-[380px] min-w-[380px] border-r border-slate-200 bg-white overflow-hidden">
           <EditorPanel
-            site={site}
+            site={previewSite}
             content={content}
             generated={generated}
+            siteTheme={siteTheme}
             onContentUpdate={handleContentUpdate}
             onGeneratedUpdate={handleGeneratedUpdate}
+            onThemeUpdate={handleThemeUpdate}
           />
         </div>
 

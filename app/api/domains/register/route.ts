@@ -68,6 +68,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if site already has a custom domain (max 1 per site)
+    const { data: existingDomain } = await supabase
+      .from('custom_domains')
+      .select('id, domain')
+      .eq('site_id', siteId)
+      .in('status', ['active', 'dns_configuring', 'registering'])
+      .limit(1)
+      .maybeSingle();
+
+    if (existingDomain) {
+      return NextResponse.json(
+        { error: `Deze site heeft al een domein: ${existingDomain.domain}` },
+        { status: 400 }
+      );
+    }
+
     const config = getTransIPConfig();
     const price = getDomainPrice(cleanedDomain);
     const tld = getTLD(cleanedDomain);

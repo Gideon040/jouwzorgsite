@@ -20,8 +20,9 @@ import {
 } from '@/components/wizard/steps';
 import { WizardProgress } from '@/components/wizard/WizardProgress';
 import { Button } from '@/components/ui';
-import { SiteContent, Contact, Dienst, Certificaat, Werkervaring, Testimonial } from '@/types';
-import { TemplateId } from '@/constants';
+import { SiteContent, GeneratedContent, Theme, Contact, Dienst, Certificaat, Werkervaring, Testimonial } from '@/types';
+import { TemplateId, getBeroepLabel } from '@/constants';
+import { createClient } from '@/lib/supabase/client';
 
 const TOTAL_STEPS = 11;
 
@@ -75,6 +76,7 @@ export default function WizardPage() {
   const [customDomain, setCustomDomain] = useState('');
   const [wantsCustomDomain, setWantsCustomDomain] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
   const updateContent = (updates: Partial<SiteContent>) => {
@@ -130,20 +132,107 @@ export default function WizardPage() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
+    setIsGenerating(true);
     setSubmitError('');
 
     try {
-      // Import the action
+      const actualBeroep = beroep === 'anders' ? customBeroep : beroep;
+      const subdomain = content.naam?.toLowerCase().replace(/\s+/g, '') || 'mijn-site';
+
+      // Map wizard template to stijlKeuze for edge function
+      const stijlMap: Record<string, string> = {
+        warm: 'warm',
+        modern: 'modern',
+        editorial: 'warm',
+      };
+      const stijlKeuze = stijlMap[templateId] || 'warm';
+
+      // Calculate jaren ervaring
+      const jarenErvaring = content.start_carriere
+        ? new Date().getFullYear() - content.start_carriere
+        : undefined;
+
+      // Step 1: Call edge function to generate AI content
+      let generatedContent: GeneratedContent | undefined;
+      let generatedTemplateId: string = templateId;
+      let generatedTheme: Theme | undefined;
+
+      try {
+        const supabase = createClient();
+        const { data: generated, error: genError } = await supabase.functions.invoke(
+          'generate-site',
+          {
+            body: {
+              naam: content.naam,
+              beroep: actualBeroep,
+              email: content.contact?.email || undefined,
+              telefoon: content.contact?.telefoon || undefined,
+              werkgebied: content.contact?.werkgebied?.length ? content.contact.werkgebied : undefined,
+              diensten: content.diensten?.length ? content.diensten : undefined,
+              certificaten: content.certificaten?.length ? content.certificaten : undefined,
+              werkervaring: content.werkervaring?.length ? content.werkervaring : undefined,
+              expertises: content.expertises?.length ? content.expertises : undefined,
+              jarenErvaring,
+              persoonlijkeNoot: content.over_mij || undefined,
+              tagline: content.tagline || undefined,
+              stijlKeuze,
+            },
+          }
+        );
+
+        if (!genError && generated) {
+          console.log('AI content gegenereerd:', generated);
+          generatedContent = generated.generated_content as GeneratedContent;
+          generatedTheme = generated.theme as Theme;
+          // Use the edge function's template_id (maps to modern template system)
+          if (generated.template_id) {
+            generatedTemplateId = generated.template_id;
+          }
+
+          // Enrich content with AI-generated data
+          const gen = generatedContent;
+          const inputData = generated.input_data || {};
+
+          if (gen?.hero?.subtitel && !content.tagline) {
+            content.tagline = gen.hero.subtitel;
+          }
+          if (gen?.overMij && !content.over_mij) {
+            content.over_mij = `${gen.overMij.intro || ''}\n\n${gen.overMij.body || ''}${gen.overMij.persoonlijk ? '\n\n' + gen.overMij.persoonlijk : ''}`;
+          }
+          if (gen?.diensten?.items && (!content.diensten || content.diensten.length === 0)) {
+            content.diensten = gen.diensten.items;
+          }
+          if (gen?.testimonials?.items && (!content.testimonials || content.testimonials.length === 0)) {
+            content.testimonials = gen.testimonials.items.map((t: any) => ({
+              tekst: t.tekst,
+              naam: t.naam,
+              functie: t.functie,
+            }));
+          }
+          // Store generated content inside content.generated as well
+          (content as any).generated = gen;
+        } else {
+          console.warn('Edge function fout, doorgaan zonder AI content:', genError);
+        }
+      } catch (genErr) {
+        console.warn('Edge function call mislukt, doorgaan zonder AI content:', genErr);
+      }
+
+      setIsGenerating(false);
+
+      // Step 2: Create the site with generated content
       const { createSite } = await import('@/lib/actions/sites');
-      
+
       const result = await createSite({
-        subdomain: content.naam?.toLowerCase().replace(/\s+/g, '') || 'mijn-site',
-        template_id: templateId,
-        beroep: beroep === 'anders' ? customBeroep : beroep,
+        subdomain,
+        template_id: generatedTemplateId,
+        beroep: actualBeroep,
         content: content as SiteContent,
         custom_domain: customDomain || undefined,
+        generated_content: generatedContent || undefined,
+        theme: generatedTheme || undefined,
       });
-      
+
       if (result.error) {
         setSubmitError(result.error);
         setIsSubmitting(false);
@@ -163,7 +252,6 @@ export default function WizardPage() {
           });
         } catch (domainError) {
           console.error('Domain registration error:', domainError);
-          // Don't block - site is created, domain can be added later
         }
       }
 
@@ -173,6 +261,7 @@ export default function WizardPage() {
       console.error('Submit error:', error);
       setSubmitError('Er ging iets mis. Probeer het opnieuw.');
       setIsSubmitting(false);
+      setIsGenerating(false);
     }
   };
 
@@ -333,6 +422,19 @@ export default function WizardPage() {
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-100 dark:border-slate-800 overflow-hidden">
             {renderStep()}
           </div>
+
+          {/* Generating state */}
+          {isGenerating && (
+            <div className="p-6 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+                <div>
+                  <p className="font-semibold text-slate-900 dark:text-white">Je website wordt gegenereerd...</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">AI schrijft unieke teksten op basis van jouw profiel. Dit duurt ongeveer 15 seconden.</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Error message */}
           {submitError && (

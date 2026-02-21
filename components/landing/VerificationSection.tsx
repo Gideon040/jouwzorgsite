@@ -115,7 +115,7 @@ export function VerificationSection({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-orange-50">
+    <div className="min-h-screen bg-[#fafaf9]">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-200 px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
@@ -130,7 +130,7 @@ export function VerificationSection({
           <div className="flex items-center gap-3">
             <button
               onClick={onContinue}
-              className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-lg font-bold hover:bg-orange-600 transition-colors"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-br from-teal-600 to-[#0f766e] text-white rounded-lg font-bold transition-colors"
             >
               <span>{hasVerification ? 'Doorgaan' : 'Overslaan'}</span>
               <span className="material-symbols-outlined">arrow_forward</span>
@@ -220,7 +220,7 @@ export function VerificationSection({
                         value={bigSearchName}
                         onChange={(e) => setBigSearchName(e.target.value)}
                         placeholder="Jansen"
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-orange-500 focus:ring-0 outline-none"
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-teal-600 focus:ring-0 outline-none"
                         onKeyDown={(e) => e.key === 'Enter' && handleBigSearch()}
                       />
                     </div>
@@ -231,7 +231,7 @@ export function VerificationSection({
                         value={bigSearchInitials}
                         onChange={(e) => setBigSearchInitials(e.target.value)}
                         placeholder="A.B."
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-orange-500 focus:ring-0 outline-none"
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:border-teal-600 focus:ring-0 outline-none"
                         onKeyDown={(e) => e.key === 'Enter' && handleBigSearch()}
                       />
                     </div>
@@ -366,7 +366,7 @@ export function VerificationSection({
           </div>
 
           {/* Continue section */}
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl p-8 text-center">
+          <div className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl p-8 text-center">
             <h3 className="text-xl font-bold text-slate-900 mb-2">
               {hasVerification ? 'Verificatie toegevoegd!' : 'Verificatie is optioneel'}
             </h3>
@@ -386,7 +386,7 @@ export function VerificationSection({
               </button>
               <button
                 onClick={onContinue}
-                className="flex items-center gap-3 px-8 py-4 bg-orange-500 text-white rounded-xl font-bold text-lg hover:bg-orange-600 transition-all hover:shadow-xl hover:shadow-orange-500/25"
+                className="flex items-center gap-3 px-8 py-4 bg-gradient-to-br from-teal-600 to-[#0f766e] text-white rounded-xl font-bold text-lg transition-all hover:shadow-xl hover:shadow-teal-600/25"
               >
                 {hasVerification ? 'Doorgaan naar checkout' : 'Overslaan en doorgaan'}
                 <span className="material-symbols-outlined">arrow_forward</span>

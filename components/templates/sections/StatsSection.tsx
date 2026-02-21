@@ -15,34 +15,35 @@ interface Stat {
   icon?: string;
 }
 
-export function StatsSection({ 
-  style = 'editorial', 
-  theme, 
-  palette, 
+export function StatsSection({
+  style = 'editorial',
+  theme,
+  palette,
   content,
   generated,
 }: StatsSectionProps) {
-  // Build stats from content
-  const jarenErvaring = getJarenErvaring(content.werkervaring);
-  const aantalDiensten = content.diensten?.length || 0;
-  const aantalCertificaten = content.certificaten?.length || 0;
-  const werkgebieden = content.contact?.werkgebied?.length || 0;
+  // Prefer AI-generated stats, fall back to computed stats from content
+  let stats: Stat[];
 
-  // Generate stats array
-  const stats: Stat[] = [];
-  
-  if (jarenErvaring) {
-    stats.push({ value: `${jarenErvaring}+`, label: 'Jaar ervaring', icon: 'timeline' });
-  }
-  
-  if (aantalDiensten > 0) {
-    stats.push({ value: `${aantalDiensten}`, label: 'Diensten', icon: 'medical_services' });
-  }
-  
-  stats.push({ value: '100%', label: 'Inzet', icon: 'favorite' });
-  
-  if (werkgebieden > 0) {
-    stats.push({ value: `${werkgebieden}`, label: `Regio${werkgebieden > 1 ? "'s" : ''}`, icon: 'location_on' });
+  if (generated?.stats && generated.stats.length >= 2) {
+    stats = generated.stats;
+  } else {
+    const jarenErvaring = getJarenErvaring(content.werkervaring);
+    const aantalDiensten = content.diensten?.length || 0;
+    const werkgebieden = content.contact?.werkgebied?.length || 0;
+
+    const computed: Stat[] = [];
+    if (jarenErvaring) {
+      computed.push({ value: `${jarenErvaring}+`, label: 'Jaar ervaring', icon: 'timeline' });
+    }
+    if (aantalDiensten > 0) {
+      computed.push({ value: `${aantalDiensten}`, label: 'Diensten', icon: 'medical_services' });
+    }
+    computed.push({ value: '100%', label: 'Inzet', icon: 'favorite' });
+    if (werkgebieden > 0) {
+      computed.push({ value: `${werkgebieden}`, label: `Regio${werkgebieden > 1 ? "'s" : ''}`, icon: 'location_on' });
+    }
+    stats = computed;
   }
 
   // Don't render if no meaningful stats
@@ -65,6 +66,8 @@ export function StatsSection({
       return <StatsCards {...{ theme, palette, stats }} />;
     case 'minimal':
       return <StatsMinimal {...{ theme, palette, stats }} />;
+    case 'serene':
+      return <StatsSerene {...{ theme, palette, stats }} />;
     default:
       return <StatsEditorial {...{ theme, palette, stats }} />;
   }
@@ -358,6 +361,42 @@ function StatsMinimal({ theme, palette, stats }: any) {
               >
                 <strong style={{ color: palette.primary }}>{stat.value}</strong> {stat.label}
               </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ============================================
+// SERENE - Zen-like, minimaal, veel witruimte
+// ============================================
+function StatsSerene({ theme, palette, stats }: any) {
+  return (
+    <section className="px-6 lg:px-12 py-16" style={{ backgroundColor: theme.colors.background }}>
+      <div className={`max-w-4xl mx-auto ${getRevealClass('up')}`}>
+        <div className="flex flex-wrap justify-center items-baseline gap-x-12 gap-y-8">
+          {stats.map((stat: Stat, i: number) => (
+            <div key={i} className="flex items-baseline gap-3">
+              <span
+                className="text-3xl sm:text-4xl font-light"
+                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+              >
+                {stat.value}
+              </span>
+              <span
+                className="text-[10px] uppercase tracking-[0.2em]"
+                style={{ color: theme.colors.textMuted }}
+              >
+                {stat.label}
+              </span>
+              {i < stats.length - 1 && (
+                <span
+                  className="hidden sm:block w-px h-6 ml-6"
+                  style={{ backgroundColor: theme.colors.border }}
+                />
+              )}
             </div>
           ))}
         </div>

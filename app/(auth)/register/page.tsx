@@ -1,12 +1,9 @@
-// app/(auth)/register/page.tsx
-
 'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { Button, Input, Card, CardContent } from '@/components/ui';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,9 +18,8 @@ export default function RegisterPage() {
     setError('');
     setIsLoading(true);
 
-    // Validate password
-    if (password.length < 6) {
-      setError('Wachtwoord moet minimaal 6 tekens zijn');
+    if (password.length < 8) {
+      setError('Wachtwoord moet minimaal 8 tekens zijn');
       setIsLoading(false);
       return;
     }
@@ -46,120 +42,131 @@ export default function RegisterPage() {
       return;
     }
 
-    // Success - redirect to wizard
     router.push('/wizard');
     router.refresh();
   };
 
   return (
-    <div className="w-full max-w-md">
-      <Card variant="elevated">
-        <CardContent className="p-8">
+    <div className="w-full max-w-sm">
+      <div className="bg-white rounded-2xl border border-stone-200 shadow-xl shadow-stone-200/40 overflow-hidden">
+        <div className="p-8 pb-0">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            <h1 className="text-2xl font-serif text-stone-900 mb-1.5">
               Account aanmaken
             </h1>
-            <p className="text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-stone-500">
               Maak je professionele zorgwebsite in 10 minuten
             </p>
           </div>
 
-          {/* Error message */}
+          {/* Error */}
           {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
-                <span className="material-symbols-outlined text-lg">error</span>
+            <div className="mb-6 p-3.5 rounded-xl bg-red-50 border border-red-100">
+              <p className="text-sm text-red-600 flex items-center gap-2">
+                <span className="material-symbols-outlined text-base">error</span>
                 {error}
               </p>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Volledige naam"
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              placeholder="Jan Jansen"
-              required
-            />
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                Volledige naam
+              </label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Jan Jansen"
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-colors"
+              />
+            </div>
 
-            <Input
-              label="E-mailadres"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="jouw@email.nl"
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                E-mailadres
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jouw@email.nl"
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-colors"
+              />
+            </div>
 
-            <Input
-              label="Wachtwoord"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimaal 6 tekens"
-              hint="Minimaal 6 tekens"
-              required
-            />
+            <div>
+              <label className="block text-sm font-medium text-stone-700 mb-1.5">
+                Wachtwoord
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Minimaal 8 tekens"
+                required
+                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-sm text-stone-900 placeholder:text-stone-400 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-colors"
+              />
+              <p className="text-xs text-stone-400 mt-1">Minimaal 8 tekens</p>
+            </div>
 
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-2.5 pt-1">
               <input
                 type="checkbox"
                 id="terms"
                 required
-                className="mt-1 w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary"
+                className="mt-0.5 w-4 h-4 rounded border-stone-300 text-teal-600 focus:ring-teal-500"
               />
-              <label htmlFor="terms" className="text-sm text-slate-600 dark:text-slate-400">
+              <label htmlFor="terms" className="text-xs text-stone-500 leading-relaxed">
                 Ik ga akkoord met de{' '}
-                <a href="/terms" className="text-primary hover:underline">
-                  algemene voorwaarden
-                </a>{' '}
+                <a href="/terms" className="text-teal-600 hover:underline">algemene voorwaarden</a>{' '}
                 en het{' '}
-                <a href="/privacy" className="text-primary hover:underline">
-                  privacybeleid
-                </a>
+                <a href="/privacy" className="text-teal-600 hover:underline">privacybeleid</a>
               </label>
             </div>
 
-            <Button type="submit" className="w-full" isLoading={isLoading}>
-              Account aanmaken
-            </Button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-br from-teal-600 to-[#0f766e] text-white font-semibold text-sm shadow-sm shadow-teal-600/20 hover:shadow-md hover:shadow-teal-600/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <>
+                  <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
+                  Bezig...
+                </>
+              ) : (
+                'Account aanmaken'
+              )}
+            </button>
           </form>
 
-          {/* Features */}
-          <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <span className="material-symbols-outlined text-primary text-lg">check_circle</span>
-                Gratis uitproberen
+          {/* Trust indicators */}
+          <div className="mt-6 grid grid-cols-2 gap-2.5">
+            {['Gratis uitproberen', 'Geen creditcard', 'Direct online', 'AVG-compliant'].map((item) => (
+              <div key={item} className="flex items-center gap-1.5 text-xs text-stone-500">
+                <span className="material-symbols-outlined text-teal-500 text-sm">check_circle</span>
+                {item}
               </div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <span className="material-symbols-outlined text-primary text-lg">check_circle</span>
-                Geen creditcard
-              </div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <span className="material-symbols-outlined text-primary text-lg">check_circle</span>
-                Direct online
-              </div>
-              <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                <span className="material-symbols-outlined text-primary text-lg">check_circle</span>
-                AVG-compliant
-              </div>
-            </div>
+            ))}
           </div>
+        </div>
 
-          {/* Login link */}
-          <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-6">
+        {/* Footer */}
+        <div className="mt-6 px-8 py-4 bg-stone-50 border-t border-stone-100 text-center">
+          <p className="text-sm text-stone-500">
             Al een account?{' '}
-            <Link href="/login" className="text-primary font-semibold hover:underline">
+            <Link href="/login" className="text-teal-600 font-semibold hover:text-teal-700 transition-colors">
               Log in
             </Link>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -4,53 +4,15 @@
 
 'use client';
 
-import { BaseSectionProps, getRevealClass, getJarenErvaring } from './types';
+import { BaseSectionProps, WerkervaringStyle, getRevealClass, getJarenErvaring, resolvePalette } from './types';
 import { ThemeConfig } from '../themes';
 import { Werkervaring } from '@/types';
-
-// ============================================
-// STYLE TYPE — matches edge function naming pattern
-// Edge function uses: pattern: 'numbered', variants: 3
-// → generates: editorial-1, editorial-2, editorial-3, etc.
-// ============================================
-
-export type WerkervaringStyle =
-  | 'editorial-1' | 'editorial-2' | 'editorial-3'
-  | 'proactief-1' | 'proactief-2' | 'proactief-3'
-  | 'portfolio-1' | 'portfolio-2' | 'portfolio-3'
-  | 'mindoor-1' | 'mindoor-2' | 'mindoor-3'
-  | 'serene-1' | 'serene-2' | 'serene-3'
-  | 'timeline' | 'cards' | 'compact';
 
 interface WerkervaringSectionProps extends BaseSectionProps {
   style?: WerkervaringStyle;
 }
 
-// ============================================
-// PALETTE WITH FALLBACKS
-// ============================================
-
-interface ResolvedPalette {
-  primary: string;
-  primaryHover: string;
-  primaryLight: string;
-  primaryDark: string;
-  accent: string;
-  accentLight: string;
-}
-
-function resolvePalette(
-  palette: BaseSectionProps['palette']
-): ResolvedPalette {
-  return {
-    primary: palette.primary,
-    primaryHover: palette.primaryHover,
-    primaryLight: palette.primaryLight,
-    primaryDark: palette.primaryDark,
-    accent: palette.accent ?? palette.primary,
-    accentLight: palette.accentLight ?? palette.primaryLight,
-  };
-}
+// resolvePalette imported from ./types
 
 // ============================================
 // VARIANT PROPS — shared across all sub-components
@@ -58,7 +20,7 @@ function resolvePalette(
 
 interface VariantProps {
   theme: ThemeConfig;
-  pal: ResolvedPalette;
+  pal: ReturnType<typeof resolvePalette>;
   werkervaring: Werkervaring[];
   titel: string;
   intro: string;
@@ -145,7 +107,7 @@ function SectionHeader({
   titel: string;
   intro: string;
   theme: ThemeConfig;
-  pal: ResolvedPalette;
+  pal: ReturnType<typeof resolvePalette>;
   labelText?: string;
   labelVariant?: 'text' | 'pill' | 'outline';
   align?: 'center' | 'left';
@@ -178,7 +140,7 @@ function HuidigBadge({
   className = '',
 }: {
   variant?: 'text' | 'pill-white' | 'pill-accent' | 'dot-mono' | 'check';
-  pal: ResolvedPalette;
+  pal: ReturnType<typeof resolvePalette>;
   className?: string;
 }) {
   if (variant === 'pill-white') {
@@ -224,7 +186,7 @@ function HuidigBadge({
 }
 
 /** Trust badges bar (BIG, DBA, etc.) */
-function TrustBar({ theme, pal }: { theme: ThemeConfig; pal: ResolvedPalette }) {
+function TrustBar({ theme, pal }: { theme: ThemeConfig; pal: ReturnType<typeof resolvePalette> }) {
   const badges = [
     { label: 'BIG-geregistreerd', icon: 'verified' },
     { label: 'DBA-compliant', icon: 'gavel' },
@@ -260,11 +222,8 @@ export function WerkervaringSection({
   const pal = resolvePalette(palette);
   const jarenErvaring = getJarenErvaring(content.werkervaring);
 
-  // Title/intro: no generated werkervaring section in edge function,
-  // so use sensible defaults. If generated ever adds werkervaring, it'll work.
-  const genWerkervaring = (generated as Record<string, { titel?: string; intro?: string } | undefined>)?.werkervaring;
-  const titel = genWerkervaring?.titel ?? 'Mijn Ervaring';
-  const intro = genWerkervaring?.intro ?? 'Een overzicht van mijn professionele achtergrond in de zorg.';
+  const titel = generated?.werkervaring?.titel ?? 'Mijn Ervaring';
+  const intro = generated?.werkervaring?.intro ?? 'Een overzicht van mijn professionele achtergrond in de zorg.';
 
   const props: VariantProps = { theme, pal, werkervaring, titel, intro, jarenErvaring };
 
@@ -284,9 +243,6 @@ export function WerkervaringSection({
     case 'serene-1': return <Serene1 {...props} />;
     case 'serene-2': return <Serene2 {...props} />;
     case 'serene-3': return <Serene3 {...props} />;
-    case 'timeline': return <GenericTimeline {...props} />;
-    case 'cards': return <GenericCards {...props} />;
-    case 'compact': return <GenericCompact {...props} />;
     default: return <Editorial1 {...props} />;
   }
 }
@@ -320,7 +276,7 @@ function Editorial1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
                 />
                 {/* Card */}
                 <div
-                  className="p-6 rounded-xl border transition-all duration-300 group-hover:border-l-[3px]"
+                  className="p-6 border transition-all duration-300 group-hover:border-l-[3px]"
                   style={{
                     backgroundColor: huidig ? `${pal.primary}08` : theme.colors.surface,
                     borderColor: huidig ? pal.primary : theme.colors.border,
@@ -391,7 +347,7 @@ function Editorial2({ theme, pal, werkervaring, titel, intro }: VariantProps) {
                   el.style.background = `${pal.primary}08`;
                   el.style.margin = '0 -16px';
                   el.style.padding = '28px 16px';
-                  el.style.borderRadius = '12px';
+                  el.style.borderRadius = '0';
                 }}
                 onMouseLeave={(e) => {
                   const el = e.currentTarget;
@@ -541,7 +497,7 @@ function Proactief1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
             return (
               <div
                 key={i}
-                className={`grid grid-cols-[56px_1fr_auto] items-start gap-5 p-6 rounded-[20px] border-l-4 border-transparent transition-all duration-[350ms] ${getRevealClass('up', i + 1)}`}
+                className={`grid grid-cols-[56px_1fr_auto] items-start gap-5 p-6 border-l-4 border-transparent transition-all duration-[350ms] ${getRevealClass('up', i + 1)}`}
                 style={{ backgroundColor: theme.colors.surface, boxShadow: '0 2px 10px rgba(0,0,0,0.04)' }}
                 onMouseEnter={(e) => {
                   const el = e.currentTarget;
@@ -1085,7 +1041,7 @@ function Mindoor2({ theme, pal, werkervaring, titel, intro }: VariantProps) {
           </h2>
           <p className="text-[15px] leading-[1.7] mb-7" style={{ color: theme.colors.textMuted }}>{intro}</p>
           <button
-            className="inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold rounded-[28px] text-white border-none cursor-pointer transition-all duration-[250ms]"
+            className="inline-flex items-center gap-2 px-7 py-3 text-sm font-semibold rounded-full text-white border-none cursor-pointer transition-all duration-[250ms]"
             style={{ backgroundColor: pal.accent }}
           >
             Neem contact op
@@ -1420,83 +1376,6 @@ function Serene3({ theme, pal, werkervaring, titel, intro }: VariantProps) {
               </div>
             );
           })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-
-// ============================================
-// GENERIC: Timeline
-// ============================================
-function GenericTimeline({ theme, pal, werkervaring, titel }: VariantProps) {
-  return (
-    <section id="werkervaring" className="py-20 px-6 md:px-12" style={{ backgroundColor: theme.colors.backgroundAlt }}>
-      <div className="max-w-3xl mx-auto">
-        <div className={`text-center mb-12 ${getRevealClass('up')}`}>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>{titel}</h2>
-        </div>
-        <div className="relative border-l-2 ml-4" style={{ borderColor: pal.primary }}>
-          {werkervaring.map((item, i) => {
-            const huidig = isHuidig(item);
-            return (
-              <div key={i} className={`relative pl-8 pb-8 last:pb-0 ${getRevealClass('left', i + 1)}`}>
-                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full" style={{ backgroundColor: huidig ? pal.primary : theme.colors.surface, border: `3px solid ${pal.primary}` }} />
-                <span className="text-xs font-bold px-2 py-1 rounded mb-2 inline-block" style={{ backgroundColor: `${pal.primary}15`, color: pal.primary }}>{formatPeriode(item)}</span>
-                <h3 className="text-lg font-bold" style={{ color: theme.colors.text }}>{item.functie}</h3>
-                <p className="text-sm font-medium" style={{ color: pal.primary }}>{item.werkgever}</p>
-                {item.beschrijving && <p className="text-sm mt-2" style={{ color: theme.colors.textMuted }}>{item.beschrijving}</p>}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-
-// ============================================
-// GENERIC: Cards
-// ============================================
-function GenericCards({ theme, pal, werkervaring, titel }: VariantProps) {
-  return (
-    <section id="werkervaring" className="py-20 px-6 md:px-12" style={{ backgroundColor: theme.colors.background }}>
-      <div className="max-w-6xl mx-auto">
-        <div className={`text-center mb-12 ${getRevealClass('up')}`}>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>{titel}</h2>
-        </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {werkervaring.slice(0, 6).map((item, i) => (
-            <div key={i} className={`p-6 rounded-xl border ${getRevealClass('up', i + 1)}`} style={{ backgroundColor: theme.colors.surface, borderColor: theme.colors.border }}>
-              <span className="text-xs font-medium px-2 py-1 rounded-full inline-block mb-3" style={{ backgroundColor: `${pal.primary}15`, color: pal.primary }}>{formatPeriode(item)}</span>
-              <h3 className="font-bold mb-1" style={{ color: theme.colors.text }}>{item.functie}</h3>
-              <p className="text-sm" style={{ color: theme.colors.textMuted }}>{item.werkgever}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-
-// ============================================
-// GENERIC: Compact
-// ============================================
-function GenericCompact({ theme, pal, werkervaring }: VariantProps) {
-  return (
-    <section id="werkervaring" className="py-12 px-6 border-y" style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.backgroundAlt }}>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-wrap items-center justify-center gap-6">
-          <span className="font-bold" style={{ color: theme.colors.text }}>Ervaring:</span>
-          {werkervaring.slice(0, 4).map((item, i) => (
-            <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ backgroundColor: theme.colors.surface }}>
-              <span className="font-medium" style={{ color: theme.colors.text }}>{item.functie}</span>
-              <span className="text-sm" style={{ color: theme.colors.textMuted }}>@ {item.werkgever}</span>
-            </div>
-          ))}
         </div>
       </div>
     </section>

@@ -53,7 +53,7 @@ export type HeroStyle =
   | 'fullwidth' 
   | 'minimal';
 
-export type StatsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'grid' | 'inline' | 'cards' | 'minimal';
+export type StatsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'grid' | 'inline' | 'cards' | 'minimal';
 export type DienstenStyle = 
   | 'editorial' 
   | 'editorial-2' 
@@ -74,23 +74,27 @@ export type DienstenStyle =
   | 'numbered' 
   | 'list' 
   | 'grid';
-export type OverStyle = 
+export type OverStyle =
   | 'editorial' | 'editorial-2' | 'editorial-3'
   | 'proactief' | 'proactief-2' | 'proactief-3'
   | 'portfolio' | 'portfolio-2' | 'portfolio-3'
   | 'mindoor' | 'mindoor-2' | 'mindoor-3'
-  | 'serene' | 'serene-2' | 'serene-3'
-  | 'split' | 'centered' | 'timeline';
-export type CredentialsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'full' | 'compact' | 'cards' | 'badges';
-export type WerkervaringStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'timeline' | 'cards' | 'compact';
+  | 'serene' | 'serene-2' | 'serene-3';
+export type CredentialsStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene';
+export type WerkervaringStyle =
+  | 'editorial-1' | 'editorial-2' | 'editorial-3'
+  | 'proactief-1' | 'proactief-2' | 'proactief-3'
+  | 'portfolio-1' | 'portfolio-2' | 'portfolio-3'
+  | 'mindoor-1' | 'mindoor-2' | 'mindoor-3'
+  | 'serene-1' | 'serene-2' | 'serene-3';
 export type VoorWieStyle =
   | 'editorial' | 'editorial-2' | 'editorial-3'
   | 'proactief' | 'proactief-2' | 'proactief-3'
   | 'portfolio' | 'portfolio-2' | 'portfolio-3'
   | 'mindoor' | 'mindoor-2' | 'mindoor-3'
-  | 'serene' | 'serene-2' | 'serene-3'
-  | 'cards' | 'grid' | 'list';
-export type QuoteStyle = 'banner' | 'minimal' | 'dark' | 'serene';export type WerkwijzeStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'steps' | 'timeline' | 'cards' | 'bento';
+  | 'serene' | 'serene-2' | 'serene-3';
+export type QuoteStyle = 'banner' | 'minimal' | 'dark' | 'serene';
+export type WerkwijzeStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene';
 export type TestimonialsStyle = 
   | 'editorial' | 'editorial-2' | 'editorial-3'
   | 'proactief' | 'proactief-2' | 'proactief-3'
@@ -137,8 +141,8 @@ export type ContactStyle =
   | 'split' 
   | 'centered' 
   | 'form-only';
-export type FooterStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'simple' | 'detailed' | 'minimal';
-export type HeaderStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'solid' | 'transparent' | 'floating';
+export type FooterStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'simple' | 'detailed' | 'minimal';
+export type HeaderStyle = 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene' | 'solid' | 'transparent' | 'floating';
 
 // ============================================
 // SECTION CONFIGURATION
@@ -375,4 +379,172 @@ export const DEFAULT_FAQS = [
     vraag: 'Bent u BIG-geregistreerd?',
     antwoord: 'Ja, ik ben BIG-geregistreerd en voldoe aan alle wettelijke eisen voor zorgverlening. Mijn registratie is te controleren via het BIG-register.',
   },
+];
+
+// ============================================
+// DETERMINISTIC HASH HELPER
+// ============================================
+// Voorkomt hydration mismatch — geeft altijd dezelfde waarde voor dezelfde input
+
+export function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0; // Convert to 32-bit integer
+  }
+  return Math.abs(hash);
+}
+
+// ============================================
+// PALETTE RESOLVE HELPER
+// ============================================
+// Convenience voor secties die optionele palette velden gebruiken
+
+export function resolvePalette(palette: PaletteColors) {
+  return {
+    primary: palette.primary,
+    primaryHover: palette.primaryHover,
+    primaryLight: palette.primaryLight,
+    primaryDark: palette.primaryDark,
+    accent: palette.accent ?? palette.primary,
+    accentLight: palette.accentLight ?? palette.primaryLight,
+    bg: palette.bg ?? '#ffffff',
+    bgAlt: palette.bgAlt ?? '#fafafa',
+    text: palette.text ?? '#1a1a1a',
+    textMuted: palette.textMuted ?? '#6b7280',
+    border: palette.border ?? '#e5e7eb',
+  };
+}
+
+// ============================================
+// HERO IMAGE POOLS
+// ============================================
+// Per beroep meerdere hero images voor variatie
+// Alle images: landscape, professioneel, zorg-gerelateerd
+
+export const HERO_IMAGE_POOLS: Record<string, string[]> = {
+  verpleegkundige: [
+    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1551190822-a9ce113ac100?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1920&q=80',
+  ],
+  verzorgende_ig: [
+    'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1581594549595-35f6edc7b762?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1920&q=80',
+  ],
+  kraamverzorgende: [
+    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1504439468489-c8920d796a29?auto=format&fit=crop&w=1920&q=80',
+  ],
+  ggz: [
+    'https://images.unsplash.com/photo-1527137342181-19aab11a8ee8?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1920&q=80',
+  ],
+  fysiotherapeut: [
+    'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&w=1920&q=80',
+  ],
+  thuiszorg: [
+    'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1581594549595-35f6edc7b762?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=1920&q=80',
+  ],
+  ouderenzorg: [
+    'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1517939782552-3e3e3c8f0a47?auto=format&fit=crop&w=1920&q=80',
+  ],
+  default: [
+    'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=1920&q=80',
+    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1920&q=80',
+  ],
+};
+
+// ============================================
+// DIENSTEN SFEER IMAGES
+// ============================================
+
+export const DIENSTEN_SFEER_IMAGES = [
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80',
+  'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=800&q=80',
+];
+
+// ============================================
+// FAQ IMAGES
+// ============================================
+
+export const FAQ_IMAGES = {
+  zorg1: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
+  zorg2: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=800&q=80',
+  zorg3: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=800&q=80',
+  zorg4: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80',
+  zorg5: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80',
+} as const;
+
+// ============================================
+// QUOTE SFEER IMAGES
+// ============================================
+
+export const QUOTE_SFEER_IMAGES = [
+  'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1920&q=80',
+];
+
+// ============================================
+// TESTIMONIALS SFEER IMAGES
+// ============================================
+
+export const TESTIMONIALS_SFEER_IMAGES = [
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80',
+  'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=700&q=80',
+  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=700&q=80',
+];
+
+// ============================================
+// DOELGROEP IMAGES (for photo-based VoorWie variants)
+// ============================================
+
+export const DOELGROEP_IMAGES: Record<string, string> = {
+  thuiszorg: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=500&h=300&fit=crop',
+  verpleeghuis: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=500&h=300&fit=crop',
+  verzorgingshuis: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=500&h=300&fit=crop',
+  ziekenhuis: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=300&fit=crop',
+  kliniek: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=300&fit=crop',
+  bemiddelaar: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
+  intermediair: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
+  instellingen: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=500&h=300&fit=crop',
+  bemiddelaars: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
+  pgb: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=500&h=300&fit=crop',
+  particulieren: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
+};
+
+// ============================================
+// DEFAULT QUOTES
+// ============================================
+
+export const DEFAULT_QUOTES = [
+  'Zorgen voor wie ooit voor ons zorgde is een van de hoogste eerbetonen.',
+  'In aandacht en rust ligt de ware kracht van zorg.',
+  'Excellentie in zorg komt voort uit passie, precisie en toewijding.',
+  'Goede zorg begint met luisteren.',
+  'De mooiste zorg ontstaat waar vakmanschap en menselijkheid samenkomen.',
+  'Elke dag opnieuw het verschil maken — dát is wat mij drijft.',
 ];

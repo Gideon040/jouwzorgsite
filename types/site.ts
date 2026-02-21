@@ -134,6 +134,12 @@ export interface WerkwijzeContent {
   footer?: string;
 }
 
+// Werkervaring sectie (titel/intro only — actual werkervaring items come from content)
+export interface WerkervaringContent {
+  titel: string;
+  intro?: string;
+}
+
 // Credentials sectie
 export interface CredentialsContent {
   titel: string;
@@ -210,6 +216,7 @@ export interface GeneratedContent {
   diensten?: DienstenContent;
   voorWie?: VoorWieContent;
   werkwijze?: WerkwijzeContent;
+  werkervaring?: WerkervaringContent;
   credentials?: CredentialsContent;
   testimonials?: TestimonialsContent;
   faq?: FaqContent;
@@ -219,20 +226,25 @@ export interface GeneratedContent {
   seo?: SEOContent;
   sections?: SectionConfig[];
   quote?: string;
+  quoteImage?: string;
 }
 
 // ============================================
 // THEME TYPES
 // ============================================
 
-export type ThemePalette = 
+export type ThemePalette =
   | 'sage' | 'lavender' | 'slate' | 'mint' | 'sand' | 'rose' | 'ocean'
   | 'forest' | 'coral' | 'teal'
-  | 'editorial' | 'proactief' | 'portfolio' | 'mindoor';
+  | 'editorial' | 'burgundy' | 'navy' | 'caramel'
+  | 'proactief' | 'electric' | 'sunset' | 'emerald'
+  | 'portfolio' | 'charcoal' | 'midnight' | 'espresso'
+  | 'mindoor' | 'dustyrose' | 'olive' | 'amber'
+  | 'serene' | 'stone' | 'dusk' | 'moss';
 
-export type ThemeFontPairing = 
+export type ThemeFontPairing =
   | 'classic' | 'modern' | 'elegant' | 'friendly' | 'professional'
-  | 'editorial' | 'proactief' | 'portfolio' | 'mindoor'
+  | 'editorial' | 'proactief' | 'portfolio' | 'mindoor' | 'serene'
   | 'soft' | 'clean';
 
 export type ThemeVariant = 

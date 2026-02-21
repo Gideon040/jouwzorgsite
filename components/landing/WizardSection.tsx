@@ -122,7 +122,7 @@ export function WizardSection({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-rose-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#fafaf9] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         
         {/* Progress */}
@@ -130,8 +130,8 @@ export function WizardSection({
           {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`h-2 rounded-full transition-all duration-500 ${
-                s < step ? 'w-12 bg-orange-500' :
-                s === step ? 'w-16 bg-orange-500' :
+                s < step ? 'w-12 bg-teal-600' :
+                s === step ? 'w-16 bg-teal-600' :
                 'w-12 bg-slate-200'
               }`} />
             </div>
@@ -184,7 +184,7 @@ export function WizardSection({
               disabled={!canProceed}
               className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-lg transition-all ${
                 canProceed
-                  ? 'bg-orange-500 text-white hover:bg-orange-600 hover:shadow-lg hover:shadow-orange-500/25'
+                  ? 'bg-gradient-to-br from-teal-600 to-[#0f766e] text-white hover:shadow-lg hover:shadow-teal-600/25'
                   : 'bg-slate-100 text-slate-400 cursor-not-allowed'
               }`}
             >
@@ -224,10 +224,10 @@ function StepNaam({
 }) {
   return (
     <div className="text-center">
-      <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-6">
-        <span className="material-symbols-outlined text-3xl text-orange-600">person</span>
+      <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-6">
+        <span className="material-symbols-outlined text-3xl text-teal-600">person</span>
       </div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">Hoe heet je?</h2>
+      <h2 className="text-2xl font-bold font-serif text-slate-900 mb-2">Hoe heet je?</h2>
       <p className="text-slate-500 mb-8">Je volledige naam zoals je die op je website wilt tonen</p>
       
       <input
@@ -236,7 +236,7 @@ function StepNaam({
         onChange={(e) => setNaam(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder="Bijv. Lisa de Vries"
-        className="w-full px-5 py-4 text-lg border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none transition-colors"
+        className="w-full px-5 py-4 text-lg border-2 border-slate-200 rounded-xl focus:border-teal-600 focus:ring-0 outline-none transition-colors"
         autoFocus
       />
     </div>
@@ -251,10 +251,10 @@ function StepBeroep({
 }) {
   return (
     <div className="text-center">
-      <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-6">
-        <span className="material-symbols-outlined text-3xl text-orange-600">medical_services</span>
+      <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-6">
+        <span className="material-symbols-outlined text-3xl text-teal-600">medical_services</span>
       </div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">Wat is je specialisatie?</h2>
+      <h2 className="text-2xl font-bold font-serif text-slate-900 mb-2">Wat is je specialisatie?</h2>
       <p className="text-slate-500 mb-8">We passen je website aan op je vakgebied</p>
       
       <div className="grid grid-cols-1 gap-3 max-h-[400px] overflow-y-auto">
@@ -263,24 +263,24 @@ function StepBeroep({
             key={b.id}
             onClick={() => setBeroep(b.id)}
             className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
-              beroep === b.id 
-                ? 'border-orange-500 bg-orange-50' 
-                : 'border-slate-200 hover:border-orange-300'
+              beroep === b.id
+                ? 'border-teal-600 bg-teal-50'
+                : 'border-slate-200 hover:border-teal-300'
             }`}
           >
             <span className={`material-symbols-outlined text-2xl ${
-              beroep === b.id ? 'text-orange-600' : 'text-slate-400'
+              beroep === b.id ? 'text-teal-600' : 'text-slate-400'
             }`}>
               {b.icon}
             </span>
             <div>
-              <div className={`font-semibold ${beroep === b.id ? 'text-orange-700' : 'text-slate-700'}`}>
+              <div className={`font-semibold ${beroep === b.id ? 'text-teal-700' : 'text-slate-700'}`}>
                 {b.label}
               </div>
               <div className="text-sm text-slate-500">{b.description}</div>
             </div>
             {beroep === b.id && (
-              <span className="material-symbols-outlined text-orange-500 ml-auto">check_circle</span>
+              <span className="material-symbols-outlined text-teal-600 ml-auto">check_circle</span>
             )}
           </button>
         ))}
@@ -311,10 +311,10 @@ function StepProfiel({
   return (
     <div>
       <div className="text-center mb-6">
-        <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-6">
-          <span className="material-symbols-outlined text-3xl text-orange-600">tune</span>
+        <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-6">
+          <span className="material-symbols-outlined text-3xl text-teal-600">tune</span>
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">Vertel meer over jezelf</h2>
+        <h2 className="text-2xl font-bold font-serif text-slate-900 mb-2">Vertel meer over jezelf</h2>
         <p className="text-slate-500">Hoe meer we weten, hoe persoonlijker je website</p>
       </div>
 
@@ -326,7 +326,7 @@ function StepProfiel({
         <select
           value={regio}
           onChange={(e) => setRegio(e.target.value)}
-          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none transition-colors bg-white text-slate-700 appearance-none"
+          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-600 focus:ring-0 outline-none transition-colors bg-white text-slate-700 appearance-none"
           style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center', backgroundSize: '20px' }}
         >
           <option value="">Selecteer je regio</option>
@@ -348,8 +348,8 @@ function StepProfiel({
               onClick={() => setJarenErvaring(e.id)}
               className={`px-4 py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${
                 jarenErvaring === e.id
-                  ? 'border-orange-500 bg-orange-50 text-orange-700'
-                  : 'border-slate-200 text-slate-600 hover:border-orange-300'
+                  ? 'border-teal-600 bg-teal-50 text-teal-700'
+                  : 'border-slate-200 text-slate-600 hover:border-teal-300'
               }`}
             >
               {e.label}
@@ -368,7 +368,7 @@ function StepProfiel({
           onChange={(e) => setOmschrijving(e.target.value)}
           placeholder={placeholder}
           rows={4}
-          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-orange-500 focus:ring-0 outline-none transition-colors resize-none text-slate-700"
+          className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-teal-600 focus:ring-0 outline-none transition-colors resize-none text-slate-700"
         />
         <p className="text-xs text-slate-400 mt-1.5">
           Deze info helpt de AI om teksten te schrijven die echt bij jou passen
@@ -387,10 +387,10 @@ function StepStijl({
 }) {
   return (
     <div className="text-center">
-      <div className="w-16 h-16 rounded-2xl bg-orange-100 flex items-center justify-center mx-auto mb-6">
-        <span className="material-symbols-outlined text-3xl text-orange-600">palette</span>
+      <div className="w-16 h-16 rounded-2xl bg-teal-50 flex items-center justify-center mx-auto mb-6">
+        <span className="material-symbols-outlined text-3xl text-teal-600">palette</span>
       </div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">Kies je stijl</h2>
+      <h2 className="text-2xl font-bold font-serif text-slate-900 mb-2">Kies je stijl</h2>
       <p className="text-slate-500 mb-8">Welke uitstraling past het beste bij jou?</p>
       
       <div className="grid grid-cols-1 gap-3">
@@ -399,22 +399,22 @@ function StepStijl({
             key={s.id}
             onClick={() => setStijl(s.id)}
             className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
-              stijl === s.id 
-                ? 'border-orange-500 bg-orange-50' 
-                : 'border-slate-200 hover:border-orange-300'
+              stijl === s.id
+                ? 'border-teal-600 bg-teal-50'
+                : 'border-slate-200 hover:border-teal-300'
             }`}
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center flex-shrink-0`}>
               <span className="material-symbols-outlined text-white text-xl">{s.icon}</span>
             </div>
             <div>
-              <div className={`font-semibold ${stijl === s.id ? 'text-orange-700' : 'text-slate-700'}`}>
+              <div className={`font-semibold ${stijl === s.id ? 'text-teal-700' : 'text-slate-700'}`}>
                 {s.label}
               </div>
               <div className="text-sm text-slate-500">{s.description}</div>
             </div>
             {stijl === s.id && (
-              <span className="material-symbols-outlined text-orange-500 ml-auto">check_circle</span>
+              <span className="material-symbols-outlined text-teal-600 ml-auto">check_circle</span>
             )}
           </button>
         ))}

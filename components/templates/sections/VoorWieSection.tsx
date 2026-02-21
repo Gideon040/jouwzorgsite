@@ -3,7 +3,7 @@
 // B2B gericht: zorginstellingen, bemiddelaars, intermediairs
 'use client';
 
-import { BaseSectionProps, VoorWieStyle, getRevealClass, DEFAULT_DOELGROEPEN } from './types';
+import { BaseSectionProps, VoorWieStyle, getRevealClass, DEFAULT_DOELGROEPEN, DOELGROEP_IMAGES } from './types';
 
 // ============================================
 // DOELGROEP ICONS MAP
@@ -33,22 +33,7 @@ const DOELGROEP_ICONS: Record<string, string> = {
   ziekenhuizen: 'local_hospital',
 };
 
-// ============================================
-// DOELGROEP IMAGES MAP (for photo-based variants)
-// ============================================
-const DOELGROEP_IMAGES: Record<string, string> = {
-  thuiszorg: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?w=500&h=300&fit=crop',
-  verpleeghuis: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=500&h=300&fit=crop',
-  verzorgingshuis: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=500&h=300&fit=crop',
-  ziekenhuis: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=300&fit=crop',
-  kliniek: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=300&fit=crop',
-  bemiddelaar: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
-  intermediair: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
-  instellingen: 'https://images.unsplash.com/photo-1447069387593-a5de0862481e?w=500&h=300&fit=crop',
-  bemiddelaars: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
-  pgb: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=500&h=300&fit=crop',
-  particulieren: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=500&h=300&fit=crop',
-};
+// DOELGROEP_IMAGES imported from ./types
 
 // ============================================
 // SHARED TYPES
@@ -165,12 +150,12 @@ function VoorWieEditorial({ theme, palette, titel, intro, doelgroepen }: VoorWie
           {doelgroepen.slice(0, 3).map((doelgroep: any, index: number) => (
             <div
               key={index}
-              className="group rounded-2xl p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+              className="group p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
               style={{ background: palette.bgAlt, border: `1px solid ${palette.border}` }}
             >
               {/* Icon */}
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center mb-6"
+                className="w-14 h-14 flex items-center justify-center mb-6"
                 style={{ background: `${palette.primary}15` }}
               >
                 <span className="material-symbols-outlined text-2xl" style={{ color: palette.primary }}>
@@ -237,7 +222,7 @@ function VoorWieEditorial2({ theme, palette, titel, intro, doelgroepen }: VoorWi
                   { val: 'BIG', lbl: 'Geregistreerd' },
                   { val: 'KvK', lbl: 'Ingeschreven' },
                 ].map((badge, i) => (
-                  <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: palette.bgAlt }}>
+                  <div key={i} className="flex items-center gap-2 px-3 py-2" style={{ background: palette.bgAlt }}>
                     <span className="text-sm font-bold" style={{ color: palette.primary }}>{badge.val}</span>
                     <span className="text-xs" style={{ color: palette.textMuted }}>{badge.lbl}</span>
                   </div>
@@ -252,7 +237,7 @@ function VoorWieEditorial2({ theme, palette, titel, intro, doelgroepen }: VoorWi
               <a
                 key={idx}
                 href="#contact"
-                className="group flex items-start gap-6 p-6 rounded-xl transition-all duration-300 hover:shadow-md"
+                className="group flex items-start gap-6 p-6 transition-all duration-300 hover:shadow-md"
                 style={{ background: palette.bgAlt, border: `1px solid ${palette.border}` }}
               >
                 {/* Number + Icon */}
@@ -339,7 +324,7 @@ function VoorWieEditorial3({ theme, palette, titel, intro, doelgroepen }: VoorWi
                   <span className="absolute text-8xl font-bold opacity-[0.06]" style={{ fontFamily: theme.fonts.heading, color: palette.text }}>
                     {String(idx + 1).padStart(2, '0')}
                   </span>
-                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: `${palette.primary}12` }}>
+                  <div className="w-16 h-16 flex items-center justify-center" style={{ background: `${palette.primary}12` }}>
                     <span className="material-symbols-outlined text-2xl" style={{ color: palette.primary }}>
                       {DOELGROEP_ICONS[doelgroep.type] || 'group'}
                     </span>
@@ -409,7 +394,7 @@ function VoorWieProactief({ theme, palette, titel, intro, doelgroepen }: VoorWie
         {/* Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => (
-            <div key={idx} className="bg-white rounded-[20px] overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
+            <div key={idx} className="bg-white overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
               <div className="h-44 overflow-hidden relative">
                 <img
                   src={doelgroep.afbeelding || DOELGROEP_IMAGES[doelgroep.type] || DOELGROEP_IMAGES.thuiszorg}
@@ -489,7 +474,7 @@ function VoorWieProactief2({ theme, palette, titel, intro, doelgroepen }: VoorWi
               </a>
 
               {/* Sfeerbeeld */}
-              <div className="mt-10 rounded-2xl overflow-hidden">
+              <div className="mt-10 overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=500&q=80"
                   alt="Zorgverlener aan het werk"
@@ -522,7 +507,7 @@ function VoorWieProactief2({ theme, palette, titel, intro, doelgroepen }: VoorWi
                 <a
                   key={idx}
                   href="#contact"
-                  className="group block p-6 border-l-4 rounded-r-2xl transition-all duration-300"
+                  className="group block p-6 border-l-4 transition-all duration-300"
                   style={{
                     background: isFirst ? `${palette.primary}12` : palette.bgAlt,
                     borderColor: isFirst ? palette.primary : 'transparent',
@@ -788,7 +773,7 @@ function VoorWiePortfolio2({ theme, palette, titel, intro, doelgroepen }: VoorWi
 
           {/* Featured: Large image card spanning 2 rows */}
           {firstDoelgroep && (
-            <a href="#contact" className="group relative md:row-span-2 overflow-hidden min-h-[320px] lg:min-h-[420px]">
+            <a href="#contact" className="group relative md:row-span-2 overflow-hidden min-h-[320px] lg:min-h-[420px]" style={{ borderRadius: '0 80px 0 0' }}>
               <img
                 src={firstDoelgroep.afbeelding || DOELGROEP_IMAGES[firstDoelgroep.type] || DOELGROEP_IMAGES.thuiszorg}
                 alt={firstDoelgroep.titel}

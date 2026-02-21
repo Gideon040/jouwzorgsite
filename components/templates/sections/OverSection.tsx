@@ -7,6 +7,7 @@
 import { ThemeConfig } from '../themes';
 import {
   BaseSectionProps,
+  PaletteColors,
   OverStyle,
   getBeroepImages,
   getRevealClass,
@@ -22,24 +23,10 @@ interface OverSectionProps extends BaseSectionProps {
   style?: OverStyle;
 }
 
-interface PaletteColors {
-  primary: string;
-  primaryHover: string;
-  primaryLight: string;
-  primaryDark: string;
-  accent?: string;
-  accentLight?: string;
-  bg?: string;
-  bgAlt?: string;
-  text?: string;
-  textMuted?: string;
-  border?: string;
-}
-
 /** Shared props passed to every variant function */
 interface VariantProps {
   theme: ThemeConfig;
-  palette: PaletteColors;
+  palette: BaseSectionProps['palette'];
   content: SiteContent;
   overMij: OverMijContent | undefined;
   jarenErvaring: number | null;

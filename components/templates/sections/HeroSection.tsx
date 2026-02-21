@@ -39,61 +39,9 @@
 
 'use client';
 
-import { BaseSectionProps, HeroStyle, getRevealClass, getJarenErvaring } from './types';
+import { BaseSectionProps, HeroStyle, getRevealClass, getJarenErvaring, HERO_IMAGE_POOLS, hashString } from './types';
 
-// ============================================
-// UNSPLASH IMAGE POOLS
-// ============================================
-// Per beroep meerdere hero images voor variatie
-// Alle images: landscape, professioneel, zorg-gerelateerd
-
-const HERO_IMAGE_POOLS: Record<string, string[]> = {
-  verpleegkundige: [
-    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1551190822-a9ce113ac100?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1920&q=80',
-  ],
-  verzorgende_ig: [
-    'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1581594549595-35f6edc7b762?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1920&q=80',
-  ],
-  kraamverzorgende: [
-    'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1504439468489-c8920d796a29?auto=format&fit=crop&w=1920&q=80',
-  ],
-  ggz: [
-    'https://images.unsplash.com/photo-1527137342181-19aab11a8ee8?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1920&q=80',
-  ],
-  fysiotherapeut: [
-    'https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1598257006458-087169a1f08d?auto=format&fit=crop&w=1920&q=80',
-  ],
-  thuiszorg: [
-    'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1581594549595-35f6edc7b762?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=1920&q=80',
-  ],
-  ouderenzorg: [
-    'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1517939782552-3e3e3c8f0a47?auto=format&fit=crop&w=1920&q=80',
-  ],
-  default: [
-    'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1538108149393-fbbd81895907?auto=format&fit=crop&w=1920&q=80',
-    'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1920&q=80',
-  ],
-};
+// HERO_IMAGE_POOLS imported from ./types
 
 // Social proof avatar images (for Mindoor variants)
 const SOCIAL_PROOF_AVATARS = [
@@ -102,9 +50,10 @@ const SOCIAL_PROOF_AVATARS = [
   'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80',
 ];
 
-function getHeroImage(beroep: string): string {
+function getHeroImage(beroep: string, naam: string): string {
   const pool = HERO_IMAGE_POOLS[beroep] || HERO_IMAGE_POOLS.default;
-  return pool[Math.floor(Math.random() * pool.length)];
+  const seed = hashString(beroep + naam);
+  return pool[seed % pool.length];
 }
 
 // ============================================
@@ -169,8 +118,8 @@ export function HeroSection({
   const werkgebied = content.contact?.werkgebied?.[0] || 'Regio';
   const hasBIG = content.certificaten?.some(c => c.type === 'big') || false;
   const jarenErvaring = getJarenErvaring(content.werkervaring);
-  const heroImage = content.foto || getHeroImage(beroepLabel);
   const naam = content.naam || '';
+  const heroImage = content.foto || getHeroImage(beroepLabel, naam);
   
   // Shared props voor alle varianten
   const sharedProps: SharedHeroProps = {
@@ -580,7 +529,7 @@ function HeroEditorial2({
               className="relative aspect-[4/5] w-full max-w-md lg:max-w-none mx-auto bg-cover bg-center"
               style={{ backgroundImage: `url('${heroImage}')`, borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' }}
             />
-            <div className="absolute -bottom-4 -left-4 lg:bottom-8 lg:-left-8 p-5 rounded-lg shadow-xl" style={{ background: theme.colors.surface }}>
+            <div className="absolute -bottom-4 -left-4 lg:bottom-8 lg:-left-8 p-5 shadow-xl" style={{ background: theme.colors.surface }}>
               <StatsDisplay stats={stats} theme={theme} palette={palette} variant="compact" max={2} />
             </div>
           </div>
@@ -771,7 +720,7 @@ function HeroProactief2({
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           <div className={`relative order-2 lg:order-1 ${getRevealClass('left')}`}>
             <div 
-              className="aspect-[4/5] w-full max-w-md mx-auto lg:mx-0 rounded-[20px] bg-cover bg-center"
+              className="aspect-[4/5] w-full max-w-md mx-auto lg:mx-0 bg-cover bg-center"
               style={{ backgroundImage: `url('${heroImage}')` }}
             />
             {beschikbaar && (
@@ -780,7 +729,7 @@ function HeroProactief2({
                 <span className="text-xs font-semibold text-emerald-700">Beschikbaar</span>
               </div>
             )}
-            <div className="absolute -bottom-5 right-6 lg:right-auto lg:-right-8 rounded-[20px] px-6 py-4" style={{ background: theme.colors.surface }}>
+            <div className="absolute -bottom-5 right-6 lg:right-auto lg:-right-8 px-6 py-4" style={{ background: theme.colors.surface }}>
               <p className="text-2xl font-bold" style={{ color: palette.primary }}>
                 {stats[0]?.value || `${jarenErvaring || 10}+`}
               </p>
@@ -808,7 +757,7 @@ function HeroProactief2({
               {uspItems.map((item, idx) => (
                 <div 
                   key={idx}
-                  className="flex items-center gap-3 p-4 rounded-[20px] group hover:-translate-y-1 transition-all relative overflow-hidden"
+                  className="flex items-center gap-3 p-4 group hover:-translate-y-1 transition-all relative overflow-hidden"
                   style={{ background: theme.colors.surface }}
                 >
                   <div className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: palette.primary }} />

@@ -33,7 +33,7 @@
 
 import { ThemeConfig } from '../themes';
 import { SiteContent, GeneratedContent } from '@/types';
-import { BaseSectionProps, getBeroepImages, getRevealClass } from './types';
+import { BaseSectionProps, getBeroepImages, getRevealClass, QUOTE_SFEER_IMAGES, DEFAULT_QUOTES, hashString } from './types';
 
 // ============================================
 // TYPE: QuoteStyle uitgebreid met 'serene'
@@ -78,42 +78,7 @@ interface QuoteWithImageProps extends QuoteVariantProps {
 // DEFAULT QUOTES
 // ============================================
 
-const DEFAULT_QUOTES = [
-  'Zorgen voor wie ooit voor ons zorgde is een van de hoogste eerbetonen.',
-  'In aandacht en rust ligt de ware kracht van zorg.',
-  'Excellentie in zorg komt voort uit passie, precisie en toewijding.',
-  'Goede zorg begint met luisteren.',
-  'De mooiste zorg ontstaat waar vakmanschap en menselijkheid samenkomen.',
-  'Elke dag opnieuw het verschil maken — dát is wat mij drijft.',
-];
-
-// ============================================
-// SFEER AFBEELDINGEN — gevarieerde quotes achtergronden
-// ============================================
-// Meerdere opties zodat banner & dark niet altijd hetzelfde beeld tonen
-
-const SFEER_IMAGES = [
-  'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=1920&q=80',
-];
-
-// ============================================
-// HELPERS
-// ============================================
-
-/** Deterministic hash from string — voorkomt hydration mismatch */
-function hashString(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0; // Convert to 32-bit integer
-  }
-  return Math.abs(hash);
-}
+// DEFAULT_QUOTES, QUOTE_SFEER_IMAGES, hashString imported from ./types
 
 /** Selecteer quote deterministic op basis van content */
 function selectQuote(generated: GeneratedContent | undefined, content: SiteContent): string {
@@ -134,7 +99,7 @@ function selectSfeerImage(beroepLabel: string, content: SiteContent): string {
   
   // Anders: deterministische keuze uit pool
   const seed = hashString(content.naam || '');
-  return SFEER_IMAGES[seed % SFEER_IMAGES.length];
+  return QUOTE_SFEER_IMAGES[seed % QUOTE_SFEER_IMAGES.length];
 }
 
 // ============================================
@@ -151,7 +116,7 @@ export function QuoteSection({
 }: QuoteSectionProps) {
   const quote = selectQuote(generated, content);
   const naam = content.naam || '';
-  const imageUrl = selectSfeerImage(beroepLabel, content);
+  const imageUrl = generated?.quoteImage || selectSfeerImage(beroepLabel, content);
 
   const baseProps: QuoteVariantProps = { theme, palette, quote, naam };
   const imageProps: QuoteWithImageProps = { ...baseProps, imageUrl };

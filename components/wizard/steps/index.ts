@@ -12,3 +12,4 @@ export * from './StepTestimonials';
 export * from './StepTemplate';
 export * from './StepDomain';
 export * from './StepSubdomain';
+export * from './StepStijlKeuze';

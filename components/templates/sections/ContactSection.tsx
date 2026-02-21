@@ -25,24 +25,24 @@
 // ============================================
 //
 // editorial    - Split layout met interest card
-// editorial-2  - TODO
-// editorial-3  - TODO
+// editorial-2  - Centered met contact kaarten
+// editorial-3  - Elegant twee-kolom layout
 //
 // proactief    - Solid icons, compact met subtle card
-// proactief-2  - TODO
-// proactief-3  - TODO
+// proactief-2  - Grid layout met gekleurde kaarten
+// proactief-3  - Full-width met accent achtergrond
 //
 // portfolio    - Elegant split met afbeelding
-// portfolio-2  - TODO
-// portfolio-3  - TODO
+// portfolio-2  - Minimalistisch met lijn-accenten
+// portfolio-3  - Kaart-gebaseerd met subtiele schaduwen
 //
 // mindoor      - Split layout met offset afbeelding
 // mindoor-2    - Bento grid met grote kaarten
 // mindoor-3    - Split met persoonlijke quote
 //
-// serene       - TODO
-// serene-2     - TODO
-// serene-3     - TODO
+// serene       - Rustige layout met organische vormen
+// serene-2     - Centered met zachte kleuren
+// serene-3     - Asymmetrisch met whitespace
 //
 // ============================================
 
@@ -91,9 +91,9 @@ export function ContactSection({
     // ============================================
     case 'editorial':      // Variant 1 - Split layout met interest card
       return <ContactEditorial {...sharedProps} />;
-    case 'editorial-2':    // Variant 2 - TODO
+    case 'editorial-2':    // Variant 2 - Centered met contact kaarten
       return <ContactEditorial2 {...sharedProps} />;
-    case 'editorial-3':    // Variant 3 - TODO
+    case 'editorial-3':    // Variant 3 - Elegant twee-kolom layout
       return <ContactEditorial3 {...sharedProps} />;
     
     // ============================================
@@ -101,9 +101,9 @@ export function ContactSection({
     // ============================================
     case 'proactief':      // Variant 1 - Solid icons, compact met subtle card
       return <ContactProactief {...sharedProps} />;
-    case 'proactief-2':    // Variant 2 - TODO
+    case 'proactief-2':    // Variant 2 - Grid layout met gekleurde kaarten
       return <ContactProactief2 {...sharedProps} />;
-    case 'proactief-3':    // Variant 3 - TODO
+    case 'proactief-3':    // Variant 3 - Full-width met accent achtergrond
       return <ContactProactief3 {...sharedProps} />;
     
     // ============================================
@@ -111,9 +111,9 @@ export function ContactSection({
     // ============================================
     case 'portfolio':      // Variant 1 - Elegant met afbeelding rechts
       return <ContactPortfolio {...sharedProps} />;
-    case 'portfolio-2':    // Variant 2 - TODO
+    case 'portfolio-2':    // Variant 2 - Minimalistisch met lijn-accenten
       return <ContactPortfolio2 {...sharedProps} />;
-    case 'portfolio-3':    // Variant 3 - TODO
+    case 'portfolio-3':    // Variant 3 - Kaart-gebaseerd met subtiele schaduwen
       return <ContactPortfolio3 {...sharedProps} />;
     
     // ============================================
@@ -129,11 +129,11 @@ export function ContactSection({
     // ============================================
     // SERENE VARIANTEN
     // ============================================
-    case 'serene':         // Variant 1 - TODO
+    case 'serene':         // Variant 1 - Rustige layout met organische vormen
       return <ContactSerene {...sharedProps} />;
-    case 'serene-2':       // Variant 2 - TODO
+    case 'serene-2':       // Variant 2 - Centered met zachte kleuren
       return <ContactSerene2 {...sharedProps} />;
-    case 'serene-3':       // Variant 3 - TODO
+    case 'serene-3':       // Variant 3 - Asymmetrisch met whitespace
       return <ContactSerene3 {...sharedProps} />;
     
     // ============================================
@@ -199,7 +199,7 @@ function ContactEditorial({ theme, palette, content, titel, intro, telefoon, ema
               {telefoon && (
                 <a href={`tel:${telefoon}`} className="flex items-center gap-4 group">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                    className="w-10 h-10 flex items-center justify-center transition-colors"
                     style={{ backgroundColor: `${palette.primary}15` }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${palette.primary}25`}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `${palette.primary}15`}
@@ -216,7 +216,7 @@ function ContactEditorial({ theme, palette, content, titel, intro, telefoon, ema
               {email && (
                 <a href={`mailto:${email}`} className="flex items-center gap-4 group">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                    className="w-10 h-10 flex items-center justify-center transition-colors"
                     style={{ backgroundColor: `${palette.primary}15` }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = `${palette.primary}25`}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = `${palette.primary}15`}
@@ -233,7 +233,7 @@ function ContactEditorial({ theme, palette, content, titel, intro, telefoon, ema
               {werkgebiedString && (
                 <div className="flex items-center gap-4">
                   <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    className="w-10 h-10 flex items-center justify-center"
                     style={{ backgroundColor: `${palette.primary}15` }}
                   >
                     <span className="material-symbols-outlined" style={{ color: palette.primary }}>location_on</span>
@@ -260,7 +260,7 @@ function ContactEditorial({ theme, palette, content, titel, intro, telefoon, ema
           {/* Right - Interest Card */}
           <div className={`flex-1 ${getRevealClass('right')}`}>
             <div 
-              className="p-8 lg:p-10 rounded-lg flex flex-col gap-6 border"
+              className="p-8 lg:p-10 flex flex-col gap-6 border"
               style={{ backgroundColor: theme.colors.backgroundAlt, borderColor: theme.colors.border }}
             >
               <h3 className="text-2xl" style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}>
@@ -1688,7 +1688,7 @@ function ContactPortfolio2({ theme, palette, content, titel, intro, telefoon, em
               {/* Werkgebied */}
               {werkgebiedString && (
                 <div>
-                  <span 
+                  <span
                     className="text-[10px] font-semibold uppercase tracking-[0.2em] block mb-2"
                     style={{ color: theme.colors.textMuted }}
                   >
@@ -1698,6 +1698,20 @@ function ContactPortfolio2({ theme, palette, content, titel, intro, telefoon, em
                     {werkgebiedString}
                   </span>
                 </div>
+              )}
+
+              {/* CTA */}
+              {email && (
+                <a
+                  href={`mailto:${email}?subject=Contactverzoek via website`}
+                  className="inline-flex items-center gap-2 mt-4 px-6 py-3 text-sm font-semibold transition-all duration-200 border-2 hover:shadow-md"
+                  style={{ borderColor: palette.primary, color: palette.primary }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = palette.primary; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = palette.primary; }}
+                >
+                  <span className="material-symbols-outlined text-lg">mail</span>
+                  Stuur een bericht
+                </a>
               )}
 
             </div>
@@ -1764,10 +1778,11 @@ function ContactPortfolio3({ theme, palette, content, titel, intro, telefoon, em
           {/* Left: Foto (5 cols, offset top) */}
           <div className={`lg:col-span-5 lg:-mt-12 ${getRevealClass('left')}`}>
             <div className="relative">
-              <img 
+              <img
                 src={content?.foto || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=500&h=600&fit=crop&crop=face"}
                 alt="Contact"
                 className="w-full h-[400px] lg:h-[500px] object-cover"
+                style={{ borderRadius: '0 80px 0 0' }}
               />
               {/* Overlay label */}
               {naam && (
@@ -1856,7 +1871,7 @@ function ContactPortfolio3({ theme, palette, content, titel, intro, telefoon, em
 
             {werkgebiedString && (
               <div className="mb-10">
-                <span 
+                <span
                   className="text-[10px] font-semibold uppercase tracking-[0.2em] block mb-2"
                   style={{ color: theme.colors.textMuted }}
                 >
@@ -1866,6 +1881,19 @@ function ContactPortfolio3({ theme, palette, content, titel, intro, telefoon, em
                   {werkgebiedString}
                 </span>
               </div>
+            )}
+
+            {/* CTA */}
+            {email && (
+              <a
+                href={`mailto:${email}?subject=Contactverzoek via website`}
+                className="inline-flex items-center gap-2 mb-10 px-7 py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 hover:shadow-lg"
+                style={{ backgroundColor: palette.primary, boxShadow: `0 4px 14px ${palette.primary}30` }}
+              >
+                <span className="material-symbols-outlined text-lg">mail</span>
+                Stuur een bericht
+                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+              </a>
             )}
 
             {/* Trust inline */}
@@ -2012,9 +2040,21 @@ function ContactMindoor({ theme, palette, content, titel, intro, telefoon, email
               )}
             </div>
 
+            {/* CTA */}
+            {email && (
+              <a
+                href={`mailto:${email}?subject=Contactverzoek via website`}
+                className="inline-flex items-center gap-2 mt-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 hover:shadow-lg"
+                style={{ background: `linear-gradient(135deg, ${palette.primary}, ${palette.accent || palette.primary})`, boxShadow: `0 4px 14px ${palette.primary}25` }}
+              >
+                <span className="material-symbols-outlined text-lg">mail</span>
+                Neem contact op
+              </a>
+            )}
+
             {content?.certificaten && content.certificaten.length > 0 && (
               <div className="mt-6">
-                <ContactTrustBadges 
+                <ContactTrustBadges
                   certificaten={content.certificaten}
                   accentColor={palette.accent || palette.primary}
                   textMutedColor={theme.colors.textMuted}
@@ -2023,7 +2063,7 @@ function ContactMindoor({ theme, palette, content, titel, intro, telefoon, email
               </div>
             )}
           </div>
-          
+
           {/* Image with offset background */}
           <div className={`relative ${getRevealClass('left', 200)}`}>
             <div className="overflow-hidden rounded-3xl shadow-2xl">
@@ -2257,10 +2297,23 @@ function ContactMindoor3({ theme, palette, content, titel, intro, telefoon, emai
                   </div>
                 </div>
               )}
+
+              {/* CTA */}
+              {email && (
+                <a
+                  href={`mailto:${email}?subject=Contactverzoek via website`}
+                  className="inline-flex items-center gap-2 mt-4 px-7 py-3.5 rounded-2xl text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 hover:shadow-lg"
+                  style={{ background: `linear-gradient(135deg, ${palette.accent || palette.primary}, ${palette.primary})`, boxShadow: `0 4px 14px ${palette.primary}25` }}
+                >
+                  <span className="material-symbols-outlined text-lg">mail</span>
+                  Neem contact op
+                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                </a>
+              )}
             </div>
 
             {content?.certificaten && content.certificaten.length > 0 && (
-              <ContactTrustBadges 
+              <ContactTrustBadges
                 certificaten={content.certificaten}
                 accentColor={palette.accent || palette.primary}
                 textMutedColor={theme.colors.textMuted}
@@ -2396,14 +2449,39 @@ function ContactSerene({ theme, palette, content, titel, intro, telefoon, email,
               )}
               
             </div>
-            
+
+            {/* CTA */}
+            {email && (
+              <div className="mt-12">
+                <a
+                  href={`mailto:${email}?subject=Contactverzoek ${beroepLabel || 'Zorgprofessional'}`}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-medium tracking-wide transition-all duration-300 border"
+                  style={{
+                    borderColor: palette.primary,
+                    color: palette.primary,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = palette.primary;
+                    e.currentTarget.style.color = '#fff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                    e.currentTarget.style.color = palette.primary;
+                  }}
+                >
+                  Stuur een bericht
+                  <span className="text-[14px]">&#8594;</span>
+                </a>
+              </div>
+            )}
+
             {/* Trust - inline, subtle */}
             {content?.certificaten && content.certificaten.length > 0 ? (
-              <div 
+              <div
                 className="mt-16 pt-8 border-t"
                 style={{ borderColor: theme.colors.border }}
               >
-                <ContactTrustBadges 
+                <ContactTrustBadges
                   certificaten={content.certificaten}
                   accentColor={palette.primary}
                   textMutedColor={theme.colors.textMuted}
@@ -2411,7 +2489,7 @@ function ContactSerene({ theme, palette, content, titel, intro, telefoon, email,
                 />
               </div>
             ) : (
-              <div 
+              <div
                 className="mt-16 pt-8 border-t flex flex-wrap gap-x-6 gap-y-2 text-[10px] uppercase tracking-[1px]"
                 style={{ borderColor: theme.colors.border, color: theme.colors.textMuted }}
               >
@@ -2420,9 +2498,9 @@ function ContactSerene({ theme, palette, content, titel, intro, telefoon, email,
                 <span>Verzekerd</span>
               </div>
             )}
-            
+
           </div>
-          
+
         </div>
       </div>
     </section>
@@ -2548,10 +2626,34 @@ function ContactSerene2({ theme, palette, content, titel, intro, telefoon, email
               )}
               
             </div>
-            
+
+            {/* CTA */}
+            {email && (
+              <div className="mb-12">
+                <a
+                  href={`mailto:${email}?subject=Contactverzoek ${beroepLabel || 'Zorgprofessional'}`}
+                  className="inline-flex items-center gap-2 px-7 py-3 text-sm font-medium tracking-wide transition-all duration-300"
+                  style={{
+                    backgroundColor: palette.primary,
+                    color: '#fff',
+                    borderRadius: '2px',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = palette.primaryDark || palette.primaryHover;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = palette.primary;
+                  }}
+                >
+                  Stuur een bericht
+                  <span className="text-[14px]">&#8594;</span>
+                </a>
+              </div>
+            )}
+
             {/* Werkgebied + Trust samen */}
             <div className="pt-8 border-t" style={{ borderColor: theme.colors.border }}>
-              <div 
+              <div
                 className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm"
                 style={{ color: theme.colors.textMuted }}
               >
@@ -2566,7 +2668,7 @@ function ContactSerene2({ theme, palette, content, titel, intro, telefoon, email
                 )}
                 {content?.certificaten && content.certificaten.length > 0 ? (
                   content.certificaten.slice(0, 3).map((cert: any, i: number) => (
-                    <span 
+                    <span
                       key={i}
                       className="text-[10px] uppercase tracking-[1px]"
                       style={{ color: theme.colors.textMuted }}
@@ -2583,9 +2685,9 @@ function ContactSerene2({ theme, palette, content, titel, intro, telefoon, email
                 )}
               </div>
             </div>
-            
+
           </div>
-          
+
         </div>
       </div>
     </section>
@@ -2678,9 +2780,22 @@ function ContactSerene3({ theme, palette, content, titel, intro, telefoon, email
           )}
           
         </div>
-        
+
+        {/* CTA */}
+        {email && (
+          <div className={`text-center mb-16 ${getRevealClass('up', 300)}`}>
+            <a
+              href={`mailto:${email}?subject=Contactverzoek ${beroepLabel || 'Zorgprofessional'}`}
+              className="inline-flex items-center gap-2 px-10 py-4 text-sm font-medium tracking-wide text-white border border-white/30 transition-all duration-300 hover:bg-white/10"
+            >
+              Neem contact op
+              <span className="text-[14px]">&#8594;</span>
+            </a>
+          </div>
+        )}
+
         {/* Bottom: Werkgebied + Trust in one line */}
-        <div 
+        <div
           className={`text-center pt-8 border-t ${getRevealClass('up', 400)}`}
           style={{ borderColor: 'rgba(255,255,255,0.1)' }}
         >
@@ -2820,7 +2935,7 @@ function ContactSplit({ theme, palette, content, titel, intro, telefoon, email, 
 }
 
 // CENTERED - Gecentreerde layout (legacy)
-function ContactCentered({ theme, palette, content, titel, intro, telefoon, email, werkgebied }: any) {
+function ContactCentered({ theme, palette, content, titel, intro, telefoon, email, werkgebied, beroepLabel }: any) {
   const werkgebiedString = Array.isArray(werkgebied) ? werkgebied.join(', ') : werkgebied;
   
   return (
@@ -2876,7 +2991,27 @@ function ContactCentered({ theme, palette, content, titel, intro, telefoon, emai
             </a>
           )}
         </div>
-        
+
+        {/* CTA */}
+        {email && (
+          <div className="mb-10">
+            <a
+              href={`mailto:${email}?subject=Contactverzoek ${beroepLabel || 'Zorgprofessional'}`}
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-sm font-semibold text-white transition-all duration-300"
+              style={{ backgroundColor: palette.primary }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = palette.primaryDark || palette.primaryHover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = palette.primary;
+              }}
+            >
+              <span className="material-symbols-outlined text-[18px]">mail</span>
+              Stuur een bericht
+            </a>
+          </div>
+        )}
+
         {werkgebiedString && (
           <p className="text-sm mb-6" style={{ color: theme.colors.textMuted }}>
             <span className="material-symbols-outlined text-sm align-middle mr-1" style={{ color: palette.primary }}>location_on</span>
@@ -2886,10 +3021,10 @@ function ContactCentered({ theme, palette, content, titel, intro, telefoon, emai
 
         {content?.certificaten && content.certificaten.length > 0 && (
           <div className="flex justify-center">
-            <ContactTrustBadges 
+            <ContactTrustBadges
               certificaten={content.certificaten}
               accentColor={palette.primary}
-              textMutedColor={theme.colors.textMuted}
+              textMutedColor={theme.colors.border}
               borderColor={theme.colors.border}
             />
           </div>

@@ -86,7 +86,7 @@ export const palettes = {
     accent: '#b8860b',         // Warm goud — contrast met koel groen
     accentLight: '#d4a84b',
     bg: '#faf9f6',
-    bgAlt: '#f5f3f0',
+    bgAlt: '#eeebe8',
     text: '#1a2e28',
     textMuted: '#5a6b65',
     border: 'rgba(90, 124, 111, 0.12)',
@@ -98,10 +98,10 @@ export const palettes = {
     primaryHover: '#6b2d42',
     primaryLight: 'rgba(124, 58, 80, 0.10)',
     primaryDark: '#5a2538',
-    accent: '#c4956a',         // Dusty goud — warm complement
+    accent: '#ae855e',         // Dusty goud — warm complement (darkened for WCAG 3:1)
     accentLight: '#d4b08a',
     bg: '#faf8f8',
-    bgAlt: '#f5f0f0',
+    bgAlt: '#f0e9e9',
     text: '#2d1f24',
     textMuted: '#6b5a60',
     border: 'rgba(124, 58, 80, 0.10)',
@@ -113,10 +113,10 @@ export const palettes = {
     primaryHover: '#2d3a5a',
     primaryLight: 'rgba(61, 74, 107, 0.10)',
     primaryDark: '#252d45',
-    accent: '#c4855c',         // Warm koper — zachte warmte bij koel blauw
+    accent: '#bc8058',         // Warm koper — zachte warmte bij koel blauw (darkened for WCAG 3:1)
     accentLight: '#d4a080',
     bg: '#f8f9fc',
-    bgAlt: '#f0f2f6',
+    bgAlt: '#e9ecf1',
     text: '#1a2030',
     textMuted: '#5a6580',
     border: 'rgba(61, 74, 107, 0.10)',
@@ -131,7 +131,7 @@ export const palettes = {
     accent: '#5a7c6f',         // Sage groen — fris contrast bij warm bruin
     accentLight: '#7a9c8f',
     bg: '#faf9f5',
-    bgAlt: '#f5f2ec',
+    bgAlt: '#f0ece4',
     text: '#2a2318',
     textMuted: '#6b6255',
     border: 'rgba(124, 106, 79, 0.10)',
@@ -143,17 +143,17 @@ export const palettes = {
 
   // 5. ProActief Cyan — Standaard, dynamisch blauw
   proactief: {
-    primary: '#0099cc',
-    primaryHover: '#007aa3',
-    primaryLight: 'rgba(0, 153, 204, 0.10)',
+    primary: '#007fa9',
+    primaryHover: '#007095',
+    primaryLight: 'rgba(0, 127, 169, 0.10)',
     primaryDark: '#004466',
-    accent: '#ff6b35',         // Oranje — energiek complement
+    accent: '#f26632',         // Oranje — energiek complement (darkened for WCAG 3:1)
     accentLight: '#ff8c5a',
     bg: '#ffffff',
-    bgAlt: '#f0f8fc',
+    bgAlt: '#e9f5fb',
     text: '#0f172a',
-    textMuted: '#64748b',
-    border: 'rgba(0, 153, 204, 0.08)',
+    textMuted: '#607085',
+    border: 'rgba(0, 127, 169, 0.08)',
   },
 
   // 6. Electric — Krachtig paars
@@ -162,10 +162,10 @@ export const palettes = {
     primaryHover: '#6d28d9',
     primaryLight: 'rgba(124, 58, 237, 0.08)',
     primaryDark: '#5b21b6',
-    accent: '#10b981',         // Smaragd groen — frisse tegenhanger
+    accent: '#0ea170',         // Smaragd groen — frisse tegenhanger (darkened for WCAG 3:1)
     accentLight: '#34d399',
     bg: '#faf8ff',
-    bgAlt: '#f3f0ff',
+    bgAlt: '#e7e3ff',
     text: '#1a1033',
     textMuted: '#6b6190',
     border: 'rgba(124, 58, 237, 0.08)',
@@ -173,14 +173,14 @@ export const palettes = {
 
   // 7. Sunset — Warm koraal-rood
   sunset: {
-    primary: '#dc4a38',
-    primaryHover: '#c4392a',
-    primaryLight: 'rgba(220, 74, 56, 0.08)',
+    primary: '#d14635',
+    primaryHover: '#b83e2f',
+    primaryLight: 'rgba(209, 70, 53, 0.08)',
     primaryDark: '#a52d1c',
     accent: '#0891b2',         // Teal — koel contrast bij warm rood
     accentLight: '#22d3ee',
     bg: '#fffaf8',
-    bgAlt: '#fff5f2',
+    bgAlt: '#ffe8e2',
     text: '#1a1210',
     textMuted: '#6b5c58',
     border: 'rgba(220, 74, 56, 0.08)',
@@ -188,14 +188,14 @@ export const palettes = {
 
   // 8. Emerald — Fris, gezond groen
   emerald: {
-    primary: '#059669',
-    primaryHover: '#047857',
-    primaryLight: 'rgba(5, 150, 105, 0.08)',
+    primary: '#05875f',
+    primaryHover: '#047754',
+    primaryLight: 'rgba(5, 135, 95, 0.08)',
     primaryDark: '#065f46',
     accent: '#d97706',         // Amber — warm accent bij koel groen
     accentLight: '#f59e0b',
     bg: '#f8fffe',
-    bgAlt: '#f0faf5',
+    bgAlt: '#e9f6ee',
     text: '#0a1f18',
     textMuted: '#4a6b60',
     border: 'rgba(5, 150, 105, 0.08)',
@@ -211,7 +211,7 @@ export const palettes = {
     primaryHover: '#2d5a47',
     primaryLight: 'rgba(26, 58, 47, 0.08)',
     primaryDark: '#0f251d',
-    accent: '#7cb342',         // Lime groen — fris tegen donker
+    accent: '#699838',         // Lime groen — fris tegen donker (darkened for WCAG 3:1)
     accentLight: '#9ccc65',
     bg: '#f8f6f2',
     bgAlt: '#ebe7df',
@@ -226,10 +226,10 @@ export const palettes = {
     primaryHover: '#1e2628',
     primaryLight: 'rgba(45, 52, 54, 0.08)',
     primaryDark: '#1a1e1f',
-    accent: '#d4a853',         // Goud — luxe accent bij neutraal grijs
+    accent: '#ac8843',         // Goud — luxe accent bij neutraal grijs (darkened for WCAG 3:1)
     accentLight: '#e4c478',
     bg: '#f8f8f6',
-    bgAlt: '#eeedea',
+    bgAlt: '#ecebe7',
     text: '#1a1c1e',
     textMuted: '#5a5e60',
     border: 'rgba(45, 52, 54, 0.08)',
@@ -241,10 +241,10 @@ export const palettes = {
     primaryHover: '#334155',
     primaryLight: 'rgba(30, 41, 59, 0.08)',
     primaryDark: '#0f172a',
-    accent: '#8b9dc3',         // Staal blauw — subtiel, sophisticated
+    accent: '#7d8db0',         // Staal blauw — subtiel, sophisticated (darkened for WCAG 3:1)
     accentLight: '#a8b8d8',
     bg: '#f8f9fb',
-    bgAlt: '#eef0f4',
+    bgAlt: '#e9ebf0',
     text: '#0f172a',
     textMuted: '#475569',
     border: 'rgba(30, 41, 59, 0.08)',
@@ -256,10 +256,10 @@ export const palettes = {
     primaryHover: '#4e342e',
     primaryLight: 'rgba(62, 39, 35, 0.08)',
     primaryDark: '#2a1a17',
-    accent: '#7cb342',         // Sage groen — fris leven bij donker bruin
+    accent: '#6b9a39',         // Sage groen — fris leven bij donker bruin (darkened for WCAG 3:1)
     accentLight: '#8bc34a',
     bg: '#f9f7f5',
-    bgAlt: '#f0ece8',
+    bgAlt: '#eeeae5',
     text: '#2a1e1a',
     textMuted: '#6b5d55',
     border: 'rgba(62, 39, 35, 0.08)',
@@ -278,7 +278,7 @@ export const palettes = {
     accent: '#d4644a',         // Coral — warm, uitnodigend
     accentLight: '#e07b5f',
     bg: '#faf8f5',
-    bgAlt: '#f5f0e8',
+    bgAlt: '#f2ece1',
     text: '#1a1a1a',
     textMuted: '#6b6560',
     border: 'rgba(90, 124, 90, 0.08)',
@@ -286,16 +286,16 @@ export const palettes = {
 
   // 14. Dusty Rose — Zacht roze + olijf
   dustyrose: {
-    primary: '#b5838d',
-    primaryHover: '#a07078',
-    primaryLight: 'rgba(181, 131, 141, 0.10)',
-    primaryDark: '#8a5a64',
+    primary: '#946b74',
+    primaryHover: '#825e66',
+    primaryLight: 'rgba(148, 107, 116, 0.10)',
+    primaryDark: '#6f5057',
     accent: '#6b705c',         // Olijf groen — aards, geaard
     accentLight: '#858a76',
     bg: '#fdf8f8',
-    bgAlt: '#f8f0f0',
+    bgAlt: '#f4eaea',
     text: '#2d2024',
-    textMuted: '#7a6a6e',
+    textMuted: '#76676b',
     border: 'rgba(181, 131, 141, 0.08)',
   },
 
@@ -308,7 +308,7 @@ export const palettes = {
     accent: '#c4694a',         // Terracotta — warm aards complement
     accentLight: '#d4845c',
     bg: '#f9f9f6',
-    bgAlt: '#f2f2ec',
+    bgAlt: '#edede5',
     text: '#1e2018',
     textMuted: '#5a5e50',
     border: 'rgba(107, 112, 92, 0.08)',
@@ -316,14 +316,14 @@ export const palettes = {
 
   // 16. Amber — Gouden warmte + bos groen
   amber: {
-    primary: '#a17c38',
-    primaryHover: '#8a6a2e',
-    primaryLight: 'rgba(161, 124, 56, 0.10)',
-    primaryDark: '#7a5e28',
+    primary: '#937133',
+    primaryHover: '#81632d',
+    primaryLight: 'rgba(147, 113, 51, 0.10)',
+    primaryDark: '#6e5526',
     accent: '#4a6b4a',         // Bos groen — natuur accent
     accentLight: '#6a8b6a',
     bg: '#fdfaf5',
-    bgAlt: '#f8f2e6',
+    bgAlt: '#f6efe0',
     text: '#2a2418',
     textMuted: '#6b6050',
     border: 'rgba(161, 124, 56, 0.08)',
@@ -339,12 +339,12 @@ export const palettes = {
     primaryHover: '#2d382d',
     primaryLight: 'rgba(61, 74, 61, 0.08)',
     primaryDark: '#2a332a',
-    accent: '#8a9680',         // Licht sage — zacht, zen
+    accent: '#86927c',         // Licht sage — zacht, zen (darkened for WCAG 3:1)
     accentLight: '#a8b5a0',
     bg: '#f9faf8',
-    bgAlt: '#f0f2ed',
+    bgAlt: '#edf0ea',
     text: '#2d3a2d',
-    textMuted: '#6b7b6b',
+    textMuted: '#617061',
     border: 'rgba(61, 74, 61, 0.08)',
   },
 
@@ -357,9 +357,9 @@ export const palettes = {
     accent: '#5a7c6f',         // Sage groen — organic touch
     accentLight: '#7a9c8f',
     bg: '#f9fafb',
-    bgAlt: '#f1f2f4',
+    bgAlt: '#ecedf0',
     text: '#1f2937',
-    textMuted: '#6b7280',
+    textMuted: '#656b79',
     border: 'rgba(107, 114, 128, 0.08)',
   },
 
@@ -372,7 +372,7 @@ export const palettes = {
     accent: '#8b7c6a',         // Warm taupe — aardse warmte bij koel blauw
     accentLight: '#a89880',
     bg: '#f8f9fc',
-    bgAlt: '#f0f2f8',
+    bgAlt: '#e7eaf4',
     text: '#1a2030',
     textMuted: '#5a6580',
     border: 'rgba(90, 107, 138, 0.08)',
@@ -387,7 +387,7 @@ export const palettes = {
     accent: '#7c6a5d',         // Warm hout — organisch complement
     accentLight: '#9c8a7d',
     bg: '#f8faf7',
-    bgAlt: '#eef2ec',
+    bgAlt: '#eaefe8',
     text: '#1e2a1e',
     textMuted: '#5a6b5a',
     border: 'rgba(74, 93, 74, 0.08)',
@@ -407,7 +407,7 @@ export const palettes = {
     accent: '#b8860b',
     accentLight: '#d4a84b',
     bg: '#faf9f6',
-    bgAlt: '#f5f3f0',
+    bgAlt: '#eeebe8',
     text: '#1a2e28',
     textMuted: '#5a6b65',
     border: 'rgba(90, 124, 111, 0.12)',
@@ -420,7 +420,7 @@ export const palettes = {
     accent: '#c49670',
     accentLight: '#d4aa88',
     bg: '#faf8fc',
-    bgAlt: '#f2f0f6',
+    bgAlt: '#eceaf2',
     text: '#1e1a28',
     textMuted: '#6b6580',
     border: 'rgba(124, 111, 158, 0.10)',
@@ -433,7 +433,7 @@ export const palettes = {
     accent: '#d4a853',
     accentLight: '#e4c478',
     bg: '#f8f9fb',
-    bgAlt: '#f0f2f5',
+    bgAlt: '#ecedf1',
     text: '#0f172a',
     textMuted: '#475569',
     border: 'rgba(71, 85, 105, 0.10)',
@@ -446,7 +446,7 @@ export const palettes = {
     accent: '#d97706',
     accentLight: '#f59e0b',
     bg: '#f8fffe',
-    bgAlt: '#f0faf5',
+    bgAlt: '#e9f6ee',
     text: '#0a1f18',
     textMuted: '#4a6b60',
     border: 'rgba(5, 150, 105, 0.08)',
@@ -459,7 +459,7 @@ export const palettes = {
     accent: '#5a7c6f',
     accentLight: '#7a9c8f',
     bg: '#fdfaf5',
-    bgAlt: '#f8f2e6',
+    bgAlt: '#f6efe0',
     text: '#2a2418',
     textMuted: '#6b6050',
     border: 'rgba(180, 83, 9, 0.08)',
@@ -472,7 +472,7 @@ export const palettes = {
     accent: '#6b705c',
     accentLight: '#858a76',
     bg: '#fdf8f9',
-    bgAlt: '#f8f0f2',
+    bgAlt: '#f4eaed',
     text: '#2d1020',
     textMuted: '#7a5a68',
     border: 'rgba(190, 24, 93, 0.08)',
@@ -485,7 +485,7 @@ export const palettes = {
     accent: '#d97706',
     accentLight: '#f59e0b',
     bg: '#f8faff',
-    bgAlt: '#f0f4fc',
+    bgAlt: '#e9eff8',
     text: '#0a1828',
     textMuted: '#4a6580',
     border: 'rgba(3, 105, 161, 0.08)',
@@ -511,7 +511,7 @@ export const palettes = {
     accent: '#5a7c5a',
     accentLight: '#7a9c7a',
     bg: '#fffaf8',
-    bgAlt: '#f8f2ee',
+    bgAlt: '#f5ece7',
     text: '#2a1a14',
     textMuted: '#6b5850',
     border: 'rgba(212, 100, 74, 0.08)',
@@ -524,7 +524,7 @@ export const palettes = {
     accent: '#d97706',
     accentLight: '#f59e0b',
     bg: '#f8fdff',
-    bgAlt: '#f0f8fc',
+    bgAlt: '#e9f5fb',
     text: '#0a1a20',
     textMuted: '#4a6068',
     border: 'rgba(8, 145, 178, 0.08)',
@@ -541,51 +541,51 @@ export function getPalette(paletteId: string) {
 // FONT PAIRINGS (12 totaal)
 // ============================================
 export const fontPairings = {
-  // === ORIGINELE PAIRINGS ===
-  classic: {
-    heading: "'Libre Baskerville', Georgia, serif",
-    body: "'Open Sans', system-ui, sans-serif",
-  },
-  modern: {
-    heading: "'DM Sans', system-ui, sans-serif",
-    body: "'Inter', system-ui, sans-serif",
-  },
-  elegant: {
-    heading: "'Playfair Display', Georgia, serif",
-    body: "'Lato', system-ui, sans-serif",
-  },
-  friendly: {
-    heading: "'Nunito', system-ui, sans-serif",
-    body: "'Open Sans', system-ui, sans-serif",
-  },
-  professional: {
-    heading: "'Manrope', system-ui, sans-serif",
-    body: "'Inter', system-ui, sans-serif",
-  },
-  
   // === TEMPLATE-SPECIFIEKE PAIRINGS ===
   editorial: {
     heading: "'Newsreader', Georgia, serif",
-    body: "'Open Sans', system-ui, sans-serif",
+    body: "'Source Sans 3', system-ui, sans-serif",
   },
   proactief: {
-    heading: "'Poppins', system-ui, sans-serif",
-    body: "'Poppins', system-ui, sans-serif",
+    heading: "'Space Grotesk', system-ui, sans-serif",
+    body: "'Work Sans', system-ui, sans-serif",
   },
   portfolio: {
-    heading: "'Playfair Display', Georgia, serif",
-    body: "'Inter', system-ui, sans-serif",
+    heading: "'DM Serif Display', Georgia, serif",
+    body: "'DM Sans', system-ui, sans-serif",
   },
   mindoor: {
-    heading: "'Playfair Display', Georgia, serif",
-    body: "'DM Sans', system-ui, sans-serif",
+    heading: "'Fraunces', Georgia, serif",
+    body: "'Nunito', system-ui, sans-serif",
   },
   serene: {
     heading: "'Cormorant Garamond', Georgia, serif",
     body: "'Nunito Sans', system-ui, sans-serif",
   },
-  
-  // Legacy
+
+  // === GENERIEKE PAIRINGS ===
+  classic: {
+    heading: "'Libre Baskerville', Georgia, serif",
+    body: "'Karla', system-ui, sans-serif",
+  },
+  modern: {
+    heading: "'Plus Jakarta Sans', system-ui, sans-serif",
+    body: "'Inter', system-ui, sans-serif",
+  },
+  elegant: {
+    heading: "'Instrument Serif', Georgia, serif",
+    body: "'Lato', system-ui, sans-serif",
+  },
+  friendly: {
+    heading: "'Figtree', system-ui, sans-serif",
+    body: "'Rubik', system-ui, sans-serif",
+  },
+  professional: {
+    heading: "'Archivo', system-ui, sans-serif",
+    body: "'Source Sans 3', system-ui, sans-serif",
+  },
+
+  // Legacy (backward compat)
   soft: {
     heading: "'Libre Baskerville', Georgia, serif",
     body: "'DM Sans', system-ui, sans-serif",
@@ -611,7 +611,7 @@ export const editorialTheme: ThemeConfig = {
   name: 'Editorial - Klassiek & Warm',
   colors: {
     background: '#faf9f6',
-    backgroundAlt: '#f5f3f0',
+    backgroundAlt: '#eeebe8',
     surface: '#ffffff',
     text: '#1a2e28',
     textMuted: '#5a6b65',
@@ -624,9 +624,9 @@ export const editorialTheme: ThemeConfig = {
     gap: 'gap-8',
   },
   radius: {
-    small: 'rounded-lg',
-    medium: 'rounded-xl',
-    large: 'rounded-2xl',
+    small: 'rounded-none',
+    medium: 'rounded-none',
+    large: 'rounded-none',
     full: 'rounded-full',
   },
   shadows: {
@@ -658,9 +658,9 @@ export const proActiefTheme: ThemeConfig = {
     gap: 'gap-8',
   },
   radius: {
-    small: 'rounded-xl',
-    medium: 'rounded-2xl',
-    large: 'rounded-3xl',
+    small: 'rounded-none',
+    medium: 'rounded-none',
+    large: 'rounded-none',
     full: 'rounded-full',
   },
   shadows: {
@@ -713,7 +713,7 @@ export const mindoorTheme: ThemeConfig = {
   name: 'Mindoor - Warm & Organisch',
   colors: {
     background: '#faf8f5',
-    backgroundAlt: '#f5f0e8',
+    backgroundAlt: '#f2ece1',
     surface: '#ffffff',
     text: '#1a1a1a',
     textMuted: '#6b6560',
@@ -747,7 +747,7 @@ export const sereneTheme: ThemeConfig = {
   name: 'Serene - Rustig & Zen',
   colors: {
     background: '#f9faf8',
-    backgroundAlt: '#f0f2ed',
+    backgroundAlt: '#edf0ea',
     surface: '#ffffff',
     text: '#2d3a2d',
     textMuted: '#6b7b6b',
@@ -975,18 +975,18 @@ export const paletteMetadata: Record<PaletteKey, { name: string; description: st
 };
 
 export const fontPairingMetadata: Record<FontPairingKey, { name: string; description: string }> = {
-  classic: { name: 'Klassiek', description: 'Libre Baskerville + Open Sans' },
-  modern: { name: 'Modern', description: 'DM Sans + Inter' },
-  elegant: { name: 'Elegant', description: 'Playfair Display + Lato' },
-  friendly: { name: 'Vriendelijk', description: 'Nunito + Open Sans' },
-  professional: { name: 'Professioneel', description: 'Manrope + Inter' },
-  editorial: { name: 'Editorial', description: 'Newsreader + Open Sans' },
-  proactief: { name: 'ProActief', description: 'Poppins' },
-  portfolio: { name: 'Portfolio', description: 'Playfair Display + Inter' },
-  mindoor: { name: 'Mindoor', description: 'Playfair Display + DM Sans' },
+  editorial: { name: 'Editorial', description: 'Newsreader + Source Sans 3' },
+  proactief: { name: 'ProActief', description: 'Space Grotesk + Work Sans' },
+  portfolio: { name: 'Portfolio', description: 'DM Serif Display + DM Sans' },
+  mindoor: { name: 'Mindoor', description: 'Fraunces + Nunito' },
   serene: { name: 'Serene', description: 'Cormorant Garamond + Nunito Sans' },
+  classic: { name: 'Klassiek', description: 'Libre Baskerville + Karla' },
+  modern: { name: 'Modern', description: 'Plus Jakarta Sans + Inter' },
+  elegant: { name: 'Elegant', description: 'Instrument Serif + Lato' },
+  friendly: { name: 'Speels', description: 'Figtree + Rubik' },
+  professional: { name: 'Krachtig', description: 'Archivo + Source Sans 3' },
   soft: { name: 'Zacht', description: 'Libre Baskerville + DM Sans' },
-  clean: { name: 'Clean', description: 'Poppins' },
+  clean: { name: 'Clean', description: 'Poppins + Poppins' },
 };
 
 export const templateMetadata: Record<string, { name: string; description: string; tags: string[] }> = {

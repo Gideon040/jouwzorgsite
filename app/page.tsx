@@ -1,8 +1,8 @@
 'use client';
 
 // app/page.tsx - Single page funnel
-// v3: 4-step wizard (naam → beroep → profiel → stijl), fullscreen generating state
-// Profiel step adds regio, jarenErvaring, omschrijving for better AI content
+// v4: MarketingHomepage replaces HeroSection as landing
+// Full marketing page with all sections, CTA triggers wizard overlay
 
 import { useState } from 'react';
 import { Site, SiteContent, Theme, GeneratedContent } from '@/types';
@@ -10,8 +10,8 @@ import { getBeroepLabel } from '@/constants';
 import { generatePlaceholderContent } from '@/lib/placeholder-content';
 import { trackWizardStart, trackWizardStep, trackSitePreview } from '@/lib/pixel';
 import { createClient } from '@/lib/supabase/client';
+import MarketingHomepage from '@/components/landing/MarketingHomepage';
 import {
-  HeroSection,
   WizardSection,
   GeneratingSection,
   PreviewSection,
@@ -51,24 +51,17 @@ export default function Home() {
   // Final subdomain
   const [finalSubdomain, setFinalSubdomain] = useState('');
   
-  // UI state
-  const [isCustomizing, setIsCustomizing] = useState(false);
-  
   // Regeneration tracking
   const [regenerateCount, setRegenerateCount] = useState(0);
-  const [isRegenerating, setIsRegenerating] = useState(false);
 
   // ── Helpers ─────────────────────────────────
 
-  // Convert regio id to werkgebied array for edge function
   const getWerkgebied = (): string[] => {
     if (!regio) return [];
-    // Capitalize first letter for display
     const label = regio.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('-');
     return [label];
   };
 
-  // Convert ervaring id to number for edge function
   const getJarenErvaringNumber = (): number | undefined => {
     if (!jarenErvaring) return undefined;
     const found = ERVARING_OPTIES.find(e => e.id === jarenErvaring);
@@ -80,6 +73,8 @@ export default function Home() {
   const handleStartWizard = () => {
     trackWizardStart();
     setFlowStep('wizard');
+    // Scroll to top when entering wizard
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleWizardNext = async () => {
@@ -90,7 +85,6 @@ export default function Home() {
       trackWizardStep(2, 'beroep');
       setWizardStep(3);
     } else if (wizardStep === 3) {
-      // Step 3 (profiel) always proceeds — fields are encouraged but not blocking
       trackWizardStep(3, 'profiel');
       setWizardStep(4);
     } else if (wizardStep === 4 && stijl) {
@@ -105,20 +99,15 @@ export default function Home() {
     }
   };
 
-  const handleGenerateSite = async (isRegeneration = false) => {
+  const handleGenerateSite = async () => {
     if (!stijl) return;
-    
-    // Show fullscreen generating state (not for regeneration — that uses inline loading)
-    if (!isRegeneration) {
-      setFlowStep('generating');
-    } else {
-      setIsRegenerating(true);
-    }
+
+    const isRegeneration = previewSite !== null;
+    setFlowStep('generating');
     
     try {
       const supabase = createClient();
       
-      // Build payload — werkgebied and jarenErvaring are already in WizardInput interface
       const werkgebied = getWerkgebied();
       const jarenErvaringNumber = getJarenErvaringNumber();
       
@@ -139,8 +128,6 @@ export default function Home() {
       );
 
       console.log('🎨 Generate-site response:', generated);
-      console.log('🎨 Template ID:', generated?.template_id);
-      console.log('🎨 Error:', error);
       
       let content: SiteContent;
       let templateId: string;
@@ -156,22 +143,51 @@ export default function Home() {
       } else {
         const gen = generated.generated_content as GeneratedContent;
         const inputData = generated.input_data || {};
-        
+
+        const mockEmail = inputData.email || `info@${naam.toLowerCase().replace(/[^a-z0-9]/g, '')}.nl`;
+        const mockTelefoon = inputData.telefoon || '06 12345678';
+
         content = {
           naam,
-          foto: undefined,
+          foto: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80',
           tagline: gen?.hero?.subtitel || `${getBeroepLabel(beroep)} | Beschikbaar voor opdrachten`,
-          over_mij: gen?.overMij 
+          over_mij: gen?.overMij
             ? `${gen.overMij.intro || ''}\n\n${gen.overMij.body || ''}${gen.overMij.persoonlijk ? '\n\n' + gen.overMij.persoonlijk : ''}`
             : generatePlaceholderContent({ naam, beroep, email: '' }).over_mij,
           contact: {
-            email: '',
-            werkgebied: werkgebied,
+            email: mockEmail,
+            telefoon: mockTelefoon,
+            werkgebied: werkgebied.length > 0 ? werkgebied : (inputData.werkgebied || ['Regio']),
           },
           diensten: gen?.diensten?.items || generatePlaceholderContent({ naam, beroep, email: '' }).diensten,
-          certificaten: customContent?.certificaten || [],
-          zakelijk: { kvk: '' },
+          certificaten: inputData.certificaten || customContent?.certificaten || [],
+          zakelijk: {
+            ...(inputData.zakelijk || { kvk: '12345678', handelsnaam: `${naam} Zorg` }),
+            btw: 'NL123456789B01',
+          },
+          kleuren: { primary: '#137fec' },
+          socials: {
+            linkedin: 'https://linkedin.com/in/voorbeeld',
+            instagram: 'https://instagram.com/voorbeeld',
+            facebook: 'https://facebook.com/voorbeeld',
+          },
           beschikbaar: true,
+          start_carriere: inputData.jarenErvaring
+            ? new Date().getFullYear() - inputData.jarenErvaring
+            : new Date().getFullYear() - 5,
+          werkervaring: inputData.werkervaring || [],
+          expertises: inputData.expertises || inputData.specialisaties || [
+            'Persoonlijke verzorging',
+            'Wondverzorging',
+            'Medicatiebeheer',
+            'Palliatieve zorg',
+          ],
+          testimonials: gen?.testimonials?.items?.map((t: any) => ({
+            tekst: t.tekst,
+            naam: t.naam,
+            functie: t.functie,
+          })) || [],
+          telefoon: mockTelefoon,
           generated: gen,
         };
         
@@ -199,8 +215,6 @@ export default function Home() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-
-      console.log('🎨 Final site object:', site);
       
       setPreviewSite(site);
       setCustomContent(content);
@@ -210,9 +224,9 @@ export default function Home() {
         setRegenerateCount(prev => prev + 1);
       } else {
         trackSitePreview();
-        setFlowStep('preview');
       }
-      
+      setFlowStep('preview');
+
     } catch (err) {
       console.error('Fout bij genereren site:', err);
       const content = generatePlaceholderContent({ naam, beroep, email: '' });
@@ -240,16 +254,16 @@ export default function Home() {
       
       if (!isRegeneration) {
         trackSitePreview();
-        setFlowStep('preview');
       }
-    } finally {
-      setIsRegenerating(false);
+      setFlowStep('preview');
     }
   };
 
-  const handleRegenerate = async () => {
+  const handleBackToStyle = () => {
     if (regenerateCount >= MAX_REGENERATIONS) return;
-    await handleGenerateSite(true);
+    setStijl('');
+    setWizardStep(4);
+    setFlowStep('wizard');
   };
 
   const handleCheckoutComplete = () => {
@@ -259,17 +273,15 @@ export default function Home() {
   const handleSetContent = (newContent: SiteContent) => {
     setCustomContent(newContent);
     if (previewSite) {
-      setPreviewSite({
-        ...previewSite,
-        content: newContent,
-      });
+      setPreviewSite({ ...previewSite, content: newContent });
     }
   };
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Marketing homepage = the "hero" step */}
       {flowStep === 'hero' && (
-        <HeroSection onStart={handleStartWizard} />
+        <MarketingHomepage onStart={handleStartWizard} />
       )}
       
       {flowStep === 'wizard' && (
@@ -303,14 +315,10 @@ export default function Home() {
         <PreviewSection
           site={previewSite}
           content={customContent}
-          setContent={handleSetContent}
           onCheckout={() => setFlowStep('verification')}
-          onRegenerate={handleRegenerate}
-          isCustomizing={isCustomizing}
-          setIsCustomizing={setIsCustomizing}
-          isRegenerating={isRegenerating}
-          regenerateCount={regenerateCount}
-          maxRegenerations={MAX_REGENERATIONS}
+          onBackToStyle={handleBackToStyle}
+          canRegenerate={regenerateCount < MAX_REGENERATIONS}
+          regenerationsLeft={MAX_REGENERATIONS - regenerateCount}
         />
       )}
       

@@ -14,6 +14,8 @@ export async function createSite(data: {
   beroep: string;
   content: Partial<SiteContent>;
   custom_domain?: string;
+  generated_content?: any;
+  theme?: any;
 }) {
   const supabase = await createClient();
   
@@ -33,17 +35,26 @@ export async function createSite(data: {
   }
 
   // Create the site
+  const insertData: any = {
+    user_id: user.id,
+    subdomain: data.subdomain.toLowerCase(),
+    template_id: data.template_id,
+    beroep: data.beroep,
+    content: data.content,
+    custom_domain: data.custom_domain || null,
+    published: false, // Start unpublished until payment
+  };
+
+  if (data.generated_content) {
+    insertData.generated_content = data.generated_content;
+  }
+  if (data.theme) {
+    insertData.theme = data.theme;
+  }
+
   const { data: site, error } = await supabase
     .from('sites')
-    .insert({
-      user_id: user.id,
-      subdomain: data.subdomain.toLowerCase(),
-      template_id: data.template_id,
-      beroep: data.beroep,
-      content: data.content,
-      custom_domain: data.custom_domain || null,
-      published: false, // Start unpublished until payment
-    })
+    .insert(insertData)
     .select()
     .single();
 
@@ -62,7 +73,10 @@ export async function updateSite(
   siteId: string,
   updates: {
     template_id?: string;
+    beroep?: string;
     content?: Partial<SiteContent>;
+    generated_content?: any;
+    theme?: any;
   }
 ) {
   const supabase = await createClient();
@@ -213,4 +227,9 @@ export async function checkSubdomainAvailability(subdomain: string) {
   }
 
   return { available: isAvailable };
+}
+
+// Revalidate a published site's cache after editor save
+export async function revalidateSite(subdomain: string) {
+  revalidatePath(`/site/${subdomain}`);
 }

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { BaseSectionProps, DienstenStyle, getRevealClass, getDienstIcon, getJarenErvaring } from './types';
+import { BaseSectionProps, PaletteColors, DienstenStyle, getRevealClass, getDienstIcon, getJarenErvaring, DIENSTEN_SFEER_IMAGES, resolvePalette } from './types';
 import { ThemeConfig } from '../themes';
 
 // ============================================
@@ -22,25 +22,10 @@ interface DienstItem {
   icon?: string;
 }
 
-/** Extended palette with optional Color Story properties */
-interface PaletteColors {
-  primary: string;
-  primaryHover: string;
-  primaryLight: string;
-  primaryDark: string;
-  accent?: string;
-  accentLight?: string;
-  bg?: string;
-  bgAlt?: string;
-  text?: string;
-  textMuted?: string;
-  border?: string;
-}
-
 /** Shared props passed to all variant components */
 interface DienstenComponentProps {
   theme: ThemeConfig;
-  palette: PaletteColors;
+  palette: BaseSectionProps['palette'];
   diensten: DienstItem[];
   titel: string;
   intro?: string;
@@ -48,41 +33,17 @@ interface DienstenComponentProps {
   ctaButtonText: string;
 }
 
-// ============================================
-// SFEERBEELDEN — Varied healthcare images
-// ============================================
-
-const SFEER_IMAGES = [
-  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80',
-  'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=800&q=80',
-];
+// DIENSTEN_SFEER_IMAGES imported from ./types
 
 function getSfeerImage(index: number, size: 'sm' | 'md' | 'lg' = 'md'): string {
   const widths = { sm: 400, md: 600, lg: 800 };
   const w = widths[size];
-  const base = SFEER_IMAGES[index % SFEER_IMAGES.length];
+  const base = DIENSTEN_SFEER_IMAGES[index % DIENSTEN_SFEER_IMAGES.length];
   return base.replace('w=800', `w=${w}`);
 }
 
-// ============================================
-// PALETTE HELPERS — Safe access with fallbacks
-// ============================================
-
-function p(palette: PaletteColors) {
-  return {
-    accent: palette.accent ?? palette.primary,
-    accentLight: palette.accentLight ?? palette.primaryLight,
-    bg: palette.bg ?? '#ffffff',
-    bgAlt: palette.bgAlt ?? '#fafafa',
-    text: palette.text ?? '#1a1a1a',
-    textMuted: palette.textMuted ?? '#6b7280',
-    border: palette.border ?? '#e5e7eb',
-  };
-}
+// resolvePalette imported from ./types — alias as p() for brevity
+const p = resolvePalette;
 
 // ============================================
 // REUSABLE MICRO-COMPONENTS
@@ -232,7 +193,7 @@ export function DienstenSection({
   
   const sharedProps: DienstenComponentProps = { 
     theme, 
-    palette: palette as PaletteColors, 
+    palette,
     diensten, 
     titel, 
     intro,
@@ -605,7 +566,7 @@ function DienstenProactief({ theme, palette, diensten, titel, intro }: DienstenC
           {diensten.map((dienst, idx) => (
             <div 
               key={idx}
-              className={`bg-white p-10 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] relative overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,153,204,0.12)] group ${getRevealClass('up', idx * 100)}`}
+              className={`bg-white p-10 shadow-[0_10px_40px_rgba(0,0,0,0.04)] relative overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_50px_rgba(0,153,204,0.12)] group ${getRevealClass('up', idx * 100)}`}
             >
               {/* Top border on hover */}
               <div 
@@ -702,7 +663,7 @@ function DienstenProactief2({ theme, palette, diensten, titel, intro, ctaButtonT
                 <img 
                   src={getSfeerImage(0, 'sm')}
                   alt="Zorgverlener aan het werk"
-                  className="w-full h-40 object-cover rounded-lg"
+                  className="w-full h-40 object-cover"
                 />
               </div>
             </div>
@@ -817,6 +778,9 @@ function DienstenProactief3({ theme, palette, diensten, titel, intro, ctaButtonT
               href="#contact"
               className={`group p-8 transition-colors duration-300 ${getRevealClass('up', (idx + 1) * 50)}`}
               style={{ backgroundColor: theme.colors.background }}
+              // NOTE: querySelector is used for hover effects because Tailwind cannot apply
+              // hover styles with runtime-dynamic palette colors (e.g. hover:text-[${color}]).
+              // A CSS custom properties approach would be cleaner but requires refactoring all variants.
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = palette.primary;
                 const number = e.currentTarget.querySelector('.dienst-number') as HTMLElement;
@@ -959,6 +923,7 @@ function DienstenPortfolio({ theme, palette, diensten, titel, intro, ctaButtonTe
             <a 
               href="#contact"
               className={`group relative md:row-span-2 overflow-hidden min-h-[300px] lg:min-h-[400px] ${getRevealClass('up')}`}
+              style={{ borderRadius: '0 80px 0 0' }}
             >
               <img 
                 src={getSfeerImage(0, 'md')}
@@ -1127,7 +1092,7 @@ function DienstenPortfolio2({ theme, palette, diensten, titel, intro, jarenErvar
             
             <a 
               href="#contact"
-              className="inline-flex items-center gap-3 mt-10 px-8 py-4 text-sm font-medium text-white transition-all hover:gap-4"
+              className="inline-flex items-center gap-3 mt-10 px-8 py-4 rounded-full text-sm font-medium text-white transition-all hover:gap-4"
               style={{ backgroundColor: palette.primary }}
             >
               {ctaButtonText}
@@ -1175,7 +1140,7 @@ function DienstenPortfolio3({ theme, palette, diensten, titel, intro, ctaButtonT
             href="#contact"
             className={`group grid md:grid-cols-2 gap-8 lg:gap-16 items-center ${idx < 3 ? 'mb-16 lg:mb-24' : ''} ${getRevealClass('up', (idx + 1) * 100)}`}
           >
-            <div className={`relative overflow-hidden ${idx % 2 === 1 ? 'md:order-2' : ''}`}>
+            <div className={`relative overflow-hidden ${idx % 2 === 1 ? 'md:order-2' : ''}`} style={{ borderRadius: '0 80px 0 0' }}>
               <img 
                 src={getSfeerImage(idx, 'md')}
                 alt={dienst.naam}
@@ -1324,7 +1289,7 @@ function MindoorCard({
   return (
     <a
       href="#contact"
-      className={`group p-6 rounded-2xl transition-colors ${position === 'right' ? 'lg:max-w-xs lg:ml-auto' : 'lg:max-w-xs'} ${getRevealClass('up', (index + 1) * 100)}`}
+      className={`group p-6 rounded-3xl transition-colors ${position === 'right' ? 'lg:max-w-xs lg:ml-auto' : 'lg:max-w-xs'} ${getRevealClass('up', (index + 1) * 100)}`}
       style={{ backgroundColor: bgColor }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = hoverColor;
@@ -1381,12 +1346,12 @@ function DienstenMindoor2({ theme, palette, diensten, titel, intro, jarenErvarin
         
         {/* Header */}
         <div className={`max-w-2xl mb-12 lg:mb-16 ${getRevealClass('up')}`}>
-          <span className="text-sm font-medium mb-3 block" style={{ color: palette.primary }}>
+          <span className="text-sm font-medium mb-3 block" style={{ color: palette.primaryDark }}>
             Mijn expertise
           </span>
-          <SectionTitle 
-            text={titel} 
-            font={theme.fonts.heading} 
+          <SectionTitle
+            text={titel}
+            font={theme.fonts.heading}
             color={theme.colors.text}
             accentColor={safe.accent}
             italicLastWord
@@ -1713,7 +1678,7 @@ function DienstenSerene({ theme, palette, diensten, titel, intro, ctaButtonText 
                   {dienst.beschrijving || 'Professionele zorg met aandacht.'}
                 </p>
                 <span 
-                  className="inline-block px-5 py-2 rounded-full text-[10px] uppercase tracking-wider text-white"
+                  className="inline-block px-5 py-2 rounded text-[10px] uppercase tracking-wider text-white"
                   style={{ backgroundColor: palette.primary }}
                 >
                   Meer info

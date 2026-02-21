@@ -4,7 +4,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { BaseSectionProps, TestimonialsStyle, getRevealClass, getInitials, DEFAULT_TESTIMONIALS } from './types';
+import { BaseSectionProps, TestimonialsStyle, getRevealClass, getInitials, DEFAULT_TESTIMONIALS, TESTIMONIALS_SFEER_IMAGES } from './types';
 
 // ============================================
 // HELPERS
@@ -18,12 +18,7 @@ function hexToRgb(hex: string): string {
   return `${r},${g},${b}`;
 }
 
-// Sfeer images for slider (per slide)
-const SFEER_IMAGES = [
-  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=700&q=80',
-  'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=700&q=80',
-  'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=700&q=80',
-];
+// TESTIMONIALS_SFEER_IMAGES imported from ./types
 
 // Default avatar images
 const DEFAULT_AVATARS = [
@@ -482,7 +477,7 @@ function TestimonialsProactief({ theme, palette, testimonials, titel, intro }: T
           {testimonials.slice(0, 3).map((testimonial: any, idx: number) => (
             <div 
               key={idx}
-className={`p-9 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] relative ${getRevealClass('up', idx * 100)}`}
+className={`p-9 shadow-[0_10px_40px_rgba(0,0,0,0.04)] relative ${getRevealClass('up', idx * 100)}`}
 style={{ backgroundColor: theme.colors.background }}            >
               <div 
                 className="absolute top-5 right-6 text-7xl font-serif leading-none opacity-10"
@@ -601,7 +596,7 @@ function TestimonialsProactief2({ theme, palette, testimonials, titel, intro }: 
                 <img 
                   src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80"
                   alt="Tevreden cliënten"
-                  className="w-full h-36 object-cover rounded-lg"
+                  className="w-full h-36 object-cover"
                 />
               </div>
             </div>
@@ -1173,9 +1168,9 @@ function TestimonialsPortfolio3({ theme, palette, testimonials, titel, intro }: 
               }}
             >
               <div className="grid lg:grid-cols-12 gap-0">
-                <div className="lg:col-span-5 relative overflow-hidden">
+                <div className="lg:col-span-5 relative overflow-hidden" style={{ borderRadius: '0 80px 0 0' }}>
                   <img 
-                    src={SFEER_IMAGES[idx % SFEER_IMAGES.length]}
+                    src={TESTIMONIALS_SFEER_IMAGES[idx % TESTIMONIALS_SFEER_IMAGES.length]}
                     alt="Zorg sfeer"
                     className="w-full h-[260px] lg:h-[380px] object-cover"
                   />
@@ -1739,7 +1734,7 @@ function TestimonialsMindoor3({ theme, palette, testimonials, titel, intro }: Te
                     style={{ backgroundColor: offsetColors[idx % offsetColors.length], opacity: 0.08 }}
                   />
                   <img 
-                    src={SFEER_IMAGES[idx % SFEER_IMAGES.length]}
+                    src={TESTIMONIALS_SFEER_IMAGES[idx % TESTIMONIALS_SFEER_IMAGES.length]}
                     alt="Zorg sfeer"
                     className="w-full h-[260px] lg:h-[380px] object-cover rounded-t-[2.5rem] lg:rounded-l-[2.5rem] lg:rounded-tr-none"
                   />
@@ -1883,7 +1878,7 @@ function TestimonialsSerene1({ theme, palette, testimonials, titel, intro }: Tes
       <div 
         className={`relative py-24 lg:py-32 px-6 ${getRevealClass('up')}`}
         style={{
-          background: `linear-gradient(rgba(${hexToRgb(palette.primary)},0.88), rgba(${hexToRgb(palette.primary)},0.88)), url('${SFEER_IMAGES[0]}') center/cover`,
+          background: `linear-gradient(rgba(${hexToRgb(palette.primary)},0.88), rgba(${hexToRgb(palette.primary)},0.88)), url('${TESTIMONIALS_SFEER_IMAGES[0]}') center/cover`,
         }}
       >
         <div className="text-center max-w-lg mx-auto">
@@ -1916,8 +1911,8 @@ function TestimonialsSerene1({ theme, palette, testimonials, titel, intro }: Tes
             {testimonials.slice(0, 3).map((testimonial: any, idx: number) => (
               <div 
                 key={idx}
-                className={`rounded-[20px] p-8 shadow-sm hover:-translate-y-1 transition-transform ${getRevealClass('up', idx * 100)}`}
-                style={{ backgroundColor: theme.colors.background }}
+                className={`rounded-[20px] p-8 border hover:-translate-y-1 transition-transform ${getRevealClass('up', idx * 100)}`}
+                style={{ backgroundColor: theme.colors.background, borderColor: theme.colors.border }}
               >
                 <div 
                   className="text-[56px] leading-none -mb-2"
@@ -1992,7 +1987,7 @@ function TestimonialsSerene2({ theme, palette, testimonials, titel, intro }: Tes
           <div className={`lg:col-span-5 ${getRevealClass('up')}`}>
             <div className="relative">
               <img 
-                src={SFEER_IMAGES[0]}
+                src={TESTIMONIALS_SFEER_IMAGES[0]}
                 alt="Tevreden cliënt"
                 className="w-full h-[300px] lg:h-[480px] object-cover"
                 style={{ borderRadius: '0 40px 0 0' }}
@@ -2160,7 +2155,7 @@ function TestimonialsSerene3({ theme, palette, testimonials, titel, intro }: Tes
                 <div className="lg:col-span-5">
                   <div className="mb-6">
                     <img 
-                      src={SFEER_IMAGES[idx % SFEER_IMAGES.length]}
+                      src={TESTIMONIALS_SFEER_IMAGES[idx % TESTIMONIALS_SFEER_IMAGES.length]}
                       alt="Zorg"
                       className="w-full h-48 object-cover"
                       style={{ borderRadius: '0 40px 0 0' }}

@@ -1,357 +1,469 @@
 // app/(dashboard)/dashboard/page.tsx
-// Overview page: stats, recent sites, quick actions
 
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Site } from '@/types';
-import { getBeroepLabel } from '@/constants';
 import { PublishToggle } from '@/components/dashboard/PublishToggle';
 
-export const metadata = { title: 'Dashboard - Overzicht' };
+export const metadata = { title: 'Dashboard - Mijn Website' };
 
-export default async function DashboardOverviewPage() {
+interface PageProps {
+  searchParams: { site?: string };
+}
+
+export default async function DashboardOverviewPage({ searchParams }: PageProps) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  // Fetch sites
   const { data: sites } = await supabase
     .from('sites')
     .select('*')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  // Fetch total visits (last 30 days) for all user's sites
-  const siteIds = (sites || []).map(s => s.id);
-  let totalViews = 0;
-  let todayViews = 0;
-  let weekViews = 0;
-  let deviceBreakdown: Record<string, number> = {};
-
-  if (siteIds.length > 0) {
-    // Total last 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-    const { count: total30 } = await supabase
-      .from('site_visits')
-      .select('*', { count: 'exact', head: true })
-      .in('site_id', siteIds)
-      .gte('created_at', thirtyDaysAgo);
-    totalViews = total30 || 0;
-
-    // Today
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const { count: todayCount } = await supabase
-      .from('site_visits')
-      .select('*', { count: 'exact', head: true })
-      .in('site_id', siteIds)
-      .gte('created_at', todayStart.toISOString());
-    todayViews = todayCount || 0;
-
-    // This week
-    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-    const { count: weekCount } = await supabase
-      .from('site_visits')
-      .select('*', { count: 'exact', head: true })
-      .in('site_id', siteIds)
-      .gte('created_at', weekAgo);
-    weekViews = weekCount || 0;
-
-    // Device breakdown
-    const { data: devices } = await supabase
-      .from('site_visits')
-      .select('device')
-      .in('site_id', siteIds)
-      .gte('created_at', thirtyDaysAgo);
-    if (devices) {
-      devices.forEach(d => {
-        deviceBreakdown[d.device || 'unknown'] = (deviceBreakdown[d.device || 'unknown'] || 0) + 1;
-      });
-    }
-  }
-
-  const publishedCount = (sites || []).filter(s => s.published).length;
   const hasSites = sites && sites.length > 0;
   const firstName = user.user_metadata?.full_name?.split(' ')[0] || 'daar';
 
+  if (!hasSites) {
+    return <EmptyState firstName={firstName} />;
+  }
+
+  const selectedSiteId = searchParams.site || sites[0].id;
+  const site = (sites.find(s => s.id === selectedSiteId) || sites[0]) as Site;
+
+  let todayViews = 0;
+  let weekViews = 0;
+  let monthViews = 0;
+
+  try {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
+    const monthAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+
+    const [todayResult, weekResult, monthResult] = await Promise.all([
+      supabase
+        .from('site_visits')
+        .select('*', { count: 'exact', head: true })
+        .eq('site_id', site.id)
+        .gte('created_at', todayStart.toISOString()),
+      supabase
+        .from('site_visits')
+        .select('*', { count: 'exact', head: true })
+        .eq('site_id', site.id)
+        .gte('created_at', weekAgo),
+      supabase
+        .from('site_visits')
+        .select('*', { count: 'exact', head: true })
+        .eq('site_id', site.id)
+        .gte('created_at', monthAgo),
+    ]);
+
+    todayViews = todayResult.count || 0;
+    weekViews = weekResult.count || 0;
+    monthViews = monthResult.count || 0;
+  } catch {
+    // site_visits table may not exist
+  }
+
   return (
-    <div className="space-y-8 max-w-[1100px]">
-      {/* Greeting */}
-      <div>
-        <h2 className="text-xl font-semibold text-slate-900">
-          Goedemorgen, {firstName} 👋
-        </h2>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Hier is een overzicht van je websites en bezoekers.
-        </p>
-      </div>
+    <div className="max-w-[960px] mx-auto">
+      {/* Multi-site selector */}
+      {sites.length > 1 && (
+        <div className="flex gap-2 flex-wrap mb-6">
+          {sites.map(s => (
+            <Link
+              key={s.id}
+              href={`/dashboard?site=${s.id}`}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                s.id === site.id
+                  ? 'bg-stone-900 text-white'
+                  : 'bg-white text-stone-600 border border-stone-200 hover:border-stone-300'
+              }`}
+            >
+              {(s as Site).content?.naam || s.subdomain}
+            </Link>
+          ))}
+        </div>
+      )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon="language"
-          label="Websites"
-          value={sites?.length || 0}
-          sub={`${publishedCount} live`}
-          color="teal"
-        />
-        <StatCard
-          icon="visibility"
-          label="Bezoekers vandaag"
-          value={todayViews}
-          sub="pageviews"
-          color="blue"
-        />
-        <StatCard
-          icon="trending_up"
-          label="Deze week"
-          value={weekViews}
-          sub="pageviews"
-          color="violet"
-        />
-        <StatCard
-          icon="bar_chart"
-          label="30 dagen"
-          value={totalViews}
-          sub="totaal"
-          color="amber"
-        />
-      </div>
+      {/* ── Welcome Card (dark) ───────────────── */}
+      <div className="relative rounded-2xl overflow-hidden mb-7" style={{ background: 'linear-gradient(135deg, #1c1917 0%, #292524 100%)' }}>
+        {/* Decorative radials */}
+        <div className="absolute -right-5 -top-5 w-[180px] h-[180px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.12) 0%, transparent 70%)' }} />
+        <div className="absolute right-[60px] -bottom-10 w-[120px] h-[120px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)' }} />
 
-      {/* Main Grid: Sites + Sidebar */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Sites — 2/3 width */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-slate-900">Mijn websites</h3>
-            {hasSites && (
-              <Link
-                href="/wizard"
-                className="text-xs font-medium text-teal-600 hover:text-teal-700"
+        <div className="relative px-8 py-7 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div>
+            <h1 className="text-[26px] font-semibold text-stone-50 font-logo leading-tight tracking-tight">
+              Welkom terug, {firstName}
+            </h1>
+            <div className="flex items-center gap-2 mt-2.5">
+              <a
+                href={`https://${site.subdomain}.jouwzorgsite.nl`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[14px] font-medium text-teal-300 hover:text-teal-200 transition-colors"
               >
-                + Nieuwe site
-              </Link>
-            )}
-          </div>
-
-          {hasSites ? (
-            <div className="space-y-3">
-              {sites!.slice(0, 5).map((site) => (
-                <SiteRow key={site.id} site={site as Site} />
-              ))}
-              {sites!.length > 5 && (
-                <Link
-                  href="/dashboard/websites"
-                  className="block text-center py-2.5 text-xs font-medium text-slate-500 hover:text-slate-700 bg-white rounded-xl border border-slate-200/60 hover:border-slate-300 transition-colors"
-                >
-                  Bekijk alle {sites!.length} websites →
-                </Link>
+                {site.subdomain}.jouwzorgsite.nl
+              </a>
+              {site.published ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-300 bg-emerald-400/10 px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-emerald-300 rounded-full animate-pulse" />
+                  Live
+                </span>
+              ) : (
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-stone-400 bg-white/5 px-2 py-0.5 rounded-full">
+                  Concept
+                </span>
               )}
             </div>
-          ) : (
-            <EmptyState />
-          )}
-        </div>
-
-        {/* Sidebar — 1/3 width */}
-        <div className="space-y-4">
-          {/* Device breakdown */}
-          {totalViews > 0 && (
-            <div className="bg-white rounded-xl border border-slate-200/60 p-5">
-              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
-                Apparaten (30d)
-              </h4>
-              <div className="space-y-3">
-                {[
-                  { key: 'desktop', icon: 'computer', label: 'Desktop' },
-                  { key: 'mobile', icon: 'smartphone', label: 'Mobiel' },
-                  { key: 'tablet', icon: 'tablet_mac', label: 'Tablet' },
-                ].map(({ key, icon, label }) => {
-                  const count = deviceBreakdown[key] || 0;
-                  const pct = totalViews > 0 ? Math.round((count / totalViews) * 100) : 0;
-                  return (
-                    <div key={key}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[16px] text-slate-400">{icon}</span>
-                          <span className="text-xs font-medium text-slate-700">{label}</span>
-                        </div>
-                        <span className="text-xs font-semibold text-slate-900">{pct}%</span>
-                      </div>
-                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-teal-500 rounded-full transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Quick Actions */}
-          <div className="bg-white rounded-xl border border-slate-200/60 p-5">
-            <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-              Snelle acties
-            </h4>
-            <div className="space-y-1.5">
-              <QuickAction href="/wizard" icon="add_circle" label="Nieuwe website maken" />
-              <QuickAction href="/dashboard/dba-tools" icon="shield" label="DBA-check uitvoeren" badge="Nieuw" />
-              <QuickAction href="/dashboard/instellingen" icon="settings" label="Account instellingen" />
-            </div>
           </div>
+          <div className="sm:min-w-[200px]">
+            <PublishToggle siteId={site.id} published={site.published} />
+          </div>
+        </div>
+      </div>
 
-          {/* DBA-Tools Promo */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl p-5 text-white">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-symbols-outlined text-teal-400 text-lg">shield</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-teal-400">DBA-Tools</span>
-            </div>
-            <p className="text-sm font-medium mb-1">Check je inbeddingsrisico</p>
-            <p className="text-xs text-slate-400 leading-relaxed mb-3">
-              AI-analyse of jouw werkrelatie als schijnzelfstandigheid kan worden gezien.
-            </p>
-            <Link
+      {/* ── Snelle acties ─────────────────────── */}
+      <div className="mb-7">
+        <h2 className="text-[13px] font-semibold text-stone-500 uppercase tracking-wider mb-3.5">Snelle acties</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <QuickActionCard
+            href={`/edit/${site.id}`}
+            icon={<IconEdit />}
+            title="Site bewerken"
+            desc="Teksten, foto's en kleuren"
+            color="#0d9488"
+            bg="#f0fdfa"
+          />
+          <QuickActionCard
+            href={`/dashboard/wizard/${site.id}`}
+            icon={<IconSparkle />}
+            title="AI Wizard"
+            desc="Laat AI je site verbeteren"
+            color="#8b5cf6"
+            bg="#f5f3ff"
+          />
+          <QuickActionCard
+            href={`/site/${site.subdomain}`}
+            icon={<IconEye />}
+            title="Site bekijken"
+            desc="Bekijk je live website"
+            color="#2563eb"
+            bg="#eff6ff"
+            external
+          />
+        </div>
+      </div>
+
+      {/* ── Beheer + Stats ────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5">
+        {/* Tools grid */}
+        <div>
+          <h2 className="text-[13px] font-semibold text-stone-500 uppercase tracking-wider mb-3.5">Beheer</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <ToolCard
+              href={`/dashboard/gegevens?site=${site.id}`}
+              icon={<IconUser />}
+              title="Mijn gegevens"
+              desc="Contact & zakelijke info"
+              color="#059669"
+            />
+            <ToolCard
+              href={`/dashboard/kwaliteit?site=${site.id}`}
+              icon={<IconShield />}
+              title="Kwaliteitskeurmerk"
+              desc="Toon dat je aan eisen voldoet"
+              color="#0891b2"
+            />
+            <ToolCard
+              href={`/dashboard/domein?site=${site.id}`}
+              icon={<IconGlobe />}
+              title="Eigen domein"
+              desc="Koppel je eigen .nl domein"
+              color="#7c3aed"
+            />
+            <ToolCard
               href="/dashboard/dba-tools"
-              className="inline-flex items-center gap-1 text-xs font-semibold text-teal-400 hover:text-teal-300 transition-colors"
-            >
-              Start analyse →
-            </Link>
+              icon={<IconTool />}
+              title="DBA-Tools"
+              desc="Binnenkort beschikbaar"
+              color="#94a3b8"
+              disabled
+            />
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// COMPONENTS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function StatCard({
-  icon, label, value, sub, color,
-}: {
-  icon: string; label: string; value: number; sub: string;
-  color: 'teal' | 'blue' | 'violet' | 'amber';
-}) {
-  const colors = {
-    teal:   { bg: 'bg-teal-50',   icon: 'text-teal-600',   ring: 'ring-teal-500/10' },
-    blue:   { bg: 'bg-blue-50',   icon: 'text-blue-600',   ring: 'ring-blue-500/10' },
-    violet: { bg: 'bg-violet-50', icon: 'text-violet-600', ring: 'ring-violet-500/10' },
-    amber:  { bg: 'bg-amber-50',  icon: 'text-amber-600',  ring: 'ring-amber-500/10' },
-  };
-  const c = colors[color];
-
-  return (
-    <div className={`bg-white rounded-xl border border-slate-200/60 p-4 ring-1 ${c.ring}`}>
-      <div className={`w-9 h-9 ${c.bg} rounded-lg flex items-center justify-center mb-3`}>
-        <span className={`material-symbols-outlined text-[20px] ${c.icon}`}>{icon}</span>
-      </div>
-      <p className="text-2xl font-bold text-slate-900 tracking-tight">{value.toLocaleString('nl-NL')}</p>
-      <div className="flex items-center gap-1.5 mt-0.5">
-        <span className="text-xs text-slate-500">{label}</span>
-        <span className="text-[10px] text-slate-400">· {sub}</span>
-      </div>
-    </div>
-  );
-}
-
-function SiteRow({ site }: { site: Site }) {
-  const { content } = site;
-  return (
-    <div className="bg-white rounded-xl border border-slate-200/60 p-4 flex items-center gap-4 hover:border-slate-300 transition-colors group">
-      {/* Avatar */}
-      <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
-        {content.foto ? (
-          <img src={content.foto} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-sm font-bold text-slate-400">
-            {(content.naam || '?').charAt(0)}
-          </span>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-sm font-semibold text-slate-900 truncate">{content.naam || 'Naamloze site'}</p>
-          {site.published ? (
-            <span className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 rounded">
-              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-              Live
-            </span>
-          ) : (
-            <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 rounded">
-              Concept
-            </span>
-          )}
+        {/* Stats panel */}
+        <div>
+          <h2 className="text-[13px] font-semibold text-stone-500 uppercase tracking-wider mb-3.5">Bezoekers</h2>
+          <StatsPanel todayViews={todayViews} weekViews={weekViews} monthViews={monthViews} />
         </div>
-        <p className="text-xs text-slate-400 truncate">{site.subdomain}.jouwzorgsite.nl</p>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Link
-          href={`/edit/${site.id}`}
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          title="Bewerken"
-        >
-          <span className="material-symbols-outlined text-[18px]">edit</span>
-        </Link>
-        <a
-          href={`/site/${site.subdomain}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          title="Bekijken"
-        >
-          <span className="material-symbols-outlined text-[18px]">open_in_new</span>
-        </a>
       </div>
     </div>
   );
 }
 
-function QuickAction({
-  href, icon, label, badge,
-}: {
-  href: string; icon: string; label: string; badge?: string;
-}) {
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// SVG ICONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function IconEdit() {
   return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-3 py-2.5 -mx-1 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors group"
-    >
-      <span className="material-symbols-outlined text-[18px] text-slate-400 group-hover:text-slate-600">{icon}</span>
-      <span className="flex-1 text-[13px] font-medium">{label}</span>
-      {badge && (
-        <span className="px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider bg-teal-500/10 text-teal-600 rounded">
-          {badge}
-        </span>
-      )}
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+    </svg>
+  );
+}
+
+function IconSparkle() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2L9.5 9.5 2 12l7.5 2.5L12 22l2.5-7.5L22 12l-7.5-2.5z" />
+    </svg>
+  );
+}
+
+function IconEye() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function IconUser() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function IconShield() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
+function IconGlobe() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </svg>
+  );
+}
+
+function IconTool() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+}
+
+function IconChart() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 20V10" /><path d="M12 20V4" /><path d="M6 20v-6" />
+    </svg>
+  );
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CARD COMPONENTS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function QuickActionCard({
+  href,
+  icon,
+  title,
+  desc,
+  color,
+  bg,
+  external,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  color: string;
+  bg: string;
+  external?: boolean;
+}) {
+  const inner = (
+    <>
+      <div
+        className="w-10 h-10 rounded-[10px] flex items-center justify-center mb-3.5"
+        style={{ background: bg, color }}
+      >
+        {icon}
+      </div>
+      <div className="text-[15px] font-semibold text-stone-900 tracking-tight mb-0.5">{title}</div>
+      <div className="text-[13px] text-stone-500">{desc}</div>
+    </>
+  );
+
+  const className = `block p-5 rounded-xl border border-stone-200 bg-white transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer`;
+
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+        {inner}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={className}>
+      {inner}
     </Link>
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="bg-white rounded-xl border border-dashed border-slate-300 p-10 text-center">
-      <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-        <span className="material-symbols-outlined text-2xl text-slate-400">web</span>
+function ToolCard({
+  href,
+  icon,
+  title,
+  desc,
+  color,
+  disabled,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  color: string;
+  disabled?: boolean;
+}) {
+  const inner = (
+    <div className={`flex items-center gap-3.5 ${disabled ? 'opacity-50' : ''}`}>
+      <div className="flex-shrink-0" style={{ color }}>
+        {icon}
       </div>
-      <h3 className="text-sm font-semibold text-slate-900 mb-1">Nog geen websites</h3>
-      <p className="text-xs text-slate-500 mb-4">
-        Maak je eerste professionele zorgwebsite in 3 stappen.
-      </p>
-      <Link
-        href="/wizard"
-        className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors"
-      >
-        <span className="material-symbols-outlined text-[16px]">add</span>
-        Maak je eerste website
-      </Link>
+      <div>
+        <div className="text-[14px] font-semibold text-stone-900 tracking-tight">{title}</div>
+        <div className="text-[12px] text-stone-400 mt-0.5">{desc}</div>
+      </div>
+    </div>
+  );
+
+  if (disabled) {
+    return (
+      <div className="p-4 rounded-xl border border-stone-200 bg-[#fafaf9] cursor-default">
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="block p-4 rounded-xl border border-stone-200 bg-white transition-all hover:shadow-sm cursor-pointer"
+    >
+      {inner}
+    </Link>
+  );
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STATS PANEL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function StatsPanel({
+  todayViews,
+  weekViews,
+  monthViews,
+}: {
+  todayViews: number;
+  weekViews: number;
+  monthViews: number;
+}) {
+  const bars = [20, 35, 15, 45, 30, 55, 25, 40, 50, 35, 60, 45, 30, 55];
+
+  return (
+    <div className="p-5 rounded-xl border border-stone-200 bg-white h-full">
+      {/* Header */}
+      <div className="flex items-center gap-2.5 mb-5">
+        <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+          <IconChart />
+        </div>
+        <div>
+          <div className="text-[28px] font-semibold text-stone-900 font-logo leading-none tracking-tight">
+            {monthViews}
+          </div>
+          <div className="text-[12px] text-stone-400">bezoekers deze maand</div>
+        </div>
+      </div>
+
+      {/* Mini chart */}
+      <div className="h-[60px] rounded-lg flex items-end px-1 pb-1 gap-[3px] mb-4" style={{ background: 'linear-gradient(180deg, #fef9ee 0%, #fff 100%)' }}>
+        {bars.map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-[3px] opacity-25"
+            style={{
+              height: `${h}%`,
+              background: 'linear-gradient(180deg, #fbbf24 0%, #fde68a 100%)',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Stats rows */}
+      <div className="flex flex-col gap-0">
+        {[
+          { label: 'Vandaag', value: todayViews },
+          { label: 'Deze week', value: weekViews },
+          { label: 'Deze maand', value: monthViews },
+        ].map((stat, i) => (
+          <div
+            key={stat.label}
+            className={`flex justify-between items-center py-1.5 ${i < 2 ? 'border-b border-stone-100' : ''}`}
+          >
+            <span className="text-[13px] text-stone-500">{stat.label}</span>
+            <span className="text-[14px] font-semibold text-stone-900">{stat.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// EMPTY STATE
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+function EmptyState({ firstName }: { firstName: string }) {
+  return (
+    <div className="max-w-[600px] mx-auto mt-12">
+      <div className="bg-white rounded-2xl border border-dashed border-stone-300 p-12 text-center">
+        <div className="w-16 h-16 bg-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+          <span className="material-symbols-outlined text-3xl text-stone-400">web</span>
+        </div>
+        <h2 className="text-lg font-semibold font-logo text-stone-900 mb-2">
+          Welkom, {firstName}!
+        </h2>
+        <p className="text-sm text-stone-500 mb-6 max-w-sm mx-auto">
+          Je hebt nog geen website. Maak je eerste professionele zorgwebsite in een paar stappen.
+        </p>
+        <Link
+          href="/wizard"
+          className="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white rounded-xl transition-colors"
+          style={{ background: 'linear-gradient(135deg, #0d9488, #0f766e)' }}
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          Maak je eerste website
+        </Link>
+      </div>
     </div>
   );
 }

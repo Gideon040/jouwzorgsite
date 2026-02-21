@@ -20,26 +20,12 @@ interface WerkwijzeSectionProps extends BaseSectionProps {
 }
 
 // ============================================
-// SHARED VARIANT PROPS (no more `any`)
+// SHARED VARIANT PROPS
 // ============================================
-
-interface PaletteWithOptionals {
-  primary: string;
-  primaryHover: string;
-  primaryLight: string;
-  primaryDark: string;
-  accent?: string;
-  accentLight?: string;
-  bg?: string;
-  bgAlt?: string;
-  text?: string;
-  textMuted?: string;
-  border?: string;
-}
 
 interface WerkwijzeVariantProps {
   theme: ThemeConfig;
-  palette: PaletteWithOptionals;
+  palette: BaseSectionProps['palette'];
   titel: string;
   intro?: string;
   stappen: WerkwijzeStap[];
@@ -110,7 +96,7 @@ function padNum(n: number): string {
 
 interface SectionHeaderProps {
   theme: ThemeConfig;
-  palette: PaletteWithOptionals;
+  palette: BaseSectionProps['palette'];
   titel: string;
   intro?: string;
   variant: 'editorial' | 'proactief' | 'serene' | 'mindoor' | 'portfolio';
@@ -194,7 +180,7 @@ function SectionHeader({ theme, palette, titel, intro, variant }: SectionHeaderP
 // HELPER: Footer Trust Badges
 // ============================================
 
-function FooterBadges({ theme, palette }: { theme: ThemeConfig; palette: PaletteWithOptionals }) {
+function FooterBadges({ theme, palette }: { theme: ThemeConfig; palette: BaseSectionProps['palette'] }) {
   return (
     <div className="flex flex-wrap items-center justify-center gap-5 mt-12 pt-8" style={{ borderTop: `1px solid ${theme.colors.border}` }}>
       <span className="flex items-center gap-1.5 text-xs" style={{ color: theme.colors.textMuted }}>
@@ -221,7 +207,7 @@ interface StepperTrackProps {
   progress: number;
   goTo: (idx: number) => void;
   theme: ThemeConfig;
-  palette: PaletteWithOptionals;
+  palette: BaseSectionProps['palette'];
   nodeStyle: 'circle' | 'square' | 'pill' | 'corner';
 }
 
@@ -286,7 +272,7 @@ function StepperLabels({ items, current, theme, palette }: {
   items: WerkwijzeStap[];
   current: number;
   theme: ThemeConfig;
-  palette: PaletteWithOptionals;
+  palette: BaseSectionProps['palette'];
 }) {
   return (
     <div className="flex justify-between px-0 mb-10">
@@ -313,7 +299,7 @@ function StepperLabels({ items, current, theme, palette }: {
 function ProgressBar({ progress, theme, palette }: {
   progress: number;
   theme: ThemeConfig;
-  palette: PaletteWithOptionals;
+  palette: BaseSectionProps['palette'];
 }) {
   const accent = palette.accent ?? palette.primary;
   return (
@@ -363,7 +349,6 @@ export function WerkwijzeSection({
       if (variant === 3) return <EditorialV3Ghost {...props} />;
       return <EditorialV1Cards {...props} />;
     case 'proactief':
-    case 'bento':
       if (variant === 2) return <ProactiefV2Vertical {...props} />;
       if (variant === 3) return <ProactiefV3Expanding {...props} />;
       return <ProactiefV1Stepper {...props} />;
@@ -434,7 +419,7 @@ function EditorialV1Cards({ theme, palette, titel, intro, stappen }: WerkwijzeVa
                     className="text-[56px] font-normal leading-none"
                     style={{
                       fontFamily: theme.fonts.heading,
-                      color: isHover ? accent : (isAccent ? `${palette.primary}25` : theme.colors.border),
+                      color: isHover ? accent : (isAccent ? 'rgba(255,255,255,0.15)' : theme.colors.border),
                       transition: 'color 0.35s ease',
                     }}
                   >
@@ -787,7 +772,7 @@ function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: W
                   position: idx === current ? 'relative' : 'absolute',
                 }}
               >
-                <a href="#contact" className="block bg-white rounded-[20px] p-8 md:p-10 shadow-sm hover:shadow-lg transition-shadow">
+                <a href="#contact" className="block bg-white p-8 md:p-10 shadow-sm hover:shadow-lg transition-shadow">
                   <div className="flex flex-col md:flex-row md:items-center gap-6">
                     <div
                       className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
@@ -824,7 +809,7 @@ function ProactiefV1Stepper({ theme, palette, titel, intro, stappen, footer }: W
         {/* Mobile: Stacked */}
         <div className="md:hidden space-y-4">
           {items.map((stap, idx) => (
-            <a key={idx} href="#contact" className={`block bg-white rounded-2xl p-6 ${getRevealClass('up', idx + 1)}`}>
+            <a key={idx} href="#contact" className={`block bg-white p-6 ${getRevealClass('up', idx + 1)}`}>
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
                   style={{ backgroundColor: isAccentStep(idx, items.length) ? accent : palette.primary }}>

@@ -7,7 +7,7 @@
 import { useState } from 'react';
 import { ThemeConfig } from '../themes';
 import { FaqItem, FaqContent, SiteContent, GeneratedContent } from '@/types';
-import { BaseSectionProps, FaqStyle, getRevealClass, DEFAULT_FAQS } from './types';
+import { BaseSectionProps, FaqStyle, getRevealClass, DEFAULT_FAQS, FAQ_IMAGES } from './types';
 
 // ============================================
 // SECTION PROPS
@@ -18,30 +18,12 @@ interface FaqSectionProps extends BaseSectionProps {
 }
 
 // ============================================
-// PALETTE TYPE (matches BaseSectionProps + optional Color Story fields)
-// ============================================
-
-interface FaqPalette {
-  primary: string;
-  primaryHover: string;
-  primaryLight: string;
-  primaryDark: string;
-  accent?: string;
-  accentLight?: string;
-  bg?: string;
-  bgAlt?: string;
-  text?: string;
-  textMuted?: string;
-  border?: string;
-}
-
-// ============================================
 // SHARED PROPS FOR ALL VARIANT COMPONENTS
 // ============================================
 
 interface FaqComponentProps {
   theme: ThemeConfig;
-  palette: FaqPalette;
+  palette: BaseSectionProps['palette'];
   faqs: FaqItem[];
   titel: string;
   intro?: string;
@@ -49,17 +31,7 @@ interface FaqComponentProps {
   beroepLabel?: string;
 }
 
-// ============================================
-// VARIED UNSPLASH IMAGES
-// ============================================
-
-const FAQ_IMAGES = {
-  zorg1: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80',
-  zorg2: 'https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?auto=format&fit=crop&w=800&q=80',
-  zorg3: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?auto=format&fit=crop&w=800&q=80',
-  zorg4: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80',
-  zorg5: 'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80',
-} as const;
+// FAQ_IMAGES imported from ./types
 
 // ============================================
 // SHARED HELPER: Accordion Item
@@ -193,7 +165,7 @@ export function FaqSection({
 
   const sharedProps: FaqComponentProps = {
     theme,
-    palette: palette as FaqPalette,
+    palette,
     faqs,
     titel,
     intro,
@@ -301,7 +273,7 @@ function FaqEditorial({ theme, palette, faqs, titel, ctaLabel }: FaqComponentPro
           {faqs.map((faq, index) => (
             <div
               key={index}
-              className={`rounded-lg overflow-hidden border transition-all duration-300 ${getRevealClass('up', Math.min(index + 1, 3) * 100)}`}
+              className={`overflow-hidden border transition-all duration-300 ${getRevealClass('up', Math.min(index + 1, 3) * 100)}`}
               style={{
                 backgroundColor: theme.colors.surface,
                 borderColor: openIndex === index ? palette.primary : (palette.border ?? theme.colors.border),
@@ -564,7 +536,7 @@ function FaqProactief({ theme, palette, faqs, titel, ctaLabel, beroepLabel }: Fa
             {faqs.map((faq, idx) => (
               <div
                 key={idx}
-                className={`p-7 rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.04)] cursor-pointer relative overflow-hidden group hover:shadow-[0_20px_50px_rgba(37,99,235,0.12)] transition-all ${getRevealClass('up', idx * 50)}`}
+                className={`p-7 shadow-[0_10px_40px_rgba(0,0,0,0.04)] cursor-pointer relative overflow-hidden group hover:shadow-[0_20px_50px_rgba(37,99,235,0.12)] transition-all ${getRevealClass('up', idx * 50)}`}
                 style={{ backgroundColor: theme.colors.surface }}
                 onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
               >
@@ -611,7 +583,7 @@ function FaqProactief({ theme, palette, faqs, titel, ctaLabel, beroepLabel }: Fa
           <div className="lg:col-span-5">
             <div className={`lg:sticky lg:top-24 ${getRevealClass('left', 200)}`}>
               <div
-                className="rounded-[20px] p-8 lg:p-10"
+                className="p-8 lg:p-10"
                 style={{ background: `linear-gradient(135deg, ${palette.primary} 0%, ${palette.primaryDark} 100%)` }}
               >
                 <span className="material-symbols-outlined text-4xl text-white/80 mb-6 block">contact_support</span>
@@ -1131,7 +1103,7 @@ function FaqPortfolio3({ theme, palette, faqs, titel, ctaLabel }: FaqComponentPr
         <div className={`text-center mt-12 ${getRevealClass('up', 300)}`}>
           <a
             href="#contact"
-            className="inline-flex items-center gap-3 px-8 py-4 text-[13px] font-semibold uppercase tracking-[2px] transition-all hover:gap-4"
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-[13px] font-semibold uppercase tracking-[2px] transition-all hover:gap-4"
             style={{ backgroundColor: accentColor, color: palette.primary }}
           >
             Andere vraag? {ctaLabel}
@@ -1154,9 +1126,11 @@ function FaqMindoor({ theme, palette, faqs, titel, ctaLabel }: FaqComponentProps
   return (
     <section
       id="faq"
-      className="py-20 lg:py-32"
+      className="py-20 lg:py-32 relative overflow-hidden"
       style={{ backgroundColor: theme.colors.background }}
     >
+      <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full opacity-[0.07]" style={{ background: palette.primary }} />
+      <div className="absolute bottom-16 -left-12 w-40 h-40 rounded-full opacity-[0.07]" style={{ background: accentColor }} />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className={`text-center mb-16 ${getRevealClass('up')}`}>
@@ -1227,11 +1201,17 @@ function FaqMindoor({ theme, palette, faqs, titel, ctaLabel }: FaqComponentProps
           </div>
 
           {/* Image */}
-          <div className={`hidden lg:block overflow-hidden rounded-[32px] ${getRevealClass('left', 200)}`}>
-            <img
-              src={FAQ_IMAGES.zorg4}
-              alt="Zorgprofessional"
-              className="w-full aspect-[4/3] object-cover transition-transform duration-500 hover:scale-105"
+          <div className={`hidden lg:block relative ${getRevealClass('left', 200)}`}>
+            <div className="overflow-hidden rounded-[32px]">
+              <img
+                src={FAQ_IMAGES.zorg4}
+                alt="Zorgprofessional"
+                className="w-full aspect-[4/3] object-cover transition-transform duration-500 hover:scale-105"
+              />
+            </div>
+            <div
+              className="absolute -z-10 -bottom-4 -right-4 w-full h-full rounded-[32px]"
+              style={{ background: `${palette.primary}15` }}
             />
           </div>
         </div>
@@ -1726,7 +1706,7 @@ function FaqSerene2({ theme, palette, faqs, titel, intro, ctaLabel }: FaqCompone
         <div className={`mt-16 text-center ${getRevealClass('up', 300)}`}>
           <a
             href="#contact"
-            className="inline-flex items-center gap-3 px-6 py-3 text-[10px] uppercase tracking-[2px] border transition-colors"
+            className="inline-flex items-center gap-3 px-6 py-3 text-[10px] uppercase tracking-[2px] border rounded transition-colors"
             style={{ color: palette.primary, borderColor: palette.primary }}
           >
             {ctaLabel}

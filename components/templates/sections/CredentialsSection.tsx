@@ -8,7 +8,7 @@
 //     - All palette properties use proper fallbacks
 'use client';
 
-import { BaseSectionProps, CredentialsStyle, getRevealClass, getJarenErvaring } from './types';
+import { BaseSectionProps, PaletteColors, CredentialsStyle, getRevealClass, getJarenErvaring } from './types';
 import { ThemeConfig } from '../themes';
 import { Certificaat, CertificaatType, CredentialsContent } from '@/types';
 
@@ -18,24 +18,6 @@ import { Certificaat, CertificaatType, CredentialsContent } from '@/types';
 
 interface CredentialsSectionProps extends BaseSectionProps {
   style?: CredentialsStyle;
-}
-
-// ============================================
-// PALETTE TYPE (matches BaseSectionProps.palette)
-// ============================================
-
-interface PaletteColors {
-  primary: string;
-  primaryHover: string;
-  primaryLight: string;
-  primaryDark: string;
-  accent?: string;
-  accentLight?: string;
-  bg?: string;
-  bgAlt?: string;
-  text?: string;
-  textMuted?: string;
-  border?: string;
 }
 
 // ============================================
@@ -306,14 +288,6 @@ export function CredentialsSection({
       return <CredentialsMindoor {...sharedProps} />;
     case 'serene':
       return <CredentialsSerene {...sharedProps} />;
-    case 'full':
-      return <CredentialsFull {...sharedProps} />;
-    case 'compact':
-      return <CredentialsCompact {...sharedProps} />;
-    case 'cards':
-      return <CredentialsCards {...sharedProps} />;
-    case 'badges':
-      return <CredentialsBadges {...sharedProps} />;
     default:
       return <CredentialsEditorial {...sharedProps} />;
   }
@@ -1344,13 +1318,12 @@ function CredentialsMindoor({
                     BIG-registratie
                   </span>
                   <span
-                    className="ml-3 text-xs px-2 py-1 rounded-full"
-                    style={{ backgroundColor: `${palette.primaryLight}30`, color: palette.accentLight ?? '#e0e0e0' }}
+                    className="ml-3 text-xs px-2 py-1 rounded-full bg-white/15 text-white/90"
                   >
                     Geverifieerd
                   </span>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center">
                   <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
                   </svg>
@@ -1362,14 +1335,14 @@ function CredentialsMindoor({
               >
                 {bigCred?.value}
               </div>
-              <p className="text-white/70 mb-4">
+              <p className="text-sm text-white/80 mb-4">
                 {bigCred?.sublabel || bigCred?.label || 'BIG-geregistreerd'}
               </p>
               <a
                 href={`https://zoeken.bigregister.nl/zoeken/resultaat?nummer=${bigCred?.value}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-medium text-white/80 hover:text-white"
+                className="text-sm font-semibold text-white hover:underline"
               >
                 Controleer →
               </a>
@@ -1460,8 +1433,7 @@ function CredentialsMindoor({
                   Diploma
                 </span>
                 <span
-                  className="ml-3 text-xs px-2 py-1 rounded-full"
-                  style={{ backgroundColor: `${palette.primaryLight}30`, color: palette.accentLight ?? '#e0e0e0' }}
+                  className="ml-3 text-xs px-2 py-1 rounded-full bg-white/15 text-white/90"
                 >
                   Behaald
                 </span>
@@ -1478,7 +1450,7 @@ function CredentialsMindoor({
             >
               {diploma.split(' niveau')[0]}
             </div>
-            <p className="text-white/70">
+            <p className="text-sm text-white/80">
               {diploma.includes('niveau') ? `niveau ${diploma.split('niveau ')[1]}` : ''}
             </p>
           </div>
@@ -1573,229 +1545,5 @@ function CredentialsMindoor({
   );
 }
 
-
-// ============================================
-// FULL — Uitgebreide weergave met alle details
-// ============================================
-function CredentialsFull({
-  theme,
-  palette,
-  credentials,
-  sectionTitel,
-}: CredentialComponentProps) {
-  return (
-    <section
-      id="transparantie"
-      className="py-20 md:py-28 px-6 md:px-12"
-      style={{ backgroundColor: theme.colors.backgroundAlt }}
-    >
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className={`text-center mb-12 ${getRevealClass('up')}`}>
-          <span
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold mb-4"
-            style={{ backgroundColor: `${palette.primary}15`, color: palette.primary }}
-          >
-            <span className="material-symbols-outlined text-lg">verified_user</span>
-            Transparantie
-          </span>
-          <h2
-            className="text-3xl md:text-4xl font-bold mb-4"
-            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-          >
-            {sectionTitel}
-          </h2>
-        </div>
-
-        {/* All credentials */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {credentials.map((cred, index) => (
-            <div
-              key={index}
-              className={`p-6 rounded-xl border transition-shadow hover:shadow-lg ${getRevealClass('up', (index % 3) + 1)}`}
-              style={{
-                backgroundColor: theme.colors.surface || theme.colors.background,
-                borderColor: cred.type === 'big' ? palette.primary : theme.colors.border,
-                borderWidth: cred.type === 'big' ? '2px' : '1px',
-              }}
-            >
-              <span
-                className="material-symbols-outlined text-2xl mb-4 block"
-                style={{ color: palette.primary }}
-              >
-                {cred.config.icon}
-              </span>
-              <h3
-                className="font-bold mb-1"
-                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-              >
-                {cred.config.label}
-              </h3>
-              <p
-                className="text-sm mb-2"
-                style={{ color: theme.colors.textMuted }}
-              >
-                {cred.config.description}
-              </p>
-              {cred.value && (
-                <p
-                  className="font-mono text-sm"
-                  style={{ color: palette.primary }}
-                >
-                  {cred.value}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-
-// ============================================
-// COMPACT — Inline badges
-// ============================================
-function CredentialsCompact({
-  theme,
-  palette,
-  credentials,
-}: CredentialComponentProps) {
-  return (
-    <section
-      id="transparantie"
-      className="py-12 px-6 border-y"
-      style={{ borderColor: theme.colors.border }}
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-wrap justify-center items-center gap-6">
-          {credentials.slice(0, 5).map((cred, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2 px-4 py-2 rounded-full border"
-              style={{
-                backgroundColor: theme.colors.surface || theme.colors.background,
-                borderColor: theme.colors.border,
-              }}
-            >
-              <span
-                className="material-symbols-outlined text-lg"
-                style={{ color: palette.primary }}
-              >
-                {cred.config.icon}
-              </span>
-              <span
-                className="text-sm font-medium"
-                style={{ color: theme.colors.text }}
-              >
-                {cred.config.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-
-// ============================================
-// CARDS — Kaarten in grid
-// ============================================
-function CredentialsCards({
-  theme,
-  palette,
-  credentials,
-  sectionTitel,
-}: CredentialComponentProps) {
-  return (
-    <section
-      id="transparantie"
-      className="py-20 md:py-28 px-6 md:px-12"
-      style={{ backgroundColor: theme.colors.background }}
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className={`text-center mb-12 ${getRevealClass('up')}`}>
-          <h2
-            className="text-3xl md:text-4xl font-bold mb-4"
-            style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-          >
-            {sectionTitel}
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {credentials.map((cred, index) => (
-            <div
-              key={index}
-              className={`flex flex-col items-center text-center p-6 rounded-xl border ${getRevealClass('up', (index % 4) + 1)}`}
-              style={{
-                backgroundColor: theme.colors.surface || theme.colors.background,
-                borderColor: theme.colors.border,
-              }}
-            >
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center mb-4"
-                style={{ backgroundColor: `${palette.primary}15` }}
-              >
-                <span
-                  className="material-symbols-outlined"
-                  style={{ color: palette.primary }}
-                >
-                  {cred.config.icon}
-                </span>
-              </div>
-              <h3
-                className="font-semibold text-sm"
-                style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
-              >
-                {cred.config.label}
-              </h3>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-
-// ============================================
-// BADGES — Horizontale badge strip
-// ============================================
-function CredentialsBadges({
-  theme,
-  palette,
-  credentials,
-}: CredentialComponentProps) {
-  return (
-    <section
-      className="py-8 px-6"
-      style={{ backgroundColor: `${palette.primary}10` }}
-    >
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-wrap justify-center items-center gap-8">
-          {credentials.slice(0, 4).map((cred, index) => (
-            <div key={index} className="flex items-center gap-2">
-              <span
-                className="material-symbols-outlined text-xl"
-                style={{ color: palette.primary }}
-              >
-                {cred.config.icon}
-              </span>
-              <span
-                className="font-semibold"
-                style={{ color: palette.primaryDark }}
-              >
-                {cred.config.label}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 export default CredentialsSection;

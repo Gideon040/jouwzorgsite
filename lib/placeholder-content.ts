@@ -75,24 +75,56 @@ export function generatePlaceholderContent(input: PlaceholderInput): SiteContent
     icon: d.icon,
   }));
   
-  // Placeholder certificaten (leeg voor nu, user vult later in)
-  const certificaten: Certificaat[] = [];
+  const beroepLabel = getBeroepLabel(beroep);
+  const mockEmail = email || `info@${naam.toLowerCase().replace(/[^a-z0-9]/g, '')}.nl`;
+  const mockTelefoon = '06 12345678';
+
+  const certificaten: Certificaat[] = [
+    { type: 'big', label: 'BIG-registratie', value: '29XXXXXXXXX', sublabel: beroepLabel },
+    { type: 'kvk', label: 'KvK-inschrijving', value: '12345678' },
+    { type: 'wtza', label: 'Wtza-melding' },
+    { type: 'wkkgz', label: 'Wkkgz compliant' },
+    { type: 'verzekering', label: 'Beroepsaansprakelijkheid' },
+  ];
+
+  const currentYear = new Date().getFullYear();
 
   return {
     naam,
     tagline,
     over_mij,
-    foto: undefined, // Placeholder - user upload later
+    foto: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=800&q=80',
     contact: {
-      email,
-      werkgebied: ['Regio nog invullen'],
+      email: mockEmail,
+      telefoon: mockTelefoon,
+      werkgebied: ['Regio'],
     },
     diensten,
     certificaten,
     zakelijk: {
-      kvk: '',
+      kvk: '12345678',
+      btw: 'NL123456789B01',
+      handelsnaam: `${naam} Zorg`,
+    },
+    kleuren: { primary: '#137fec' },
+    socials: {
+      linkedin: 'https://linkedin.com/in/voorbeeld',
+      facebook: 'https://facebook.com/voorbeeld',
     },
     beschikbaar: true,
+    start_carriere: currentYear - 5,
+    werkervaring: [
+      { functie: `Zelfstandig ${beroepLabel}`, werkgever: 'Eigen praktijk', startJaar: currentYear - 2 },
+      { functie: beroepLabel, werkgever: 'Zorginstelling', startJaar: currentYear - 6, eindJaar: currentYear - 2 },
+      { functie: `Junior ${beroepLabel}`, werkgever: 'Ziekenhuis', startJaar: currentYear - 10, eindJaar: currentYear - 6 },
+    ],
+    expertises: ['Persoonlijke verzorging', 'Wondverzorging', 'Medicatiebeheer', 'Palliatieve zorg'],
+    testimonials: [
+      { tekst: `${naam} levert uitstekende zorg met oprechte aandacht voor de cliënt.`, naam: 'Familie Jansen', functie: 'Cliënt' },
+      { tekst: 'Professioneel, betrouwbaar en altijd bereid om een stap extra te zetten.', naam: 'M. de Vries', functie: 'Mantelzorger' },
+      { tekst: 'Fijne samenwerking, goede communicatie en warme persoonlijkheid.', naam: 'R. Bakker', functie: 'Opdrachtgever' },
+    ],
+    telefoon: mockTelefoon,
   };
 }
 

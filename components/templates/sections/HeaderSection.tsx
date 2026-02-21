@@ -82,8 +82,14 @@ export function HeaderSection({
       );
     case 'floating':
       return (
-        <HeaderFloating 
-          {...{ theme, palette, content, displayName, shortName, navItems, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen }} 
+        <HeaderFloating
+          {...{ theme, palette, content, displayName, shortName, navItems, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen }}
+        />
+      );
+    case 'serene':
+      return (
+        <HeaderSerene
+          {...{ theme, palette, content, displayName, shortName, navItems, isScrolled, isMobileMenuOpen, setIsMobileMenuOpen }}
         />
       );
     default:
@@ -802,6 +808,111 @@ function HeaderFloating({
                 {item.label}
               </a>
             ))}
+          </nav>
+        </div>
+      )}
+    </header>
+  );
+}
+
+// ============================================
+// SERENE - Minimalistisch, zen-like
+// ============================================
+function HeaderSerene({
+  theme,
+  palette,
+  displayName,
+  navItems,
+  isScrolled,
+  isMobileMenuOpen,
+  setIsMobileMenuOpen,
+}: any) {
+  return (
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-md'
+          : 'bg-transparent'
+      }`}
+      style={{ borderBottom: isScrolled ? `1px solid ${theme.colors.border}` : '1px solid transparent' }}
+    >
+      <div className="max-w-6xl mx-auto px-6 lg:px-12 py-5">
+        <div className="flex items-center justify-between">
+          {/* Logo — light serif */}
+          <a href="#" className="flex items-center">
+            <h1
+              className="text-lg font-light tracking-wide transition-colors"
+              style={{
+                fontFamily: theme.fonts.heading,
+                color: theme.colors.text,
+              }}
+            >
+              {displayName}
+            </h1>
+          </a>
+
+          {/* Desktop Navigation — understated */}
+          <nav className="hidden md:flex items-center gap-10">
+            {navItems.map((item: any) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="text-[11px] uppercase tracking-[0.2em] font-normal transition-colors duration-300"
+                style={{ color: theme.colors.textMuted }}
+                onMouseEnter={(e) => e.currentTarget.style.color = palette.primary}
+                onMouseLeave={(e) => e.currentTarget.style.color = theme.colors.textMuted}
+              >
+                {item.label}
+              </a>
+            ))}
+            <a
+              href="#contact"
+              className="text-[11px] uppercase tracking-[0.2em] font-normal ml-4 pb-0.5 transition-colors duration-300"
+              style={{ color: palette.primary, borderBottom: `1px solid ${palette.primary}` }}
+            >
+              Contact
+            </a>
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden w-10 h-10 flex items-center justify-center"
+            aria-label="Menu"
+          >
+            <span
+              className="material-symbols-outlined text-xl"
+              style={{ color: theme.colors.text }}
+            >
+              {isMobileMenuOpen ? 'close' : 'menu'}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden bg-white/95 backdrop-blur-md" style={{ borderTop: `1px solid ${theme.colors.border}` }}>
+          <nav className="flex flex-col px-6 py-6 gap-5">
+            {navItems.map((item: any) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="text-sm font-light tracking-wide"
+                style={{ color: theme.colors.text }}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                {item.label}
+              </a>
+            ))}
+            <a
+              href="#contact"
+              className="text-sm font-light tracking-wide pt-3"
+              style={{ color: palette.primary, borderTop: `1px solid ${theme.colors.border}` }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Neem contact op
+            </a>
           </nav>
         </div>
       )}

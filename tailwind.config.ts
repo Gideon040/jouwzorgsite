@@ -10,11 +10,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: "#137fec",
-        "background-light": "#f6f7f8",
+        primary: "#0d9488",
+        "background-light": "#fafaf9",
         "background-dark": "#101922",
       },
       fontFamily: {
+        sans: ["DM Sans", "sans-serif"],
+        serif: ["DM Serif Display", "serif"],
+        logo: ["Fraunces", "serif"],
         display: ["Manrope", "sans-serif"],
       },
       borderRadius: {
