@@ -27,6 +27,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check subscription plan — only professional/expert can register domains
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('plan')
+      .eq('user_id', user.id)
+      .in('status', ['active'])
+      .maybeSingle();
+
+    if (!subscription || subscription.plan === 'starter') {
+      return NextResponse.json(
+        { error: 'Eigen domein is beschikbaar vanaf het Professional abonnement' },
+        { status: 403 }
+      );
+    }
+
     const { domain, siteId } = await request.json();
 
     if (!domain || typeof domain !== 'string') {
