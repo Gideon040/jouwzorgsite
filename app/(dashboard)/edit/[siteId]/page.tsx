@@ -9,6 +9,7 @@ import { Site, SiteContent, GeneratedContent, Theme } from '@/types';
 import { EditorPanel } from '@/components/dashboard/EditorPanel';
 import { EditablePreview } from '@/components/dashboard/EditablePreview';
 import { revalidateSite } from '@/lib/actions/sites';
+import { DEFAULT_DOELGROEPEN, DEFAULT_FAQS } from '@/components/templates/sections/types';
 
 interface EditPageProps {
   params: { siteId: string };
@@ -104,6 +105,81 @@ export default function EditPage({ params }: EditPageProps) {
     setSaveStatus('idle');
   }, []);
 
+  // ── Add item from preview "+" button ──
+  const handleAddItem = useCallback((sectionType: string) => {
+    switch (sectionType) {
+      case 'diensten': {
+        const items = (generated as any)?.diensten?.items || content?.diensten || [];
+        setGenerated(prev => ({
+          ...prev,
+          diensten: { ...(prev as any)?.diensten, items: [...items, { naam: 'Nieuwe dienst', beschrijving: 'Beschrijf hier uw dienst...' }] },
+        }));
+        break;
+      }
+      case 'faq': {
+        const items = (generated as any)?.faq?.items || DEFAULT_FAQS;
+        setGenerated(prev => ({
+          ...prev,
+          faq: { ...(prev as any)?.faq, items: [...items, { vraag: 'Nieuwe vraag?', antwoord: 'Typ hier het antwoord...' }] },
+        }));
+        break;
+      }
+      case 'voorwie': {
+        const doelgroepen = (generated as any)?.voorWie?.doelgroepen || DEFAULT_DOELGROEPEN;
+        const typeRotation = ['thuiszorg', 'ouderenzorg', 'ggz', 'particulieren', 'wijkverpleging', 'overig'];
+        const nextType = typeRotation[doelgroepen.length % typeRotation.length];
+        setGenerated(prev => ({
+          ...prev,
+          voorWie: { ...(prev as any)?.voorWie, doelgroepen: [...doelgroepen, { type: nextType, titel: 'Nieuwe doelgroep', tekst: 'Beschrijf voor wie u werkt en wat u voor hen kunt betekenen.' }] },
+        }));
+        break;
+      }
+      case 'werkervaring': {
+        const items = content?.werkervaring || [];
+        setContent(prev => prev ? { ...prev, werkervaring: [...items, { functie: 'Nieuwe functie', werkgever: 'Werkgever' }] } : prev);
+        break;
+      }
+      default:
+        return;
+    }
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, [generated, content]);
+
+  // ── Remove item from preview "x" button ──
+  const handleRemoveItem = useCallback((sectionType: string, index: number) => {
+    switch (sectionType) {
+      case 'diensten': {
+        const items = [...((generated as any)?.diensten?.items || content?.diensten || [])];
+        items.splice(index, 1);
+        setGenerated(prev => ({ ...prev, diensten: { ...(prev as any)?.diensten, items } }));
+        break;
+      }
+      case 'faq': {
+        const items = [...((generated as any)?.faq?.items || DEFAULT_FAQS)];
+        items.splice(index, 1);
+        setGenerated(prev => ({ ...prev, faq: { ...(prev as any)?.faq, items } }));
+        break;
+      }
+      case 'voorwie': {
+        const doelgroepen = [...((generated as any)?.voorWie?.doelgroepen || DEFAULT_DOELGROEPEN)];
+        doelgroepen.splice(index, 1);
+        setGenerated(prev => ({ ...prev, voorWie: { ...(prev as any)?.voorWie, doelgroepen } }));
+        break;
+      }
+      case 'werkervaring': {
+        const items = [...(content?.werkervaring || [])];
+        items.splice(index, 1);
+        setContent(prev => prev ? { ...prev, werkervaring: items } : prev);
+        break;
+      }
+      default:
+        return;
+    }
+    setHasChanges(true);
+    setSaveStatus('idle');
+  }, [generated, content]);
+
   // ── Save ─────────────────────────────────
   const handleSave = useCallback(async () => {
     if (!site || !content) return;
@@ -180,7 +256,7 @@ export default function EditPage({ params }: EditPageProps) {
             <div className="h-6 w-px bg-slate-200" />
             <div>
               <h1 className="text-sm font-bold text-slate-900">{content.naam}</h1>
-              <p className="text-xs text-slate-400">{site.subdomain}.jouwzorgsite.nl</p>
+              <p className="text-xs text-slate-400">{site.custom_domain || `${site.subdomain}.jouwzorgsite.nl`}</p>
             </div>
           </div>
 
@@ -195,11 +271,6 @@ export default function EditPage({ params }: EditPageProps) {
               <span className="flex items-center gap-0.5">
                 <span className="material-symbols-outlined text-sm">edit</span>
                 Teksten
-              </span>
-              <span className="text-slate-300">·</span>
-              <span className="flex items-center gap-0.5">
-                <span className="material-symbols-outlined text-sm text-purple-400">smart_button</span>
-                Buttons
               </span>
               <span className="text-slate-300 mx-1">– klik om te bewerken</span>
             </div>
@@ -223,7 +294,7 @@ export default function EditPage({ params }: EditPageProps) {
             )}
 
             <a
-              href={`/site/${site.subdomain}`}
+              href={site.custom_domain ? `https://${site.custom_domain}` : `/site/${site.subdomain}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
@@ -273,6 +344,8 @@ export default function EditPage({ params }: EditPageProps) {
                 onImageReplace={handleImageReplace}
                 onTextChange={handleTextChange}
                 onButtonChange={handleButtonChange}
+                onAddItem={handleAddItem}
+                onRemoveItem={handleRemoveItem}
               />
             </div>
           </div>

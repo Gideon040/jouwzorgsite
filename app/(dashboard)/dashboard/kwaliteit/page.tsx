@@ -147,7 +147,7 @@ function ActiveSiteBar({ site }: { site: Site }) {
             </span>
           )}
         </div>
-        <p className="text-xs text-slate-400">{site.subdomain}.jouwzorgsite.nl · {site.beroep}</p>
+        <p className="text-xs text-slate-400">{site.custom_domain || `${site.subdomain}.jouwzorgsite.nl`} · {site.beroep}</p>
       </div>
 
       {/* Link naar site */}
@@ -160,7 +160,7 @@ function ActiveSiteBar({ site }: { site: Site }) {
           <span className="material-symbols-outlined text-[18px]">edit</span>
         </Link>
         <a
-          href={`/site/${site.subdomain}`}
+          href={site.custom_domain ? `https://${site.custom_domain}` : `/site/${site.subdomain}`}
           target="_blank"
           rel="noopener noreferrer"
           className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"

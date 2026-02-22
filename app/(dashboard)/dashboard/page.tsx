@@ -101,12 +101,12 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
             </h1>
             <div className="flex items-center gap-2 mt-2.5">
               <a
-                href={`https://${site.subdomain}.jouwzorgsite.nl`}
+                href={site.custom_domain ? `https://${site.custom_domain}` : `https://${site.subdomain}.jouwzorgsite.nl`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[14px] font-medium text-teal-300 hover:text-teal-200 transition-colors"
               >
-                {site.subdomain}.jouwzorgsite.nl
+                {site.custom_domain || `${site.subdomain}.jouwzorgsite.nl`}
               </a>
               {site.published ? (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-300 bg-emerald-400/10 px-2 py-0.5 rounded-full">
@@ -147,7 +147,7 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
             bg="#f5f3ff"
           />
           <QuickActionCard
-            href={`/site/${site.subdomain}`}
+            href={site.custom_domain ? `https://${site.custom_domain}` : `/site/${site.subdomain}`}
             icon={<IconEye />}
             title="Site bekijken"
             desc="Bekijk je live website"

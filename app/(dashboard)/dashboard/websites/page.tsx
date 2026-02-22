@@ -130,7 +130,7 @@ function SiteCard({ site, views }: { site: Site; views: number }) {
             )}
           </div>
 
-          <p className="text-xs text-slate-400 mb-2">{site.subdomain}.jouwzorgsite.nl</p>
+          <p className="text-xs text-slate-400 mb-2">{site.custom_domain || `${site.subdomain}.jouwzorgsite.nl`}</p>
 
           {/* Meta row */}
           <div className="flex items-center gap-4 text-[11px] text-slate-400">
@@ -159,7 +159,7 @@ function SiteCard({ site, views }: { site: Site; views: number }) {
             Bewerken
           </Link>
           <a
-            href={`/site/${site.subdomain}`}
+            href={site.custom_domain ? `https://${site.custom_domain}` : `/site/${site.subdomain}`}
             target="_blank"
             rel="noopener noreferrer"
             className="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors"
