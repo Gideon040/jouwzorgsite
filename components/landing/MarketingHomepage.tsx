@@ -66,11 +66,13 @@ export default function MarketingHomepage({ onStart }: MarketingHomepageProps) {
     // ── Smooth scroll for anchor links ──
     const anchors = page.querySelectorAll('a[href^="#"]');
     const handleAnchorClick = (e: Event) => {
-      e.preventDefault();
       const href = (e.currentTarget as HTMLAnchorElement).getAttribute('href');
-      if (href) {
+      if (href && /^#[a-zA-Z][\w-]*$/.test(href)) {
         const target = page.querySelector(href);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
       }
     };
     anchors.forEach((a) => a.addEventListener('click', handleAnchorClick));
@@ -108,7 +110,7 @@ export default function MarketingHomepage({ onStart }: MarketingHomepageProps) {
             <a href="#features">Voordelen</a>
             <a href="#templates">Templates</a>
             <a href="#prijzen">Prijzen</a>
-            <a href="#faq">FAQ</a>
+            <a href="/faq">FAQ</a>
             <a href="#contact">Contact</a>
             <a href="/login" className="nav-login">Inloggen</a>
           </div>
@@ -130,7 +132,7 @@ export default function MarketingHomepage({ onStart }: MarketingHomepageProps) {
             <a href="#features" onClick={() => setMobileMenuOpen(false)}>Voordelen</a>
             <a href="#templates" onClick={() => setMobileMenuOpen(false)}>Templates</a>
             <a href="#prijzen" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
-            <a href="#faq" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
+            <a href="/faq" onClick={() => setMobileMenuOpen(false)}>FAQ</a>
             <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
             <a href="/login" className="mobile-login" onClick={() => setMobileMenuOpen(false)}>Inloggen</a>
             <button className="mobile-cta" onClick={() => { setMobileMenuOpen(false); onStart(); }}>Gratis proberen</button>
@@ -815,9 +817,24 @@ export default function MarketingHomepage({ onStart }: MarketingHomepageProps) {
             <div className="faq-a"><p>Ja, je kunt gratis een website maken met een subdomein (naam.jouwzorgsite.nl). Geen creditcard nodig. Wil je een eigen domein en het kwaliteitskeurmerk? Dan upgrade je naar het Pro-abonnement met 14 dagen gratis proefperiode.</p></div>
           </div>
         </div>
+        <div style={{ textAlign: 'center', marginTop: '32px' }}>
+          <a href="/faq" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '15px',
+            fontWeight: 600,
+            color: '#5a7c6f',
+            textDecoration: 'none',
+            transition: 'color 0.2s',
+          }}>
+            Bekijk alle vragen
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
       </section>
-      
-      
+
+
       {/* ═══════════════════════════════════════════════════════════
            CONTACT FORM
            ═══════════════════════════════════════════════════════════ */}
@@ -939,7 +956,7 @@ export default function MarketingHomepage({ onStart }: MarketingHomepageProps) {
           </div>
           <div className="footer-col">
             <h4>Support</h4>
-            <a href="#faq">Veelgestelde vragen</a>
+            <a href="/faq">Veelgestelde vragen</a>
             <a href="mailto:support@jouwzorgsite.nl">Contact</a>
             <a href="mailto:support@jouwzorgsite.nl">Hulp nodig?</a>
           </div>

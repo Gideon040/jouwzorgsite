@@ -35,12 +35,11 @@ export function HeaderSection({
   // Get telefoon for call buttons
   const telefoon = (content as any).telefoon || content.contact?.telefoon;
 
-  // Navigation items
+  // Navigation items (Contact is excluded — each header variant renders its own styled Contact CTA)
   const navItems = [
     { href: '#diensten', label: 'Diensten' },
     { href: '#over', label: 'Over mij' },
     { href: '#werkwijze', label: 'Werkwijze' },
-    { href: '#contact', label: 'Contact' },
   ];
 
   switch (style) {
@@ -540,6 +539,14 @@ function HeaderMindoor({
                 {item.label}
               </a>
             ))}
+            <a
+              href="#contact"
+              className="text-lg font-medium py-3 border-b"
+              style={{ color: theme.colors.textMuted, borderColor: '#f5f0e8' }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </a>
             {telefoon && (
               <a
                 href={`tel:${telefoon}`}
@@ -638,6 +645,14 @@ function HeaderSolid({
                 {item.label}
               </a>
             ))}
+            <a
+              href="#contact"
+              className="flex items-center justify-center h-12 text-white text-sm font-semibold rounded mt-2"
+              style={{ backgroundColor: palette.primary }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </a>
           </nav>
         </div>
       )}
@@ -726,6 +741,17 @@ function HeaderTransparent({
                 {item.label}
               </a>
             ))}
+            <a
+              href="#contact"
+              className="flex items-center justify-center h-12 text-sm font-semibold rounded mt-2"
+              style={{
+                backgroundColor: isScrolled ? palette.primary : 'white',
+                color: isScrolled ? 'white' : palette.primary
+              }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </a>
           </nav>
         </div>
       )}
@@ -808,6 +834,14 @@ function HeaderFloating({
                 {item.label}
               </a>
             ))}
+            <a
+              href="#contact"
+              className="text-sm font-medium py-2 px-4 rounded-lg text-center mt-1 text-white"
+              style={{ backgroundColor: palette.primary }}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Contact
+            </a>
           </nav>
         </div>
       )}

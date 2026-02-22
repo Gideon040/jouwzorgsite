@@ -261,7 +261,7 @@ function Editorial1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 
         {/* Timeline */}
         <div className="relative pl-8 border-l-2" style={{ borderColor: `${pal.primary}30` }}>
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div key={i} className={`relative pb-10 last:pb-0 group ${getRevealClass('left', i + 1)}`}>
@@ -335,7 +335,7 @@ function Editorial2({ theme, pal, werkervaring, titel, intro }: VariantProps) {
         <SectionHeader titel={titel} intro={intro} theme={theme} pal={pal} labelText="Achtergrond" />
 
         <div>
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -415,7 +415,7 @@ function Editorial3({ theme, pal, werkervaring, titel, intro }: VariantProps) {
         <SectionHeader titel={titel} intro={intro} theme={theme} pal={pal} labelText="Loopbaan" labelVariant="outline" />
 
         <div>
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -480,7 +480,7 @@ function Proactief1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 
         {/* Progress bar */}
         <div className="flex justify-between mb-2.5 text-[11px] font-medium" style={{ color: theme.colors.textMuted }}>
-          {werkervaring.slice(0, 5).map((item, i) => (
+          {werkervaring.slice(0, 8).map((item, i) => (
             <span key={i} style={i === 0 ? { color: pal.primary, fontWeight: 700 } : {}}>
               {isHuidig(item) ? 'Heden' : getStartJaar(item)}
             </span>
@@ -492,7 +492,7 @@ function Proactief1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 
         {/* Cards */}
         <div className="flex flex-col gap-3">
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -552,7 +552,7 @@ function Proactief1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 // ============================================
 function Proactief2({ theme, pal, werkervaring, titel, intro, jarenErvaring }: VariantProps) {
   const first = werkervaring[0];
-  const rest = werkervaring.slice(1, 4);
+  const rest = werkervaring.slice(1, 8);
 
   return (
     <section id="werkervaring" className="py-20 px-6 md:px-8 relative overflow-hidden" style={{ backgroundColor: theme.colors.background }}>
@@ -659,7 +659,7 @@ function Proactief3({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 
         {/* Scroll row */}
         <div className="flex gap-5 overflow-x-auto scroll-smooth snap-x snap-mandatory pb-4" style={{ scrollbarWidth: 'thin', scrollbarColor: `${pal.primary}33 transparent` }}>
-          {werkervaring.slice(0, 5).map((item, i) => (
+          {werkervaring.slice(0, 8).map((item, i) => (
             <div
               key={i}
               className="flex-[0_0_280px] snap-start flex flex-col overflow-hidden transition-all duration-[400ms] group"
@@ -739,7 +739,7 @@ function Portfolio1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
         </div>
 
         <div className="flex flex-col">
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -805,7 +805,7 @@ function Portfolio2({ theme, pal, werkervaring, titel, intro }: VariantProps) {
         </div>
 
         <div className="flex flex-col gap-5">
-          {werkervaring.slice(0, 4).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             const isEven = i % 2 === 1;
             return (
@@ -893,7 +893,7 @@ function Portfolio3({ theme, pal, werkervaring, titel, intro }: VariantProps) {
             style={{ background: `linear-gradient(to bottom, transparent, ${pal.accent} 5%, ${pal.accent} 95%, transparent)`, opacity: 0.3 }}
           />
 
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -961,7 +961,7 @@ function Mindoor1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
         </div>
 
         <div className="grid md:grid-cols-2 gap-5">
-          {werkervaring.slice(0, 4).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -1053,7 +1053,7 @@ function Mindoor2({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 
         {/* Right: Cards */}
         <div className="flex flex-col gap-3.5">
-          {werkervaring.slice(0, 4).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -1113,7 +1113,7 @@ function Mindoor3({ theme, pal, werkervaring, titel, intro }: VariantProps) {
         </div>
 
         <div className="flex flex-col gap-4">
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div
@@ -1193,7 +1193,7 @@ function Serene1({ theme, pal, werkervaring, titel, intro }: VariantProps) {
         <div className="relative">
           <div className="absolute left-6 top-0 bottom-0 w-px" style={{ backgroundColor: theme.colors.border }} />
 
-          {werkervaring.slice(0, 5).map((item, i) => (
+          {werkervaring.slice(0, 8).map((item, i) => (
             <div
               key={i}
               className={`flex gap-10 py-10 relative transition-all duration-[400ms] ${i < werkervaring.length - 1 ? 'border-b' : ''} ${getRevealClass('up', i + 1)}`}
@@ -1256,7 +1256,7 @@ function Serene2({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 
       {/* Cards */}
       <div className="max-w-[900px] mx-auto px-6 py-[60px] flex flex-col gap-5">
-        {werkervaring.slice(0, 5).map((item, i) => {
+        {werkervaring.slice(0, 8).map((item, i) => {
           const huidig = isHuidig(item);
           return (
             <div
@@ -1328,7 +1328,7 @@ function Serene3({ theme, pal, werkervaring, titel, intro }: VariantProps) {
 
         {/* Timeline */}
         <div className="flex flex-col">
-          {werkervaring.slice(0, 5).map((item, i) => {
+          {werkervaring.slice(0, 8).map((item, i) => {
             const huidig = isHuidig(item);
             return (
               <div

@@ -7,29 +7,6 @@ export const metadata = { title: 'Hulp & Support' };
 const SUPPORT_EMAIL = 'support@jouwzorgsite.nl';
 const WHATSAPP_NUMBER = '31612345678'; // Pas aan naar jullie nummer
 
-const faqItems = [
-  {
-    vraag: 'Hoe pas ik mijn website aan?',
-    antwoord: 'Ga naar je dashboard en klik op "Site bewerken". Daar kun je teksten, foto\'s en kleuren aanpassen via de editor.',
-  },
-  {
-    vraag: 'Hoe zet ik mijn website online?',
-    antwoord: 'Op je dashboard staat een schakelaar bij je website. Zet deze aan om je site live te zetten. Je site is dan direct bereikbaar op jouw subdomain.',
-  },
-  {
-    vraag: 'Kan ik mijn website opnieuw laten genereren?',
-    antwoord: 'Ja! Klik op "AI Wizard" op je dashboard. De wizard genereert nieuwe teksten op basis van je gegevens.',
-  },
-  {
-    vraag: 'Wat is het kwaliteitskeurmerk?',
-    antwoord: 'Het kwaliteitskeurmerk is een vertrouwenswidget op je website. Het toont bezoekers dat je voldoet aan professionele eisen zoals BIG-registratie en Wkkgz.',
-  },
-  {
-    vraag: 'Hoe wijzig ik mijn wachtwoord?',
-    antwoord: 'Ga naar Instellingen in het menu links. Daar kun je je wachtwoord en naam aanpassen.',
-  },
-];
-
 export default function SupportPage() {
   return (
     <div className="max-w-[700px] space-y-6">
@@ -74,17 +51,25 @@ export default function SupportPage() {
       </div>
 
       {/* FAQ */}
-      <div className="bg-white rounded-xl border border-slate-200/60 p-6">
-        <h3 className="text-sm font-semibold text-slate-900 mb-4">Veelgestelde vragen</h3>
-        <div className="divide-y divide-slate-100">
-          {faqItems.map((item) => (
-            <div key={item.vraag} className="py-4 first:pt-0 last:pb-0">
-              <h4 className="text-sm font-medium text-slate-900 mb-1.5">{item.vraag}</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">{item.antwoord}</p>
-            </div>
-          ))}
+      <Link
+        href="/faq"
+        className="flex items-center justify-between bg-white rounded-xl border border-slate-200/60 p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
+      >
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="material-symbols-outlined text-[24px] text-amber-600">quiz</span>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900 mb-1">Veelgestelde vragen</h3>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Bekijk alle veelgestelde vragen over JouwZorgSite, abonnementen, het keurmerk en meer.
+            </p>
+          </div>
         </div>
-      </div>
+        <span className="material-symbols-outlined text-[20px] text-slate-400 group-hover:text-slate-600 transition-colors">
+          arrow_forward
+        </span>
+      </Link>
 
       {/* Terug */}
       <Link

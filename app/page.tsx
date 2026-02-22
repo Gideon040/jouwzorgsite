@@ -47,6 +47,8 @@ export default function Home() {
   // Generated site
   const [previewSite, setPreviewSite] = useState<Site | null>(null);
   const [customContent, setCustomContent] = useState<SiteContent | null>(null);
+  const [previewGenerated, setPreviewGenerated] = useState<GeneratedContent | null>(null);
+  const [previewTheme, setPreviewTheme] = useState<Theme | null>(null);
   
   // Final subdomain
   const [finalSubdomain, setFinalSubdomain] = useState('');
@@ -218,8 +220,10 @@ export default function Home() {
       
       setPreviewSite(site);
       setCustomContent(content);
+      setPreviewGenerated(generatedContent || null);
+      setPreviewTheme(theme || null);
       setFinalSubdomain(generatedSubdomain);
-      
+
       if (isRegeneration) {
         setRegenerateCount(prev => prev + 1);
       } else {
@@ -250,8 +254,10 @@ export default function Home() {
       
       setPreviewSite(site);
       setCustomContent(content);
+      setPreviewGenerated(null);
+      setPreviewTheme(null);
       setFinalSubdomain(generatedSubdomain);
-      
+
       if (!isRegeneration) {
         trackSitePreview();
       }
@@ -274,6 +280,30 @@ export default function Home() {
     setCustomContent(newContent);
     if (previewSite) {
       setPreviewSite({ ...previewSite, content: newContent });
+    }
+  };
+
+  const handleGeneratedUpdate = (gen: GeneratedContent) => {
+    setPreviewGenerated(gen);
+    if (previewSite) {
+      setPreviewSite({ ...previewSite, generated_content: gen });
+    }
+    // Also sync generated into content.generated
+    if (customContent) {
+      setCustomContent({ ...customContent, generated: gen });
+    }
+  };
+
+  const handleThemeUpdate = (theme: Theme) => {
+    setPreviewTheme(theme);
+    if (previewSite) {
+      setPreviewSite({ ...previewSite, theme });
+    }
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    if (previewSite) {
+      setPreviewSite({ ...previewSite, template_id: templateId });
     }
   };
 
@@ -315,6 +345,12 @@ export default function Home() {
         <PreviewSection
           site={previewSite}
           content={customContent}
+          generated={previewGenerated || customContent.generated || {}}
+          siteTheme={previewTheme || previewSite.theme || { palette: 'editorial' as const, fontPairing: 'editorial' as const }}
+          onContentUpdate={handleSetContent}
+          onGeneratedUpdate={handleGeneratedUpdate}
+          onThemeUpdate={handleThemeUpdate}
+          onTemplateChange={handleTemplateChange}
           onCheckout={() => setFlowStep('verification')}
           onBackToStyle={handleBackToStyle}
           canRegenerate={regenerateCount < MAX_REGENERATIONS}

@@ -18,6 +18,8 @@ interface EditorPanelProps {
   onContentUpdate: (content: SiteContent) => void;
   onGeneratedUpdate: (gen: GeneratedContent) => void;
   onThemeUpdate: (theme: Theme) => void;
+  onTemplateChange?: (templateId: string) => void;
+  disableImageUpload?: boolean;
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -412,7 +414,7 @@ const SECTION_EDITORS: Record<string, { label: string; icon: string }> = {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // MAIN COMPONENT
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-export function EditorPanel({ site, content, generated, siteTheme, onContentUpdate, onGeneratedUpdate, onThemeUpdate }: EditorPanelProps) {
+export function EditorPanel({ site, content, generated, siteTheme, onContentUpdate, onGeneratedUpdate, onThemeUpdate, onTemplateChange, disableImageUpload }: EditorPanelProps) {
   const [openSection, setOpenSection] = useState<string | null>('stijl');
 
   const toggle = (id: string) => {
@@ -439,6 +441,22 @@ export function EditorPanel({ site, content, generated, siteTheme, onContentUpda
     setGen(arrayPath, newArr);
   };
 
+  const addGenItem = (arrayPath: string, item: any) => {
+    const parts = arrayPath.split('.');
+    let arr: any = generated;
+    for (const p of parts) arr = arr?.[p];
+    const current = Array.isArray(arr) ? arr : [];
+    setGen(arrayPath, [...current, item]);
+  };
+
+  const removeGenItem = (arrayPath: string, index: number) => {
+    const parts = arrayPath.split('.');
+    let arr: any = generated;
+    for (const p of parts) arr = arr?.[p];
+    if (!Array.isArray(arr)) return;
+    setGen(arrayPath, arr.filter((_: any, i: number) => i !== index));
+  };
+
   // ── Resolve active sections ──
   const templateStyle = site.template_id || 'editorial';
   const activeSections: SectionConfig[] =
@@ -457,17 +475,17 @@ export function EditorPanel({ site, content, generated, siteTheme, onContentUpda
   // ── Render section content editor ──
   const renderEditor = (id: string) => {
     switch (id) {
-      case 'hero':         return <HeroFields gen={generated} content={content} setGen={setGen} setCont={setCont} />;
+      case 'hero':         return <HeroFields gen={generated} content={content} setGen={setGen} setCont={setCont} disableImageUpload={disableImageUpload} />;
       case 'stats':        return <StatsFields gen={generated} setGenItem={setGenItem} />;
-      case 'diensten':     return <DienstenFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
-      case 'over':         return <OverFields gen={generated} content={content} setGen={setGen} setCont={setCont} />;
+      case 'diensten':     return <DienstenFields gen={generated} setGen={setGen} setGenItem={setGenItem} addGenItem={addGenItem} removeGenItem={removeGenItem} />;
+      case 'over':         return <OverFields gen={generated} content={content} setGen={setGen} setCont={setCont} disableImageUpload={disableImageUpload} />;
       case 'credentials':  return <CredentialsFields gen={generated} setGen={setGen} />;
       case 'werkervaring': return <WerkervaringFields content={content} setCont={setCont} />;
-      case 'voorwie':      return <VoorWieFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
-      case 'quote':        return <QuoteFields gen={generated} setGen={setGen} />;
-      case 'werkwijze':    return <WerkwijzeFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
-      case 'testimonials': return <TestimonialsFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
-      case 'faq':          return <FaqFields gen={generated} setGen={setGen} setGenItem={setGenItem} />;
+      case 'voorwie':      return <VoorWieFields gen={generated} setGen={setGen} setGenItem={setGenItem} addGenItem={addGenItem} removeGenItem={removeGenItem} />;
+      case 'quote':        return <QuoteFields gen={generated} setGen={setGen} disableImageUpload={disableImageUpload} />;
+      case 'werkwijze':    return <WerkwijzeFields gen={generated} setGen={setGen} setGenItem={setGenItem} addGenItem={addGenItem} removeGenItem={removeGenItem} />;
+      case 'testimonials': return <TestimonialsFields gen={generated} setGen={setGen} setGenItem={setGenItem} addGenItem={addGenItem} removeGenItem={removeGenItem} />;
+      case 'faq':          return <FaqFields gen={generated} setGen={setGen} setGenItem={setGenItem} addGenItem={addGenItem} removeGenItem={removeGenItem} />;
       case 'cta':          return <CtaFields gen={generated} setGen={setGen} />;
       case 'contact':      return <ContactFields gen={generated} content={content} setGen={setGen} setCont={setCont} />;
       default: return null;
@@ -476,14 +494,29 @@ export function EditorPanel({ site, content, generated, siteTheme, onContentUpda
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
-        <span className="material-symbols-outlined text-teal-600 text-xl">edit_note</span>
-        <h3 className="font-bold text-slate-900 text-sm">Website bewerken</h3>
-      </div>
+      {/* Header — hidden in landing preview (onTemplateChange present) on mobile */}
+      {!onTemplateChange && (
+        <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100 bg-slate-50/80 shrink-0">
+          <span className="material-symbols-outlined text-teal-600 text-xl">edit_note</span>
+          <h3 className="font-bold text-slate-900 text-sm">Website bewerken</h3>
+        </div>
+      )}
 
       {/* Scrollable accordion */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
+        {/* Template picker (only when onTemplateChange is provided) */}
+        {onTemplateChange && (
+          <AccordionItem
+            id="template"
+            label="Template"
+            icon="dashboard"
+            isOpen={openSection === 'template'}
+            onToggle={() => toggle('template')}
+          >
+            <TemplatePickerFields templateStyle={templateStyle} onTemplateChange={onTemplateChange} onThemeUpdate={onThemeUpdate} onGeneratedUpdate={onGeneratedUpdate} generated={generated} siteTheme={siteTheme} />
+          </AccordionItem>
+        )}
+
         {/* Fixed: Stijl & Kleuren */}
         <AccordionItem
           id="stijl"
@@ -558,11 +591,12 @@ function Field({ label, value, onChange, multiline, rows, placeholder }: {
 }
 
 // ── IMAGE UPLOAD FIELD ────────────────────
-function ImageField({ label, value, onChange, hint }: {
+function ImageField({ label, value, onChange, hint, disabled }: {
   label: string;
   value?: string;
   onChange: (url: string | undefined) => void;
   hint?: string;
+  disabled?: boolean;
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
@@ -623,7 +657,17 @@ function ImageField({ label, value, onChange, hint }: {
     <div>
       <label className="block text-xs font-medium text-slate-500 mb-1.5">{label}</label>
 
-      {value ? (
+      {disabled ? (
+        // Disabled state — upload not available
+        <div className="border-2 border-dashed border-slate-200 rounded-lg p-4 flex flex-col items-center gap-2 opacity-60">
+          {value ? (
+            <img src={value} alt="Upload" className="w-full h-32 object-cover rounded-lg border border-slate-200 mb-1" />
+          ) : (
+            <span className="material-symbols-outlined text-2xl text-slate-300">photo_camera</span>
+          )}
+          <span className="text-xs text-slate-400">Beschikbaar na registratie</span>
+        </div>
+      ) : value ? (
         // Preview met vervang/verwijder
         <div className="relative group">
           <img
@@ -690,12 +734,35 @@ function ImageField({ label, value, onChange, hint }: {
   );
 }
 
-function ItemCard({ children, label, index }: { children: React.ReactNode; label: string; index: number }) {
+function ItemCard({ children, label, index, onRemove }: { children: React.ReactNode; label: string; index: number; onRemove?: () => void }) {
   return (
-    <div className="p-3 bg-slate-50/80 rounded-lg space-y-2 border border-slate-100">
-      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label} {index + 1}</span>
+    <div className="relative p-3 bg-slate-50/80 rounded-lg space-y-2 border border-slate-100">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label} {index + 1}</span>
+        {onRemove && (
+          <button
+            onClick={onRemove}
+            className="p-0.5 rounded text-slate-400 hover:text-red-500 transition-colors"
+            title="Verwijderen"
+          >
+            <span className="material-symbols-outlined text-sm">delete</span>
+          </button>
+        )}
+      </div>
       {children}
     </div>
+  );
+}
+
+function AddItemButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full py-2 text-xs font-medium text-slate-500 hover:text-teal-600 border border-dashed border-slate-300 hover:border-teal-400 rounded-xl transition-all flex items-center justify-center gap-1"
+    >
+      <span className="material-symbols-outlined text-sm">add</span>
+      {label}
+    </button>
   );
 }
 
@@ -703,14 +770,115 @@ function Sep() {
   return <hr className="border-slate-100" />;
 }
 
-type SetGen     = (path: string, value: any) => void;
-type SetGenItem = (arrayPath: string, index: number, field: string, value: any) => void;
-type SetCont    = (updates: Partial<SiteContent>) => void;
+type SetGen       = (path: string, value: any) => void;
+type SetGenItem   = (arrayPath: string, index: number, field: string, value: any) => void;
+type SetCont      = (updates: Partial<SiteContent>) => void;
+type AddGenItem   = (arrayPath: string, item: any) => void;
+type RemoveGenItem = (arrayPath: string, index: number) => void;
 
+const MAX_ITEMS = 15;
+
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEMPLATE DATA
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+const TEMPLATE_OPTIONS: { id: string; name: string; description: string; icon: string; defaultPalette: PaletteKey; defaultFont: FontPairingKey }[] = [
+  { id: 'editorial', name: 'Editorial', description: 'Klassiek & warm', icon: 'auto_stories', defaultPalette: 'editorial', defaultFont: 'editorial' },
+  { id: 'proactief', name: 'ProActief', description: 'Modern & energiek', icon: 'bolt', defaultPalette: 'proactief', defaultFont: 'proactief' },
+  { id: 'portfolio', name: 'Portfolio', description: 'Elegant & sophisticated', icon: 'workspace_premium', defaultPalette: 'portfolio', defaultFont: 'portfolio' },
+  { id: 'mindoor', name: 'Mindoor', description: 'Warm & organisch', icon: 'favorite', defaultPalette: 'mindoor', defaultFont: 'mindoor' },
+  { id: 'serene', name: 'Serene', description: 'Rustig & zen', icon: 'spa', defaultPalette: 'serene', defaultFont: 'serene' },
+];
+
+// Map section styles from one template to another
+function remapSectionStyles(sections: SectionConfig[], fromTemplate: string, toTemplate: string): SectionConfig[] {
+  return sections.map(section => {
+    const { style, ...rest } = section;
+    if (!style) return { ...rest, style: toTemplate };
+
+    // Quote has its own style names — keep as-is
+    if (section.type === 'quote') return section;
+
+    // Replace old template prefix with new one
+    if (style === fromTemplate) return { ...rest, style: toTemplate };
+    // Handle numbered variants like 'editorial-2' → 'proactief-2'
+    const match = style.match(new RegExp(`^${fromTemplate}-(\\d)$`));
+    if (match) return { ...rest, style: `${toTemplate}-${match[1]}` };
+
+    // Fallback: use new template base style
+    return { ...rest, style: toTemplate };
+  });
+}
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // FIELD GROUPS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// ── TEMPLATE PICKER ──────────────────────
+function TemplatePickerFields({ templateStyle, onTemplateChange, onThemeUpdate, onGeneratedUpdate, generated, siteTheme }: {
+  templateStyle: string;
+  onTemplateChange: (templateId: string) => void;
+  onThemeUpdate: (theme: Theme) => void;
+  onGeneratedUpdate: (gen: GeneratedContent) => void;
+  generated: GeneratedContent;
+  siteTheme: Theme;
+}) {
+  const handleSwitch = (newId: string) => {
+    if (newId === templateStyle) return;
+    const option = TEMPLATE_OPTIONS.find(t => t.id === newId);
+    if (!option) return;
+
+    // 1. Remap section styles
+    const currentSections: SectionConfig[] = generated.sections || TEMPLATE_SECTIONS[templateStyle] || TEMPLATE_SECTIONS.editorial;
+    const remapped = remapSectionStyles(currentSections, templateStyle, newId);
+    onGeneratedUpdate({ ...generated, sections: remapped });
+
+    // 2. Update theme (palette + font to match new template)
+    onThemeUpdate({ ...siteTheme, palette: option.defaultPalette, fontPairing: option.defaultFont });
+
+    // 3. Update template_id on the site
+    onTemplateChange(newId);
+  };
+
+  return (
+    <div className="space-y-2">
+      {TEMPLATE_OPTIONS.map(t => {
+        const isActive = templateStyle === t.id;
+        const p = palettes[t.defaultPalette];
+        return (
+          <button
+            key={t.id}
+            onClick={() => handleSwitch(t.id)}
+            className={`w-full text-left px-3 py-3 rounded-xl border-2 transition-all ${
+              isActive
+                ? 'border-teal-400 bg-teal-50/50 shadow-sm'
+                : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {/* Color swatches */}
+              <div className="flex -space-x-1 shrink-0">
+                <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: p.primary }} />
+                <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: p.accent }} />
+                <div className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: p.bg }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className={`block text-sm font-semibold ${isActive ? 'text-teal-700' : 'text-slate-700'}`}>
+                  {t.name}
+                </span>
+                <span className="block text-[10px] text-slate-400">{t.description}</span>
+              </div>
+              {isActive && (
+                <span className="material-symbols-outlined text-sm text-teal-600 shrink-0">check_circle</span>
+              )}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 // ── PALETTE FAMILIES ──────────────────────
 const PALETTE_FAMILIES: { label: string; keys: PaletteKey[] }[] = [
@@ -836,7 +1004,7 @@ function StijlFields({ siteTheme, templateStyle, onThemeUpdate }: {
 }
 
 // ── HERO ──────────────────────────────────
-function HeroFields({ gen, content, setGen, setCont }: { gen: GeneratedContent; content: SiteContent; setGen: SetGen; setCont: SetCont }) {
+function HeroFields({ gen, content, setGen, setCont, disableImageUpload }: { gen: GeneratedContent; content: SiteContent; setGen: SetGen; setCont: SetCont; disableImageUpload?: boolean }) {
   return (
     <>
       <ImageField
@@ -844,6 +1012,7 @@ function HeroFields({ gen, content, setGen, setCont }: { gen: GeneratedContent; 
         value={content.foto}
         onChange={(url) => setCont({ foto: url })}
         hint="Wordt getoond in hero & over mij · Max 5MB"
+        disabled={disableImageUpload}
       />
       <Field label="Naam" value={content.naam} onChange={(v) => setCont({ naam: v })} />
       <Field label="Titel" value={gen.hero?.titel || ''} onChange={(v) => setGen('hero.titel', v)} placeholder="Bijv. Zorg met aandacht" />
@@ -872,25 +1041,29 @@ function StatsFields({ gen, setGenItem }: { gen: GeneratedContent; setGenItem: S
 }
 
 // ── DIENSTEN ──────────────────────────────
-function DienstenFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+function DienstenFields({ gen, setGen, setGenItem, addGenItem, removeGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem; addGenItem: AddGenItem; removeGenItem: RemoveGenItem }) {
   const d = gen.diensten;
+  const items = d?.items || [];
   return (
     <>
       <Field label="Sectie titel" value={d?.titel || ''} onChange={(v) => setGen('diensten.titel', v)} />
       <Field label="Intro" value={d?.intro || ''} onChange={(v) => setGen('diensten.intro', v)} multiline rows={2} />
       <Sep />
-      {d?.items?.map((item, i) => (
-        <ItemCard key={i} label="Dienst" index={i}>
+      {items.map((item, i) => (
+        <ItemCard key={i} label="Dienst" index={i} onRemove={items.length > 1 ? () => removeGenItem('diensten.items', i) : undefined}>
           <Field label="Naam" value={item.naam} onChange={(v) => setGenItem('diensten.items', i, 'naam', v)} />
           <Field label="Beschrijving" value={item.beschrijving || ''} onChange={(v) => setGenItem('diensten.items', i, 'beschrijving', v)} multiline rows={2} />
         </ItemCard>
       ))}
+      {items.length < MAX_ITEMS && (
+        <AddItemButton label="Dienst toevoegen" onClick={() => addGenItem('diensten.items', { naam: '', beschrijving: '' })} />
+      )}
     </>
   );
 }
 
 // ── OVER MIJ ──────────────────────────────
-function OverFields({ gen, content, setGen, setCont }: { gen: GeneratedContent; content: SiteContent; setGen: SetGen; setCont: SetCont }) {
+function OverFields({ gen, content, setGen, setCont, disableImageUpload }: { gen: GeneratedContent; content: SiteContent; setGen: SetGen; setCont: SetCont; disableImageUpload?: boolean }) {
   const o = gen.overMij;
   return (
     <>
@@ -899,6 +1072,7 @@ function OverFields({ gen, content, setGen, setCont }: { gen: GeneratedContent; 
         value={content.foto}
         onChange={(url) => setCont({ foto: url })}
         hint="Dezelfde foto als in de hero"
+        disabled={disableImageUpload}
       />
       <Field label="Sectie titel" value={o?.titel || ''} onChange={(v) => setGen('overMij.titel', v)} placeholder="Over mij" />
       <Field label="Intro" value={o?.intro || ''} onChange={(v) => setGen('overMij.intro', v)} multiline rows={3} />
@@ -927,12 +1101,19 @@ function WerkervaringFields({ content, setCont }: { content: SiteContent; setCon
     setCont({ werkervaring: newItems });
   };
 
-  if (!items.length) return <p className="text-xs text-slate-400 italic">Geen werkervaring</p>;
+  const addItem = () => {
+    setCont({ werkervaring: [...items, { functie: '', werkgever: '' }] });
+  };
+
+  const removeItem = (index: number) => {
+    setCont({ werkervaring: items.filter((_, i) => i !== index) });
+  };
 
   return (
     <>
+      {items.length === 0 && <p className="text-xs text-slate-400 italic">Geen werkervaring</p>}
       {items.map((item, i) => (
-        <ItemCard key={i} label="Positie" index={i}>
+        <ItemCard key={i} label="Positie" index={i} onRemove={() => removeItem(i)}>
           <Field label="Functie" value={item.functie} onChange={(v) => update(i, 'functie', v)} />
           <Field label="Werkgever" value={item.werkgever} onChange={(v) => update(i, 'werkgever', v)} />
           <div className="grid grid-cols-2 gap-2">
@@ -941,30 +1122,37 @@ function WerkervaringFields({ content, setCont }: { content: SiteContent; setCon
           </div>
         </ItemCard>
       ))}
+      {items.length < MAX_ITEMS && (
+        <AddItemButton label="Werkervaring toevoegen" onClick={addItem} />
+      )}
     </>
   );
 }
 
 // ── VOOR WIE ──────────────────────────────
-function VoorWieFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+function VoorWieFields({ gen, setGen, setGenItem, addGenItem, removeGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem; addGenItem: AddGenItem; removeGenItem: RemoveGenItem }) {
   const vw = gen.voorWie;
+  const items = vw?.doelgroepen || [];
   return (
     <>
       <Field label="Sectie titel" value={vw?.titel || ''} onChange={(v) => setGen('voorWie.titel', v)} />
       <Field label="Intro" value={vw?.intro || ''} onChange={(v) => setGen('voorWie.intro', v)} multiline rows={2} />
       <Sep />
-      {vw?.doelgroepen?.map((dg, i) => (
-        <ItemCard key={i} label="Doelgroep" index={i}>
+      {items.map((dg, i) => (
+        <ItemCard key={i} label="Doelgroep" index={i} onRemove={items.length > 1 ? () => removeGenItem('voorWie.doelgroepen', i) : undefined}>
           <Field label="Titel" value={dg.titel} onChange={(v) => setGenItem('voorWie.doelgroepen', i, 'titel', v)} />
           <Field label="Tekst" value={dg.tekst} onChange={(v) => setGenItem('voorWie.doelgroepen', i, 'tekst', v)} multiline rows={2} />
         </ItemCard>
       ))}
+      {items.length < MAX_ITEMS && (
+        <AddItemButton label="Doelgroep toevoegen" onClick={() => addGenItem('voorWie.doelgroepen', { type: 'overig', titel: '', tekst: '' })} />
+      )}
     </>
   );
 }
 
 // ── QUOTE ─────────────────────────────────
-function QuoteFields({ gen, setGen }: { gen: GeneratedContent; setGen: SetGen }) {
+function QuoteFields({ gen, setGen, disableImageUpload }: { gen: GeneratedContent; setGen: SetGen; disableImageUpload?: boolean }) {
   return (
     <>
       <Field label="Quote" value={gen.quote || ''} onChange={(v) => setGen('quote', v)} multiline rows={3} placeholder="Zorg begint bij aandacht" />
@@ -973,38 +1161,44 @@ function QuoteFields({ gen, setGen }: { gen: GeneratedContent; setGen: SetGen })
         value={gen.quoteImage}
         onChange={(url) => setGen('quoteImage', url)}
         hint="Optioneel · Wordt getoond bij banner en dark stijl"
+        disabled={disableImageUpload}
       />
     </>
   );
 }
 
 // ── WERKWIJZE ─────────────────────────────
-function WerkwijzeFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+function WerkwijzeFields({ gen, setGen, setGenItem, addGenItem, removeGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem; addGenItem: AddGenItem; removeGenItem: RemoveGenItem }) {
   const w = gen.werkwijze;
+  const items = w?.stappen || [];
   return (
     <>
       <Field label="Sectie titel" value={w?.titel || ''} onChange={(v) => setGen('werkwijze.titel', v)} />
       <Field label="Intro" value={w?.intro || ''} onChange={(v) => setGen('werkwijze.intro', v)} multiline rows={2} />
       <Sep />
-      {w?.stappen?.map((stap, i) => (
-        <ItemCard key={i} label="Stap" index={i}>
+      {items.map((stap, i) => (
+        <ItemCard key={i} label="Stap" index={i} onRemove={items.length > 1 ? () => removeGenItem('werkwijze.stappen', i) : undefined}>
           <Field label="Titel" value={stap.titel} onChange={(v) => setGenItem('werkwijze.stappen', i, 'titel', v)} />
           <Field label="Beschrijving" value={stap.beschrijving} onChange={(v) => setGenItem('werkwijze.stappen', i, 'beschrijving', v)} multiline rows={2} />
         </ItemCard>
       ))}
+      {items.length < MAX_ITEMS && (
+        <AddItemButton label="Stap toevoegen" onClick={() => addGenItem('werkwijze.stappen', { titel: '', beschrijving: '', nummer: items.length + 1 })} />
+      )}
     </>
   );
 }
 
 // ── TESTIMONIALS ──────────────────────────
-function TestimonialsFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+function TestimonialsFields({ gen, setGen, setGenItem, addGenItem, removeGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem; addGenItem: AddGenItem; removeGenItem: RemoveGenItem }) {
   const t = gen.testimonials;
+  const items = t?.items || [];
   return (
     <>
       <Field label="Sectie titel" value={t?.titel || ''} onChange={(v) => setGen('testimonials.titel', v)} />
       <Sep />
-      {t?.items?.map((item, i) => (
-        <ItemCard key={i} label="Review" index={i}>
+      {items.map((item, i) => (
+        <ItemCard key={i} label="Review" index={i} onRemove={items.length > 1 ? () => removeGenItem('testimonials.items', i) : undefined}>
           <Field label="Tekst" value={item.tekst} onChange={(v) => setGenItem('testimonials.items', i, 'tekst', v)} multiline rows={3} />
           <div className="grid grid-cols-2 gap-2">
             <Field label="Naam" value={item.naam} onChange={(v) => setGenItem('testimonials.items', i, 'naam', v)} />
@@ -1012,23 +1206,30 @@ function TestimonialsFields({ gen, setGen, setGenItem }: { gen: GeneratedContent
           </div>
         </ItemCard>
       ))}
+      {items.length < MAX_ITEMS && (
+        <AddItemButton label="Review toevoegen" onClick={() => addGenItem('testimonials.items', { tekst: '', naam: '', functie: '' })} />
+      )}
     </>
   );
 }
 
 // ── FAQ ───────────────────────────────────
-function FaqFields({ gen, setGen, setGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem }) {
+function FaqFields({ gen, setGen, setGenItem, addGenItem, removeGenItem }: { gen: GeneratedContent; setGen: SetGen; setGenItem: SetGenItem; addGenItem: AddGenItem; removeGenItem: RemoveGenItem }) {
   const f = gen.faq;
+  const items = f?.items || [];
   return (
     <>
       <Field label="Sectie titel" value={f?.titel || ''} onChange={(v) => setGen('faq.titel', v)} />
       <Sep />
-      {f?.items?.map((item, i) => (
-        <ItemCard key={i} label="Vraag" index={i}>
+      {items.map((item, i) => (
+        <ItemCard key={i} label="Vraag" index={i} onRemove={items.length > 1 ? () => removeGenItem('faq.items', i) : undefined}>
           <Field label="Vraag" value={item.vraag} onChange={(v) => setGenItem('faq.items', i, 'vraag', v)} />
           <Field label="Antwoord" value={item.antwoord} onChange={(v) => setGenItem('faq.items', i, 'antwoord', v)} multiline rows={3} />
         </ItemCard>
       ))}
+      {items.length < MAX_ITEMS && (
+        <AddItemButton label="Vraag toevoegen" onClick={() => addGenItem('faq.items', { vraag: '', antwoord: '' })} />
+      )}
     </>
   );
 }

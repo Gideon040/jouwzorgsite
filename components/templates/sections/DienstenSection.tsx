@@ -305,7 +305,7 @@ function DienstenEditorial({ theme, palette, diensten, titel, intro, ctaButtonTe
         
         {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
-          {diensten.slice(0, 6).map((dienst, index) => (
+          {diensten.slice(0, 8).map((dienst, index) => (
             <div 
               key={index} 
               className={`flex flex-col gap-5 ${getRevealClass('up', (index % 3) + 1)}`}
@@ -772,7 +772,7 @@ function DienstenProactief3({ theme, palette, diensten, titel, intro, ctaButtonT
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-px"
           style={{ backgroundColor: theme.colors.border }}
         >
-          {diensten.slice(0, 5).map((dienst, idx) => (
+          {diensten.slice(0, 8).map((dienst, idx) => (
             <a
               key={idx}
               href="#contact"
@@ -890,7 +890,7 @@ function DienstenProactief3({ theme, palette, diensten, titel, intro, ctaButtonT
 function DienstenPortfolio({ theme, palette, diensten, titel, intro, ctaButtonText }: DienstenComponentProps) {
   const safe = p(palette);
   const firstDienst = diensten[0];
-  const otherDiensten = diensten.slice(1, 5);
+  const otherDiensten = diensten.slice(1, 8);
   
   return (
     <section 
@@ -1049,11 +1049,11 @@ function DienstenPortfolio2({ theme, palette, diensten, titel, intro, jarenErvar
             
             {/* Services list */}
             <div className="space-y-6 mt-8">
-              {diensten.slice(0, 4).map((dienst, idx) => (
+              {diensten.slice(0, 8).map((dienst, idx) => (
                 <a
                   key={idx}
                   href="#contact"
-                  className={`group flex items-start gap-5 pb-6 ${idx < 3 ? 'border-b' : ''}`}
+                  className={`group flex items-start gap-5 pb-6 ${idx < Math.min(diensten.length, 8) - 1 ? 'border-b' : ''}`}
                   style={{ borderColor: theme.colors.border }}
                 >
                   <span 
@@ -1134,11 +1134,11 @@ function DienstenPortfolio3({ theme, palette, diensten, titel, intro, ctaButtonT
         </div>
         
         {/* Alternating rows */}
-        {diensten.slice(0, 4).map((dienst, idx) => (
+        {diensten.slice(0, 8).map((dienst, idx) => (
           <a
             key={idx}
             href="#contact"
-            className={`group grid md:grid-cols-2 gap-8 lg:gap-16 items-center ${idx < 3 ? 'mb-16 lg:mb-24' : ''} ${getRevealClass('up', (idx + 1) * 100)}`}
+            className={`group grid md:grid-cols-2 gap-8 lg:gap-16 items-center ${idx < Math.min(diensten.length, 8) - 1 ? 'mb-16 lg:mb-24' : ''} ${getRevealClass('up', (idx + 1) * 100)}`}
           >
             <div className={`relative overflow-hidden ${idx % 2 === 1 ? 'md:order-2' : ''}`} style={{ borderRadius: '0 80px 0 0' }}>
               <img 
@@ -1246,7 +1246,7 @@ function DienstenMindoor({ theme, palette, diensten, titel, intro, ctaButtonText
           
           {/* Bottom row cards */}
           <div className="grid md:grid-cols-2 gap-6 lg:gap-x-[450px] mt-auto relative z-10">
-            {diensten.slice(2, 4).map((dienst, idx) => (
+            {diensten.slice(2, 8).map((dienst, idx) => (
               <MindoorCard
                 key={idx}
                 dienst={dienst}
@@ -1460,13 +1460,13 @@ function DienstenMindoor2({ theme, palette, diensten, titel, intro, jarenErvarin
               {diensten[3]?.icon || getDienstIcon(3)}
             </span>
             <div>
-              <h3 
+              <h3
                 className="text-lg font-medium mb-1"
                 style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
               >
                 {diensten[3]?.naam || 'Palliatieve zorg'}
               </h3>
-              <span 
+              <span
                 className="text-sm group-hover:translate-x-1 inline-block transition-transform"
                 style={{ color: palette.primary }}
               >
@@ -1474,7 +1474,35 @@ function DienstenMindoor2({ theme, palette, diensten, titel, intro, jarenErvarin
               </span>
             </div>
           </a>
-          
+
+          {/* Extra service cards (5+) */}
+          {diensten.slice(4, 8).map((dienst, idx) => (
+            <a
+              key={idx + 4}
+              href="#contact"
+              className={`group p-6 rounded-[24px] flex flex-col justify-between min-h-[180px] transition-all hover:-translate-y-1 ${getRevealClass('up', (idx + 4) * 50)}`}
+              style={{ backgroundColor: theme.colors.background }}
+            >
+              <span className="material-symbols-outlined text-2xl" style={{ color: palette.primary }}>
+                {dienst.icon || getDienstIcon(idx + 4)}
+              </span>
+              <div>
+                <h3
+                  className="text-lg font-medium mb-1"
+                  style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
+                >
+                  {dienst.naam}
+                </h3>
+                <span
+                  className="text-sm group-hover:translate-x-1 inline-block transition-transform"
+                  style={{ color: palette.primary }}
+                >
+                  Bekijk →
+                </span>
+              </div>
+            </a>
+          ))}
+
           {/* Small image */}
           <div className={`rounded-[24px] overflow-hidden ${getRevealClass('up', 300)}`}>
             <img 
@@ -1541,36 +1569,33 @@ function DienstenMindoor3({ theme, palette, diensten, titel, intro, ctaButtonTex
         </div>
       </div>
       
-      {/* Horizontal scroll cards */}
-      <div className="overflow-x-auto pb-8 scrollbar-hide">
-        <div 
-          className="flex gap-6 px-6 md:px-12"
-          style={{ width: 'max-content' }}
-        >
-          {diensten.map((dienst, idx) => {
+      {/* Cards grid */}
+      <div className="max-w-6xl mx-auto px-6 md:px-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {diensten.slice(0, 8).map((dienst, idx) => {
             const isImageCard = idx % 2 === 0;
-            const isAccentCard = idx === 3;
+            const isAccentCard = idx % 4 === 3;
             const bgColor = theme.colors.background === '#f0fdf4' ? 'white' : theme.colors.backgroundAlt;
-            
-            if (isImageCard && idx < 5) {
+
+            if (isImageCard) {
               return (
                 <a
                   key={idx}
                   href="#contact"
-                  className={`group w-[300px] lg:w-[340px] flex-shrink-0 ${getRevealClass('up', (idx + 1) * 50)}`}
+                  className={`group ${getRevealClass('up', (idx + 1) * 50)}`}
                 >
                   <div className="relative h-[220px] rounded-t-[28px] overflow-hidden">
-                    <img 
+                    <img
                       src={getSfeerImage(idx, 'md')}
                       alt={dienst.naam}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
-                  <div 
+                  <div
                     className="p-6 rounded-b-[28px] -mt-6 relative z-10"
                     style={{ backgroundColor: bgColor }}
                   >
-                    <h3 
+                    <h3
                       className="text-xl font-medium mb-2"
                       style={{ fontFamily: theme.fonts.heading, color: theme.colors.text }}
                     >
@@ -1579,7 +1604,7 @@ function DienstenMindoor3({ theme, palette, diensten, titel, intro, ctaButtonTex
                     <p className="text-sm mb-4" style={{ color: theme.colors.textMuted }}>
                       {dienst.beschrijving || 'Professionele zorg met aandacht.'}
                     </p>
-                    <span 
+                    <span
                       className="text-sm font-medium flex items-center gap-2 group-hover:gap-3 transition-all"
                       style={{ color: palette.primary }}
                     >
@@ -1593,14 +1618,14 @@ function DienstenMindoor3({ theme, palette, diensten, titel, intro, ctaButtonTex
                 <a
                   key={idx}
                   href="#contact"
-                  className={`group w-[300px] lg:w-[340px] flex-shrink-0 p-8 rounded-[28px] flex flex-col justify-between min-h-[350px] ${getRevealClass('up', (idx + 1) * 50)}`}
+                  className={`group p-8 rounded-[28px] flex flex-col justify-between min-h-[350px] transition-all hover:-translate-y-1 ${getRevealClass('up', (idx + 1) * 50)}`}
                   style={{ backgroundColor: isAccentCard ? safe.accent : palette.primary }}
                 >
                   <span className="material-symbols-outlined text-3xl text-white/70">
                     {dienst.icon || getDienstIcon(idx)}
                   </span>
                   <div>
-                    <h3 
+                    <h3
                       className="text-2xl font-medium text-white mb-3"
                       style={{ fontFamily: theme.fonts.heading }}
                     >
@@ -1654,7 +1679,7 @@ function DienstenSerene({ theme, palette, diensten, titel, intro, ctaButtonText 
       <div className="px-6 md:px-12 pb-24" style={{ backgroundColor: theme.colors.background }}>
         <div className="max-w-5xl mx-auto -mt-16 relative z-10">
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-            {diensten.slice(0, 4).map((dienst, idx) => (
+            {diensten.slice(0, 8).map((dienst, idx) => (
               <a 
                 key={idx}
                 href="#contact" 
@@ -1736,7 +1761,7 @@ function DienstenSerene2({ theme, palette, diensten, titel, intro, ctaButtonText
         
         {/* Diensten list */}
         <div className="space-y-6">
-          {diensten.slice(0, 4).map((dienst, idx) => (
+          {diensten.slice(0, 8).map((dienst, idx) => (
             <div key={idx} className={getRevealClass('up', (idx + 1) * 50)}>
               <a href="#contact" className="group flex gap-6 items-start">
                 <span 
@@ -1757,7 +1782,7 @@ function DienstenSerene2({ theme, palette, diensten, titel, intro, ctaButtonText
                   </p>
                 </div>
               </a>
-              {idx < diensten.slice(0, 4).length - 1 && (
+              {idx < diensten.slice(0, 8).length - 1 && (
                 <div className="w-full h-px mt-6" style={{ backgroundColor: theme.colors.border }} />
               )}
             </div>
@@ -1848,7 +1873,7 @@ function DienstenSerene3({ theme, palette, diensten, titel, intro, ctaButtonText
           
           {/* Right column - offset down, 2 diensten + CTA */}
           <div className="lg:col-span-5 lg:col-start-8 lg:pt-32 space-y-8">
-            {diensten.slice(2, 4).map((dienst, idx) => (
+            {diensten.slice(2, 8).map((dienst, idx) => (
               <a 
                 key={idx}
                 href="#contact" 
@@ -1923,7 +1948,7 @@ function DienstenCards({ theme, palette, diensten, titel, intro }: DienstenCompo
         
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {diensten.slice(0, 6).map((dienst, index) => (
+          {diensten.slice(0, 8).map((dienst, index) => (
             <div 
               key={index}
               className={`group p-8 rounded-xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${getRevealClass('up', (index % 3) + 1)}`}
@@ -1995,7 +2020,7 @@ function DienstenNumbered({ theme, palette, diensten, titel, intro }: DienstenCo
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border-l"
           style={{ borderColor: theme.colors.border }}
         >
-          {diensten.slice(0, 6).map((dienst, index) => (
+          {diensten.slice(0, 8).map((dienst, index) => (
             <div 
               key={index}
               className={`p-8 md:p-12 border-r border-b ${getRevealClass('up', (index % 3) + 1)}`}

@@ -32,6 +32,7 @@ export function DashboardSidebar() {
   const bottomItems = [
     { href: '/dashboard/gegevens', icon: 'contact_mail', label: 'Mijn gegevens' },
     { href: '/dashboard/instellingen', icon: 'settings', label: 'Instellingen' },
+    { href: '/faq', icon: 'quiz', label: 'FAQ' },
     { href: '/dashboard/support', icon: 'help', label: 'Hulp & Support' },
   ];
 

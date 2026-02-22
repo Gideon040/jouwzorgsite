@@ -31,6 +31,7 @@ const DOELGROEP_ICONS: Record<string, string> = {
   pgb: 'home',
   particulieren: 'person',
   ziekenhuizen: 'local_hospital',
+  overig: 'groups',
 };
 
 // DOELGROEP_IMAGES imported from ./types
@@ -147,7 +148,7 @@ function VoorWieEditorial({ theme, palette, titel, intro, doelgroepen }: VoorWie
 
         {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {doelgroepen.slice(0, 3).map((doelgroep: any, index: number) => (
+          {doelgroepen.slice(0, 6).map((doelgroep: any, index: number) => (
             <div
               key={index}
               className="group p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
@@ -233,7 +234,7 @@ function VoorWieEditorial2({ theme, palette, titel, intro, doelgroepen }: VoorWi
 
           {/* Right: Stacked items */}
           <div className="lg:col-span-7 space-y-6">
-            {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => (
+            {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => (
               <a
                 key={idx}
                 href="#contact"
@@ -312,7 +313,7 @@ function VoorWieEditorial3({ theme, palette, titel, intro, doelgroepen }: VoorWi
 
         {/* Alternating rows */}
         <div className="space-y-12">
-          {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => {
+          {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => {
             const isEven = idx % 2 === 0;
             return (
               <div
@@ -393,7 +394,7 @@ function VoorWieProactief({ theme, palette, titel, intro, doelgroepen }: VoorWie
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => (
+          {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => (
             <div key={idx} className="bg-white overflow-hidden group hover:-translate-y-1 transition-transform duration-300">
               <div className="h-44 overflow-hidden relative">
                 <img
@@ -500,9 +501,9 @@ function VoorWieProactief2({ theme, palette, titel, intro, doelgroepen }: VoorWi
 
           {/* Right: Doelgroepen list */}
           <div className="lg:col-span-7 space-y-5">
-            {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => {
+            {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => {
               const isFirst = idx === 0;
-              const isLast = idx === doelgroepen.slice(0, 4).length - 1;
+              const isLast = idx === doelgroepen.slice(0, 6).length - 1;
               return (
                 <a
                   key={idx}
@@ -583,8 +584,8 @@ function VoorWieProactief3({ theme, palette, titel, intro, doelgroepen }: VoorWi
         {/* Numbered Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-px" style={{ background: palette.border }}>
 
-          {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => {
-            const useAccent = idx === doelgroepen.slice(0, 4).length - 1;
+          {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => {
+            const useAccent = idx === doelgroepen.slice(0, 6).length - 1;
             return (
               <a
                 key={idx}
@@ -694,7 +695,7 @@ function VoorWiePortfolio({ theme, palette, titel, intro, doelgroepen }: VoorWie
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => (
+          {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => (
             <div key={idx} className="bg-white rounded-3xl overflow-hidden group">
               <div className="h-[180px] relative overflow-hidden">
                 <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/30 to-transparent z-10" />
@@ -746,8 +747,7 @@ function VoorWiePortfolio({ theme, palette, titel, intro, doelgroepen }: VoorWie
 // ============================================
 function VoorWiePortfolio2({ theme, palette, titel, intro, doelgroepen }: VoorWieComponentProps) {
   const firstDoelgroep = doelgroepen[0];
-  const restDoelgroepen = doelgroepen.slice(1, 4);
-  const lastDoelgroep = doelgroepen[3];
+  const restDoelgroepen = doelgroepen.slice(1, 6);
 
   return (
     <section className="py-28 px-8 md:px-12" style={{ background: palette.bgAlt }}>
@@ -890,9 +890,9 @@ function VoorWiePortfolio3({ theme, palette, titel, intro, doelgroepen }: VoorWi
 
             {/* Doelgroepen list */}
             <div className="space-y-0">
-              {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => {
+              {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => {
                 const isFirst = idx === 0;
-                const isLast = idx === Math.min(doelgroepen.length, 4) - 1;
+                const isLast = idx === Math.min(doelgroepen.length, 6) - 1;
                 return (
                   <a
                     key={idx}
@@ -966,7 +966,7 @@ function VoorWieMindoor({ theme, palette, titel, intro, doelgroepen }: VoorWieCo
 
         {/* Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => (
+          {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => (
             <a
               key={idx}
               href="#contact"
@@ -1009,7 +1009,7 @@ function VoorWieMindoor({ theme, palette, titel, intro, doelgroepen }: VoorWieCo
 // ============================================
 function VoorWieMindoor2({ theme, palette, titel, intro, doelgroepen }: VoorWieComponentProps) {
   const firstDoelgroep = doelgroepen[0];
-  const restDoelgroepen = doelgroepen.slice(1, 4);
+  const restDoelgroepen = doelgroepen.slice(1, 6);
 
   return (
     <section className="py-20 lg:py-32" style={{ background: palette.bgAlt }}>
@@ -1050,35 +1050,41 @@ function VoorWieMindoor2({ theme, palette, titel, intro, doelgroepen }: VoorWieC
             </a>
           )}
 
-          {/* Colored card: 2nd doelgroep */}
-          {restDoelgroepen[0] && (
-            <a href="#contact" className="group p-6 rounded-[24px] flex flex-col justify-between min-h-[180px] transition-all duration-300" style={{ background: palette.primary }}>
-              <span className="material-symbols-outlined text-2xl text-white/80">
-                {DOELGROEP_ICONS[restDoelgroepen[0].type] || 'group'}
-              </span>
-              <div>
-                <h3 className="text-lg font-medium text-white mb-1" style={{ fontFamily: theme.fonts.heading }}>
-                  {restDoelgroepen[0].titel}
-                </h3>
-                <span className="text-sm text-white/70 group-hover:text-white transition-colors">Contact →</span>
-              </div>
-            </a>
-          )}
+          {/* Doelgroep cards — alternating colored/white */}
+          {restDoelgroepen.map((doelgroep: any, idx: number) => {
+            const isColored = idx === 0;
+            const useAccent = idx >= 2;
 
-          {/* White card: 3rd doelgroep */}
-          {restDoelgroepen[1] && (
-            <a href="#contact" className="group p-6 rounded-[24px] flex flex-col justify-between min-h-[180px] transition-all duration-300 bg-white hover:shadow-md">
-              <span className="material-symbols-outlined text-2xl" style={{ color: palette.primary }}>
-                {DOELGROEP_ICONS[restDoelgroepen[1].type] || 'group'}
-              </span>
-              <div>
-                <h3 className="text-lg font-medium mb-1" style={{ fontFamily: theme.fonts.heading, color: palette.text }}>
-                  {restDoelgroepen[1].titel}
-                </h3>
-                <span className="text-sm" style={{ color: palette.primary }}>Contact →</span>
-              </div>
-            </a>
-          )}
+            if (isColored) {
+              return (
+                <a key={idx} href="#contact" className="group p-6 rounded-[24px] flex flex-col justify-between min-h-[180px] transition-all duration-300" style={{ background: palette.primary }}>
+                  <span className="material-symbols-outlined text-2xl text-white/80">
+                    {DOELGROEP_ICONS[doelgroep.type] || 'group'}
+                  </span>
+                  <div>
+                    <h3 className="text-lg font-medium text-white mb-1" style={{ fontFamily: theme.fonts.heading }}>
+                      {doelgroep.titel}
+                    </h3>
+                    <span className="text-sm text-white/70 group-hover:text-white transition-colors">Contact →</span>
+                  </div>
+                </a>
+              );
+            }
+
+            return (
+              <a key={idx} href="#contact" className="group p-6 rounded-[24px] flex flex-col justify-between min-h-[180px] transition-all duration-300 bg-white hover:shadow-md">
+                <span className="material-symbols-outlined text-2xl" style={{ color: useAccent ? palette.accent : palette.primary }}>
+                  {DOELGROEP_ICONS[doelgroep.type] || 'group'}
+                </span>
+                <div>
+                  <h3 className="text-lg font-medium mb-1" style={{ fontFamily: theme.fonts.heading, color: palette.text }}>
+                    {doelgroep.titel}
+                  </h3>
+                  <span className="text-sm" style={{ color: useAccent ? palette.accent : palette.primary }}>Contact →</span>
+                </div>
+              </a>
+            );
+          })}
 
           {/* Stat card */}
           <div className="p-6 rounded-[24px] flex flex-col justify-center text-center" style={{ background: `${palette.accent}15` }}>
@@ -1087,21 +1093,6 @@ function VoorWieMindoor2({ theme, palette, titel, intro, doelgroepen }: VoorWieC
             </span>
             <span className="text-xs uppercase tracking-wider" style={{ color: palette.textMuted }}>Jaar ervaring</span>
           </div>
-
-          {/* White card: 4th doelgroep */}
-          {restDoelgroepen[2] && (
-            <a href="#contact" className="group p-6 rounded-[24px] flex flex-col justify-between min-h-[180px] transition-all duration-300 bg-white hover:shadow-md">
-              <span className="material-symbols-outlined text-2xl" style={{ color: palette.accent }}>
-                {DOELGROEP_ICONS[restDoelgroepen[2].type] || 'group'}
-              </span>
-              <div>
-                <h3 className="text-lg font-medium mb-1" style={{ fontFamily: theme.fonts.heading, color: palette.text }}>
-                  {restDoelgroepen[2].titel}
-                </h3>
-                <span className="text-sm" style={{ color: palette.accent }}>Contact →</span>
-              </div>
-            </a>
-          )}
 
           {/* CTA card (dark) — col-span-full */}
           <a href="#contact" className="group col-span-full p-6 lg:p-8 rounded-[24px] flex items-center justify-between" style={{ background: palette.text }}>
@@ -1178,8 +1169,8 @@ function VoorWieMindoor3({ theme, palette, titel, intro, doelgroepen }: VoorWieC
 
             {/* Doelgroepen list */}
             <div className="space-y-0">
-              {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => {
-                const isLast = idx === Math.min(doelgroepen.length, 4) - 1;
+              {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => {
+                const isLast = idx === Math.min(doelgroepen.length, 6) - 1;
                 const useAccent = doelgroep.type === 'bemiddelaar' || doelgroep.type === 'intermediair';
                 return (
                   <a
@@ -1253,8 +1244,8 @@ function VoorWieSerene({ theme, palette, titel, intro, doelgroepen }: VoorWieCom
 
         {/* Numbered list */}
         <div>
-          {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => {
-            const isLast = idx === Math.min(doelgroepen.length, 4) - 1;
+          {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => {
+            const isLast = idx === Math.min(doelgroepen.length, 6) - 1;
             return (
               <a
                 key={idx}
@@ -1329,7 +1320,7 @@ function VoorWieSerene2({ theme, palette, titel, intro, doelgroepen }: VoorWieCo
 
         {/* Cards grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-          {doelgroepen.slice(0, 3).map((doelgroep: any, idx: number) => (
+          {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => (
             <a
               key={idx}
               href="#contact"
@@ -1367,33 +1358,6 @@ function VoorWieSerene2({ theme, palette, titel, intro, doelgroepen }: VoorWieCo
               Volledig verzekerd
             </span>
           </div>
-
-          {/* Wide bemiddelaars card */}
-          {doelgroepen[3] && (
-            <a
-              href="#contact"
-              className="group sm:col-span-1 lg:col-span-2 p-7 lg:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 transition-all duration-300 hover:shadow-md"
-              style={{ background: palette.bgAlt, borderRadius: '0 0 0 40px' }}
-            >
-              <span className="material-symbols-outlined text-3xl transition-colors" style={{ color: palette.accent }}>
-                {DOELGROEP_ICONS[doelgroepen[3].type] || 'group'}
-              </span>
-              <div className="flex-1">
-                <span className="block mb-2 uppercase tracking-[3px] font-medium transition-colors" style={{ fontSize: '9px', color: palette.accent }}>
-                  Samenwerking
-                </span>
-                <h3 className="text-lg font-medium mb-1 transition-colors" style={{ fontFamily: theme.fonts.heading, color: palette.text }}>
-                  {doelgroepen[3].titel}
-                </h3>
-                <p className="text-sm leading-relaxed transition-colors" style={{ color: palette.textMuted }}>
-                  {doelgroepen[3].tekst}
-                </p>
-              </div>
-              <span className="text-xs uppercase tracking-[2px] transition-colors hidden sm:block" style={{ color: palette.accent }}>
-                Contact →
-              </span>
-            </a>
-          )}
         </div>
       </div>
     </section>
@@ -1467,7 +1431,7 @@ function VoorWieSerene3({ theme, palette, titel, intro, doelgroepen }: VoorWieCo
 
           {/* Right: Doelgroepen cards (3 cols) */}
           <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {doelgroepen.slice(0, 4).map((doelgroep: any, idx: number) => (
+            {doelgroepen.slice(0, 6).map((doelgroep: any, idx: number) => (
               <a
                 key={idx}
                 href="#contact"

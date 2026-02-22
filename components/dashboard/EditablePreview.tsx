@@ -11,50 +11,71 @@ const SKIP_CLASSES = ['material-symbols-outlined', 'icon', 'sr-only'];
 const SKIP_TAGS = new Set(['SCRIPT', 'STYLE', 'SVG', 'PATH', 'INPUT', 'TEXTAREA', 'SELECT', 'IMG']);
 const MIN_TEXT_LENGTH = 2;
 
-// Selectors for "button-like" elements
-const BTN_SELECTORS = [
-  'a[class*="bg-"]',
-  'a[class*="btn"]',
-  'a[class*="rounded"][class*="bg-"]',
-  'a[style*="background"]',
-  'button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"])',
-  'button[style*="background"]',
-].join(', ');
+// Sections that support "+" add buttons and "x" remove buttons in the preview
+const ADD_BUTTON_SECTIONS = [
+  { section: 'diensten', label: '+ Dienst toevoegen' },
+  { section: 'faq', label: '+ Vraag toevoegen' },
+  { section: 'werkervaring', label: '+ Werkervaring toevoegen' },
+  { section: 'voorwie', label: '+ Doelgroep toevoegen' },
+];
 
-interface ButtonStyle {
-  bgColor?: string;
-  textColor?: string;
-  radius?: string;
+// Find the repeating items container within a section by looking for the
+// grid/list/flex container with the most block-level children (≥2).
+// Searches the entire section element to handle templates with split wrappers.
+function findItemsInSection(sectionEl: Element): { container: Element; items: HTMLElement[] } | null {
+  const selectors = '.grid, [class*="space-y"], [class*="divide-y"], [class*="flex-col"], [class*="pl-8"]';
+  const candidates = sectionEl.querySelectorAll(selectors);
+
+  let bestContainer: Element | null = null;
+  let bestCount = 1;
+
+  candidates.forEach(c => {
+    const blockChildren = Array.from(c.children).filter(child =>
+      ['DIV', 'ARTICLE', 'A', 'SECTION', 'BUTTON'].includes(child.tagName) &&
+      !child.hasAttribute('data-add-btn') &&
+      !child.hasAttribute('data-remove-btn')
+    );
+    if (blockChildren.length > bestCount) {
+      bestContainer = c;
+      bestCount = blockChildren.length;
+    }
+  });
+
+  if (!bestContainer) return null;
+
+  const items = Array.from((bestContainer as Element).children).filter(child =>
+    ['DIV', 'ARTICLE', 'A', 'SECTION', 'BUTTON'].includes(child.tagName) &&
+    !child.hasAttribute('data-add-btn') &&
+    !child.hasAttribute('data-remove-btn')
+  ) as HTMLElement[];
+
+  return { container: bestContainer, items };
 }
 
 interface EditablePreviewProps {
   site: Site;
   onImageReplace: (key: string, newUrl: string) => void;
   onTextChange: (originalText: string, newText: string) => void;
-  onButtonChange: (btnId: string, style: ButtonStyle | null) => void;
+  onButtonChange?: (btnId: string, style: any) => void;
+  onAddItem?: (sectionType: string) => void;
+  onRemoveItem?: (sectionType: string, index: number) => void;
+  disableImageUpload?: boolean;
 }
 
-export function EditablePreview({ site, onImageReplace, onTextChange, onButtonChange }: EditablePreviewProps) {
+export function EditablePreview({ site, onImageReplace, onTextChange, onAddItem, onRemoveItem, disableImageUpload }: EditablePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const toolbarRef = useRef<HTMLDivElement>(null);
 
   const [clickedImgSrc, setClickedImgSrc] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadingEl, setUploadingEl] = useState<HTMLElement | null>(null);
   const [activeEditEl, setActiveEditEl] = useState<HTMLElement | null>(null);
-
-  // Button toolbar state
-  const [activeBtnId, setActiveBtnId] = useState<string | null>(null);
-  const [activeBtnEl, setActiveBtnEl] = useState<HTMLElement | null>(null);
-  const [toolbarPos, setToolbarPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const [btnStyle, setBtnStyle] = useState<ButtonStyle>({});
+  const [imageDisabledMsg, setImageDisabledMsg] = useState(false);
 
   // ── Custom data from generated_content ──
   const customImages: Record<string, string> = (site.generated_content as any)?.customImages || {};
   const customTexts: Record<string, string> = (site.generated_content as any)?.customTexts || {};
   const customStyles: Record<string, string> = (site.generated_content as any)?.customStyles || {};
-  const customButtons: Record<string, ButtonStyle> = (site.generated_content as any)?.customButtons || {};
 
   // ── Assign IDs & apply custom replacements after every render ──
   useEffect(() => {
@@ -69,29 +90,6 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
       if (customImages[imgId]) img.src = customImages[imgId];
     });
 
-    // Buttons — assign IDs & apply saved styles
-    el.querySelectorAll(BTN_SELECTORS).forEach((btn, i) => {
-      const htmlBtn = btn as HTMLElement;
-      const btnId = `btn-${i}`;
-      htmlBtn.dataset.btnId = btnId;
-
-      const saved = customButtons[btnId];
-      if (saved) {
-        if (saved.bgColor) {
-          htmlBtn.style.setProperty('background-color', saved.bgColor, 'important');
-          // Override hover handlers that would reset the color
-          htmlBtn.onmouseenter = (e) => {
-            (e.currentTarget as HTMLElement).style.setProperty('background-color', saved.bgColor!, 'important');
-          };
-          htmlBtn.onmouseleave = (e) => {
-            (e.currentTarget as HTMLElement).style.setProperty('background-color', saved.bgColor!, 'important');
-          };
-        }
-        if (saved.textColor) htmlBtn.style.setProperty('color', saved.textColor, 'important');
-        if (saved.radius) htmlBtn.style.setProperty('border-radius', saved.radius, 'important');
-      }
-    });
-
     // Texts
     applyTextReplacements(el, customTexts);
 
@@ -99,24 +97,103 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
     el.querySelectorAll('.reveal').forEach(revealEl => {
       revealEl.classList.add('revealed');
     });
-  });
 
-  // ── Close button toolbar on outside click ──
-  useEffect(() => {
-    if (!activeBtnId) return;
-    const handler = (e: MouseEvent) => {
-      if (toolbarRef.current?.contains(e.target as Node)) return;
-      if (activeBtnEl?.contains(e.target as Node)) return;
-      setActiveBtnId(null);
-      setActiveBtnEl(null);
-    };
-    // Delay to avoid immediate close
-    const timer = setTimeout(() => document.addEventListener('click', handler), 50);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('click', handler);
-    };
-  }, [activeBtnId, activeBtnEl]);
+    // ── Inject "+" add buttons & "x" remove buttons per section ──
+    el.querySelectorAll('[data-add-btn]').forEach(b => b.remove());
+    el.querySelectorAll('[data-remove-btn]').forEach(b => b.remove());
+
+    if (onAddItem || onRemoveItem) {
+      ADD_BUTTON_SECTIONS.forEach(({ section, label }) => {
+        const sectionEl = el.querySelector(`[data-section="${section}"]`);
+        if (!sectionEl) return;
+
+        const found = findItemsInSection(sectionEl);
+        // Inner container for the "+" button — place it inside the section's content area
+        const innerContainer =
+          sectionEl.querySelector('[class*="max-w-"]') ||
+          sectionEl.querySelector('section > div') ||
+          sectionEl.querySelector('section') ||
+          sectionEl;
+
+        // ── "X" remove buttons on items ──
+        if (onRemoveItem && found && found.items.length > 1) {
+          found.items.forEach((htmlItem, idx) => {
+            const prev = htmlItem.style.position;
+            if (!prev || prev === 'static') htmlItem.style.position = 'relative';
+            const xBtn = document.createElement('button');
+            xBtn.setAttribute('data-remove-btn', `${section}-${idx}`);
+            Object.assign(xBtn.style, {
+              position: 'absolute',
+              top: '6px',
+              right: '6px',
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: '#ef4444',
+              color: 'white',
+              border: '2px solid white',
+              fontSize: '14px',
+              fontWeight: '700',
+              lineHeight: '1',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: '40',
+              opacity: '0',
+              transition: 'opacity 0.15s ease, transform 0.15s ease',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            });
+            xBtn.textContent = '\u00d7';
+            xBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onRemoveItem(section, idx);
+            });
+            htmlItem.addEventListener('mouseenter', () => { xBtn.style.opacity = '1'; });
+            htmlItem.addEventListener('mouseleave', () => { xBtn.style.opacity = '0'; });
+            htmlItem.appendChild(xBtn);
+          });
+        }
+
+        // ── "+" add button ──
+        if (onAddItem) {
+          const btn = document.createElement('button');
+          btn.setAttribute('data-add-btn', section);
+          btn.textContent = label;
+          Object.assign(btn.style, {
+            display: 'block',
+            width: '100%',
+            maxWidth: '280px',
+            margin: '20px auto 0',
+            padding: '10px 20px',
+            background: 'rgba(249, 115, 22, 0.06)',
+            color: '#ea580c',
+            border: '2px dashed rgba(249, 115, 22, 0.3)',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+          });
+          btn.addEventListener('mouseenter', () => {
+            btn.style.background = 'rgba(249, 115, 22, 0.12)';
+            btn.style.borderColor = 'rgba(249, 115, 22, 0.5)';
+          });
+          btn.addEventListener('mouseleave', () => {
+            btn.style.background = 'rgba(249, 115, 22, 0.06)';
+            btn.style.borderColor = 'rgba(249, 115, 22, 0.3)';
+          });
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddItem(section);
+          });
+          innerContainer.appendChild(btn);
+        }
+      });
+    }
+  });
 
   // ── Click handler ──
   useEffect(() => {
@@ -125,6 +202,9 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
 
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+
+      // ── Skip add/remove buttons — let their own handlers fire ──
+      if (target.closest('[data-add-btn]') || target.closest('[data-remove-btn]')) return;
 
       // ── Link navigation block ──
       const link = target.closest('a');
@@ -135,6 +215,11 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
         const imgInLink = link.querySelector('img') as HTMLImageElement | null;
         if (imgInLink) {
           e.stopPropagation();
+          if (disableImageUpload) {
+            setImageDisabledMsg(true);
+            setTimeout(() => setImageDisabledMsg(false), 2500);
+            return;
+          }
           const imgId = imgInLink.dataset.imgId || imgInLink.src;
           setClickedImgSrc(imgId);
           setUploadingEl(imgInLink);
@@ -148,42 +233,23 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
       if (img) {
         e.preventDefault();
         e.stopPropagation();
+        if (disableImageUpload) {
+          setImageDisabledMsg(true);
+          setTimeout(() => setImageDisabledMsg(false), 2500);
+          return;
+        }
         setClickedImgSrc(img.dataset.imgId || img.src);
         setUploadingEl(img);
         fileInputRef.current?.click();
         return;
       }
 
-      // ── TEXT CLICK (before button — text inside a button-like card should be editable) ──
+      // ── TEXT CLICK ──
       const textEl = findEditableTextElement(target);
       if (textEl && textEl !== activeEditEl) {
         e.preventDefault();
         e.stopPropagation();
-        setActiveBtnId(null);
         startTextEdit(textEl);
-        return;
-      }
-
-      // ── BUTTON CLICK (only if no editable text was found) ──
-      const btnEl = target.closest(BTN_SELECTORS) as HTMLElement | null;
-      if (btnEl && btnEl.dataset.btnId) {
-        e.preventDefault();
-        e.stopPropagation();
-        const btnId = btnEl.dataset.btnId;
-
-        // Position toolbar above the button
-        const rect = btnEl.getBoundingClientRect();
-        const containerRect = containerRef.current?.getBoundingClientRect() || { top: 0, left: 0 };
-        setToolbarPos({
-          top: rect.top - containerRect.top - 10,
-          left: rect.left - containerRect.left + rect.width / 2,
-        });
-
-        // Load existing style
-        setBtnStyle(customButtons[btnId] || {});
-        setActiveBtnId(btnId);
-        setActiveBtnEl(btnEl);
-        setActiveEditEl(null);
         return;
       }
 
@@ -192,6 +258,11 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
       if (bgDiv && !isTextElement(target)) {
         e.preventDefault();
         e.stopPropagation();
+        if (disableImageUpload) {
+          setImageDisabledMsg(true);
+          setTimeout(() => setImageDisabledMsg(false), 2500);
+          return;
+        }
         if (!bgDiv.dataset.bgId) {
           const allBgs = containerRef.current?.querySelectorAll('[data-bg-id]') || [];
           bgDiv.dataset.bgId = `bg-${allBgs.length}`;
@@ -205,50 +276,7 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
 
     el.addEventListener('click', handler, true);
     return () => el.removeEventListener('click', handler, true);
-  }, [activeEditEl, customButtons]);
-
-  // ── Button style change ──
-  const updateBtnStyle = useCallback((key: keyof ButtonStyle, value: string) => {
-    if (!activeBtnId || !activeBtnEl) return;
-
-    const newStyle = { ...btnStyle, [key]: value };
-    setBtnStyle(newStyle);
-
-    // Apply immediately to DOM
-    if (key === 'bgColor') {
-      activeBtnEl.style.setProperty('background-color', value, 'important');
-      // Override hover handlers
-      activeBtnEl.onmouseenter = (e) => {
-        (e.currentTarget as HTMLElement).style.setProperty('background-color', value, 'important');
-      };
-      activeBtnEl.onmouseleave = (e) => {
-        (e.currentTarget as HTMLElement).style.setProperty('background-color', value, 'important');
-      };
-    }
-    if (key === 'textColor') activeBtnEl.style.setProperty('color', value, 'important');
-    if (key === 'radius') activeBtnEl.style.setProperty('border-radius', value, 'important');
-
-    // Persist
-    onButtonChange(activeBtnId, newStyle);
-  }, [activeBtnId, activeBtnEl, btnStyle, onButtonChange]);
-
-  // ── Reset button to original ──
-  const resetBtnStyle = useCallback(() => {
-    if (!activeBtnId || !activeBtnEl) return;
-
-    // Remove inline styles so original Tailwind/React styles take over
-    activeBtnEl.style.removeProperty('background-color');
-    activeBtnEl.style.removeProperty('color');
-    activeBtnEl.style.removeProperty('border-radius');
-    // Clear our hover overrides
-    activeBtnEl.onmouseenter = null;
-    activeBtnEl.onmouseleave = null;
-
-    setBtnStyle({});
-    onButtonChange(activeBtnId, null); // signal deletion
-    setActiveBtnId(null);
-    setActiveBtnEl(null);
-  }, [activeBtnId, activeBtnEl, onButtonChange]);
+  }, [activeEditEl, disableImageUpload]);
 
   // ── Start inline text editing ──
   const startTextEdit = (el: HTMLElement) => {
@@ -324,24 +352,6 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // RENDER
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  const RADIUS_OPTIONS = [
-    { label: 'Scherp', value: '0px' },
-    { label: 'Licht', value: '6px' },
-    { label: 'Rond', value: '12px' },
-    { label: 'Pill', value: '9999px' },
-  ];
-
-  const BTN_COLORS = [
-    '#1e293b', '#0f172a', '#334155',
-    '#f97316', '#ea580c',
-    '#2563eb', '#1d4ed8',
-    '#059669', '#047857',
-    '#7c3aed', '#6d28d9',
-    '#dc2626', '#b91c1c',
-    '#0d9488', '#d97706',
-    '#ffffff', '#f1f5f9',
-  ];
-
   return (
     <>
       {/* Upload overlay */}
@@ -354,111 +364,25 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
         </div>
       )}
 
+      {/* Image disabled message */}
+      {imageDisabledMsg && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[110] animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="bg-slate-800 text-white rounded-xl px-5 py-3 shadow-lg flex items-center gap-2.5">
+            <span className="material-symbols-outlined text-lg text-amber-400">photo_camera</span>
+            <span className="text-sm font-medium">Foto&apos;s uploaden kan na registratie</span>
+          </div>
+        </div>
+      )}
+
       {/* Preview container */}
       <div ref={containerRef} className="editable-preview relative">
         <SiteRenderer site={site} />
-
-        {/* ── BUTTON TOOLBAR ── */}
-        {activeBtnId && (
-          <div
-            ref={toolbarRef}
-            className="absolute z-[60] -translate-x-1/2 -translate-y-full"
-            style={{ top: toolbarPos.top, left: toolbarPos.left }}
-          >
-            <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-3 w-[260px]">
-              {/* Arrow */}
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
-                <div className="w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45 -translate-y-1.5" />
-              </div>
-
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Button stijl</p>
-
-              {/* Background Color */}
-              <div className="mb-2.5">
-                <label className="block text-[10px] font-medium text-slate-500 mb-1">Achtergrond</label>
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <input
-                    type="color"
-                    value={btnStyle.bgColor || '#1e293b'}
-                    onChange={(e) => updateBtnStyle('bgColor', e.target.value)}
-                    className="w-7 h-7 rounded border border-slate-200 cursor-pointer p-0.5"
-                  />
-                  <div className="flex flex-wrap gap-1">
-                    {BTN_COLORS.map(c => (
-                      <button
-                        key={c}
-                        onClick={() => updateBtnStyle('bgColor', c)}
-                        className={`w-5 h-5 rounded-full border transition-transform hover:scale-110 ${
-                          btnStyle.bgColor === c ? 'border-orange-400 scale-110' : 'border-slate-200'
-                        }`}
-                        style={{ backgroundColor: c }}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Text Color */}
-              <div className="mb-2.5">
-                <label className="block text-[10px] font-medium text-slate-500 mb-1">Tekst kleur</label>
-                <div className="flex gap-1.5">
-                  {[
-                    { label: 'Wit', value: '#ffffff' },
-                    { label: 'Zwart', value: '#000000' },
-                    { label: 'Donker', value: '#1e293b' },
-                  ].map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => updateBtnStyle('textColor', opt.value)}
-                      className={`flex-1 py-1.5 text-[10px] font-medium rounded border-2 transition-all ${
-                        (btnStyle.textColor || '#ffffff') === opt.value
-                          ? 'border-orange-400 bg-orange-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="inline-block w-2.5 h-2.5 rounded-full mr-0.5 align-middle border border-slate-300" style={{ backgroundColor: opt.value }} />
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Border Radius */}
-              <div className="mb-2.5">
-                <label className="block text-[10px] font-medium text-slate-500 mb-1">Vorm</label>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {RADIUS_OPTIONS.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => updateBtnStyle('radius', opt.value)}
-                      className={`flex flex-col items-center gap-0.5 py-1.5 rounded-lg border-2 transition-all ${
-                        (btnStyle.radius || '6px') === opt.value
-                          ? 'border-orange-400 bg-orange-50'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <div className="w-10 h-4 bg-slate-700" style={{ borderRadius: opt.value }} />
-                      <span className="text-[9px] font-medium text-slate-500">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Reset to original */}
-              <button
-                onClick={resetBtnStyle}
-                className="w-full py-1.5 text-[10px] font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg border border-dashed border-slate-200 hover:border-red-200 transition-all flex items-center justify-center gap-1"
-              >
-                <span className="material-symbols-outlined text-xs">undo</span>
-                Origineel herstellen
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Hidden file input */}
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+      {!disableImageUpload && (
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+      )}
 
       {/* Styles */}
       <style>{`
@@ -499,40 +423,15 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
           color: ${customStyles.bodyColor} !important;
         }
         ` : ''}
-        ${customStyles.buttonColor ? `
-        .editable-preview a[class*="bg-"],
-        .editable-preview a[class*="btn"],
-        .editable-preview a[class*="rounded"][class*="bg-"],
-        .editable-preview a[style*="background"],
-        .editable-preview button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
-        .editable-preview button[style*="background"] { background-color: ${customStyles.buttonColor} !important; }
-        ` : ''}
-        ${customStyles.buttonTextColor ? `
-        .editable-preview a[class*="bg-"],
-        .editable-preview a[class*="btn"],
-        .editable-preview a[class*="rounded"][class*="bg-"],
-        .editable-preview a[style*="background"],
-        .editable-preview button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
-        .editable-preview button[style*="background"] { color: ${customStyles.buttonTextColor} !important; }
-        ` : ''}
-        ${customStyles.buttonRadius ? `
-        .editable-preview a[class*="bg-"],
-        .editable-preview a[class*="btn"],
-        .editable-preview a[class*="rounded"][class*="bg-"],
-        .editable-preview a[style*="background"],
-        .editable-preview button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]),
-        .editable-preview button[style*="background"] { border-radius: ${customStyles.buttonRadius} !important; }
-        ` : ''}
-
         /* ── IMAGE HOVER ── */
         .editable-preview img {
-          cursor: pointer !important;
+          cursor: ${disableImageUpload ? 'not-allowed' : 'pointer'} !important;
           transition: all 0.2s ease !important;
         }
         .editable-preview img:hover {
-          outline: 3px solid #f97316 !important;
+          outline: 3px solid ${disableImageUpload ? '#94a3b8' : '#f97316'} !important;
           outline-offset: 2px !important;
-          filter: brightness(0.92) !important;
+          ${disableImageUpload ? '' : 'filter: brightness(0.92) !important;'}
         }
 
         /* ── TEXT HOVER ── */
@@ -551,18 +450,6 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
           outline: 2px dashed #94a3b8 !important;
           outline-offset: 2px !important;
           cursor: text !important;
-        }
-
-        /* ── BUTTON HOVER ── */
-        .editable-preview a[class*="bg-"]:hover,
-        .editable-preview a[class*="btn"]:hover,
-        .editable-preview a[style*="background"]:hover,
-        .editable-preview a[class*="rounded"][class*="bg-"]:hover,
-        .editable-preview button[class*="bg-"]:not([class*="bg-white"]):not([class*="bg-slate"]):not([class*="bg-gray"]):hover,
-        .editable-preview button[style*="background"]:hover {
-          outline: 3px solid #a855f7 !important;
-          outline-offset: 2px !important;
-          cursor: pointer !important;
         }
 
         /* ── ACTIVE EDITING ── */
@@ -590,6 +477,20 @@ export function EditablePreview({ site, onImageReplace, onTextChange, onButtonCh
         .editable-preview .material-symbols-outlined {
           pointer-events: none;
         }
+
+        /* ── ADD / REMOVE ITEM BUTTONS ── */
+        .editable-preview [data-add-btn],
+        .editable-preview [data-remove-btn] {
+          pointer-events: auto !important;
+        }
+        .editable-preview [data-add-btn]:hover,
+        .editable-preview [data-remove-btn]:hover {
+          outline: none !important;
+        }
+        .editable-preview [data-remove-btn]:hover {
+          transform: scale(1.15) !important;
+          background: #dc2626 !important;
+        }
       `}</style>
     </>
   );
@@ -606,8 +507,6 @@ function findEditableTextElement(el: HTMLElement): HTMLElement | null {
     if (SKIP_TAGS.has(current.tagName)) return null;
     if (SKIP_CLASSES.some(c => current!.classList.contains(c))) return null;
     if (current.closest('button, nav, [role="navigation"]')) return null;
-    // Skip if it's a button-like element
-    if (current.matches(BTN_SELECTORS)) return null;
     if (current.matches(TEXT_SELECTORS)) {
       const text = current.innerText?.trim();
       if (text && text.length >= MIN_TEXT_LENGTH) {
