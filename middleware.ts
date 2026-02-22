@@ -56,10 +56,49 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh session if expired
-  const { data: { user } } = await supabase.auth.getUser();
-
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get('host') || '';
+  const mainDomain = process.env.NEXT_PUBLIC_MAIN_DOMAIN || 'jouwzorgsite.nl';
+  const cleanHostname = hostname.split(':')[0].toLowerCase();
+
+  // Subdomain routing (e.g., naam.jouwzorgsite.nl)
+  if (cleanHostname !== mainDomain && cleanHostname !== `www.${mainDomain}` && cleanHostname.endsWith(`.${mainDomain}`)) {
+    const subdomain = cleanHostname.replace(`.${mainDomain}`, '');
+    if (!pathname.startsWith('/site/') && pathname === '/') {
+      const url = request.nextUrl.clone();
+      url.pathname = `/site/${subdomain}`;
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  // Custom domain routing (e.g., lisa-verpleegkundige.nl)
+  if (
+    cleanHostname !== mainDomain &&
+    cleanHostname !== `www.${mainDomain}` &&
+    !cleanHostname.endsWith(`.${mainDomain}`) &&
+    cleanHostname !== 'localhost'
+  ) {
+    const customDomain = cleanHostname.replace(/^www\./, '');
+
+    const { data: site } = await supabase
+      .from('sites')
+      .select('subdomain')
+      .eq('custom_domain', customDomain)
+      .eq('published', true)
+      .single();
+
+    if (site?.subdomain && pathname === '/') {
+      const url = request.nextUrl.clone();
+      url.pathname = `/site/${site.subdomain}`;
+      return NextResponse.rewrite(url);
+    }
+
+    // Unknown custom domain or non-root path → fall through to Next.js
+    return response;
+  }
+
+  // Main domain: refresh session and handle auth routing
+  const { data: { user } } = await supabase.auth.getUser();
 
   // Protected routes - require authentication
   const protectedRoutes = ['/dashboard', '/edit', '/settings'];
@@ -77,24 +116,6 @@ export async function middleware(request: NextRequest) {
 
   if (isAuthRoute && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // Subdomain routing (for production)
-  // Check if request is coming from a subdomain
-  const hostname = request.headers.get('host') || '';
-  const mainDomain = process.env.NEXT_PUBLIC_MAIN_DOMAIN || 'jouwzorgsite.nl';
-  
-  // Extract subdomain if exists
-  if (hostname !== mainDomain && hostname !== `www.${mainDomain}` && hostname.endsWith(mainDomain)) {
-    const subdomain = hostname.replace(`.${mainDomain}`, '');
-    
-    // Don't rewrite for main routes
-    if (!pathname.startsWith('/site/') && pathname === '/') {
-      // Rewrite to /site/[subdomain]
-      const url = request.nextUrl.clone();
-      url.pathname = `/site/${subdomain}`;
-      return NextResponse.rewrite(url);
-    }
   }
 
   return response;
