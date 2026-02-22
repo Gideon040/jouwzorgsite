@@ -116,8 +116,4 @@ export default async function SitePage({ params }: SitePageProps) {
   );
 }
 
-export async function generateStaticParams() {
-  return [];
-}
-
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
