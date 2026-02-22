@@ -64,7 +64,20 @@ export async function middleware(request: NextRequest) {
   // Subdomain routing (e.g., naam.jouwzorgsite.nl)
   if (cleanHostname !== mainDomain && cleanHostname !== `www.${mainDomain}` && cleanHostname.endsWith(`.${mainDomain}`)) {
     const subdomain = cleanHostname.replace(`.${mainDomain}`, '');
-    if (!pathname.startsWith('/site/') && pathname === '/') {
+
+    // Check if this site has a custom domain — if so, redirect there
+    const { data: subSite } = await supabase
+      .from('sites')
+      .select('custom_domain')
+      .eq('subdomain', subdomain)
+      .eq('published', true)
+      .single();
+
+    if (subSite?.custom_domain) {
+      return NextResponse.redirect(`https://${subSite.custom_domain}`);
+    }
+
+    if (pathname === '/') {
       const url = request.nextUrl.clone();
       url.pathname = `/site/${subdomain}`;
       return NextResponse.rewrite(url);
