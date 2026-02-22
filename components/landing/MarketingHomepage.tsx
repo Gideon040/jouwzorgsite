@@ -103,8 +103,7 @@ export default function MarketingHomepage({ onStart }: MarketingHomepageProps) {
       <nav className="nav" id="nav">
         <div className="nav-inner">
           <a href="#" className="nav-logo">
-            <div className="nav-logo-mark">JZ</div>
-            <span className="nav-logo-text">JouwZorgSite</span>
+            <img src="/logo.png" alt="JouwZorgSite" style={{ height: '28px' }} />
           </a>
           <div className="nav-links">
             <a href="#features">Voordelen</a>
@@ -935,8 +934,7 @@ export default function MarketingHomepage({ onStart }: MarketingHomepageProps) {
         <div className="footer-inner">
           <div className="footer-brand">
             <div className="footer-logo">
-              <div className="footer-logo-mark">JZ</div>
-              <span className="footer-logo-text">JouwZorgSite</span>
+              <img src="/logo.png" alt="JouwZorgSite" style={{ height: '28px' }} />
             </div>
             <p className="footer-tagline">De enige website-builder speciaal voor zelfstandige zorgprofessionals in Nederland. AI-gegenereerd, zorgspecifiek, met ingebouwd kwaliteitskeurmerk.</p>
           </div>

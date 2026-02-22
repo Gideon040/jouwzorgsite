@@ -12,13 +12,8 @@ export default function AuthLayout({
       {/* Header */}
       <header className="w-full bg-white border-b border-stone-200 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-600 to-teal-400 flex items-center justify-center">
-              <span className="text-white font-logo font-bold text-sm">J</span>
-            </div>
-            <span className="font-logo text-lg font-semibold text-stone-900 tracking-tight">
-              JouwZorgSite
-            </span>
+          <Link href="/" className="flex items-center">
+            <img src="/logo.png" alt="JouwZorgSite" className="h-7" />
           </Link>
           <nav className="flex items-center gap-4">
             <Link

@@ -46,11 +46,8 @@ export function DashboardSidebar() {
 
       {/* Logo */}
       <div className="relative px-6 pt-6 pb-2 mb-6">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-300 flex items-center justify-center">
-            <span className="text-white text-sm font-bold font-logo tracking-tight">JZ</span>
-          </div>
-          <span className="text-[17px] font-semibold text-stone-50 font-logo tracking-tight">JouwZorgSite</span>
+        <Link href="/dashboard" className="flex items-center">
+          <img src="/logo.png" alt="JouwZorgSite" className="h-7 brightness-0 invert" />
         </Link>
       </div>
 
