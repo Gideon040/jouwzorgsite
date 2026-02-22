@@ -13,7 +13,7 @@ export default function AuthLayout({
       <header className="w-full bg-white border-b border-stone-200 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center">
-            <img src="/logo.png" alt="JouwZorgSite" className="h-7" />
+            <img src="/logo.png" alt="JouwZorgSite" className="h-[70px]" />
           </Link>
           <nav className="flex items-center gap-4">
             <Link

@@ -11,7 +11,7 @@ export function HeroSection({ onStart }: HeroSectionProps) {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-100">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center">
-            <img src="/logo.png" alt="JouwZorgSite" className="h-7" />
+            <img src="/logo.png" alt="JouwZorgSite" className="h-[70px]" />
           </div>
           <button 
             onClick={onStart}

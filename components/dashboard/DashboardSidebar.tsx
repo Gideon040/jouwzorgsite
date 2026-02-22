@@ -47,7 +47,7 @@ export function DashboardSidebar() {
       {/* Logo */}
       <div className="relative px-6 pt-6 pb-2 mb-6">
         <Link href="/dashboard" className="flex items-center">
-          <img src="/logo.png" alt="JouwZorgSite" className="h-7 brightness-0 invert" />
+          <img src="/logo.png" alt="JouwZorgSite" className="h-[70px] brightness-0 invert" />
         </Link>
       </div>
 
