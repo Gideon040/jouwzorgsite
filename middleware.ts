@@ -97,6 +97,14 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
+  // Block direct access to /site/* on main domain (should only be reached via rewrite)
+  if (
+    (cleanHostname === mainDomain || cleanHostname === `www.${mainDomain}`) &&
+    pathname.startsWith('/site/')
+  ) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   // Main domain: refresh session and handle auth routing
   const { data: { user } } = await supabase.auth.getUser();
 
