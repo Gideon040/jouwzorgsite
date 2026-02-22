@@ -4,7 +4,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Site } from '@/types';
 import Link from 'next/link';
-import { DomeinManager } from './DomeinManager';
+import { DomeinManager, DomeinBeheer } from './DomeinManager';
 
 export const metadata = { title: 'Eigen Domein' };
 
@@ -129,6 +129,11 @@ export default async function DomeinPage({ searchParams }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Domain beheer als er al een domein gekoppeld is */}
+      {site.custom_domain && isProfessional && (
+        <DomeinBeheer siteId={site.id} domain={site.custom_domain} />
+      )}
 
       {/* Domain zoeken + registreren */}
       {!site.custom_domain && isProfessional && (
